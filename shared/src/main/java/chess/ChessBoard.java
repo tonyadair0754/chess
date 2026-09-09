@@ -10,7 +10,8 @@ public class ChessBoard {
     private ChessPiece[][] board = new ChessPiece[8][8];
 
     public ChessBoard() {
-        
+        // We may want to remove this later
+        resetBoard();
     }
 
     /**
@@ -52,18 +53,18 @@ public class ChessBoard {
             row = 7;
         }
 
-        // One row of r, n, b, q, k, b, n, r on rows 1 and 8
+        // One row of r, n, b, q, k, b, n, r on rows 1 and 8. Again, WHITE is assumed to be predicted first by values()
         row = 1;
         for (ChessGame.TeamColor color : ChessGame.TeamColor.values()) {
             ChessPiece piece = new ChessPiece(color, ChessPiece.PieceType.ROOK);
             ChessPosition pos = new ChessPosition(row, 1);
             addPiece(pos, piece);
 
-            piece = new ChessPiece(color, ChessPiece.PieceType.BISHOP);
+            piece = new ChessPiece(color, ChessPiece.PieceType.KNIGHT);
             pos = new ChessPosition(row, 2);
             addPiece(pos, piece);
 
-            piece = new ChessPiece(color, ChessPiece.PieceType.KNIGHT);
+            piece = new ChessPiece(color, ChessPiece.PieceType.BISHOP);
             pos = new ChessPosition(row, 3);
             addPiece(pos, piece);
 
