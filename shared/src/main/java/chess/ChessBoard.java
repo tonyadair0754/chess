@@ -40,5 +40,54 @@ public class ChessBoard {
      */
     public void resetBoard() {
         board = new ChessPiece[8][8];
+
+        // One row of pawns on rows 2 and 7. Assume that values() predicts WHITE first
+        int row = 2;
+        for (ChessGame.TeamColor color : ChessGame.TeamColor.values()) {
+            for (int col = 1; col < 9; col++) {
+                ChessPiece piece = new ChessPiece(color, ChessPiece.PieceType.PAWN);
+                ChessPosition pos = new ChessPosition(row, col);
+                addPiece(pos, piece);
+            }
+            row = 7;
+        }
+
+        // One row of r, n, b, q, k, b, n, r on rows 1 and 8
+        row = 1;
+        for (ChessGame.TeamColor color : ChessGame.TeamColor.values()) {
+            ChessPiece piece = new ChessPiece(color, ChessPiece.PieceType.ROOK);
+            ChessPosition pos = new ChessPosition(row, 1);
+            addPiece(pos, piece);
+
+            piece = new ChessPiece(color, ChessPiece.PieceType.BISHOP);
+            pos = new ChessPosition(row, 2);
+            addPiece(pos, piece);
+
+            piece = new ChessPiece(color, ChessPiece.PieceType.KNIGHT);
+            pos = new ChessPosition(row, 3);
+            addPiece(pos, piece);
+
+            piece = new ChessPiece(color, ChessPiece.PieceType.QUEEN);
+            pos = new ChessPosition(row, 4);
+            addPiece(pos, piece);
+
+            piece = new ChessPiece(color, ChessPiece.PieceType.KING);
+            pos = new ChessPosition(row, 5);
+            addPiece(pos, piece);
+
+            piece = new ChessPiece(color, ChessPiece.PieceType.BISHOP);
+            pos = new ChessPosition(row, 6);
+            addPiece(pos, piece);
+
+            piece = new ChessPiece(color, ChessPiece.PieceType.KNIGHT);
+            pos = new ChessPosition(row, 7);
+            addPiece(pos, piece);
+
+            piece = new ChessPiece(color, ChessPiece.PieceType.ROOK);
+            pos = new ChessPosition(row, 8);
+            addPiece(pos, piece);
+
+            row = 8;
+        }
     }
 }
