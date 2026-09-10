@@ -22,20 +22,16 @@ public class PawnMovesCalculator implements PieceMovesCalculator {
             if (position.getRow() == 2) {
                 checkDirection(2, 0, moves, board, position);
             }
-            checkDirection(0, -1, moves, board, position);
             checkDirection(1, -1, moves, board, position);
-            checkDirection(0, 1, moves, board, position);
             checkDirection(1, 1, moves, board, position);
             checkDirection(1, 0, moves, board, position);
         } else {
             if (position.getRow() == 7) {
                 checkDirection(-2, 0, moves, board, position);
             }
-            checkDirection(0, -1, moves, board, position);
             checkDirection(-1, -1, moves, board, position);
             checkDirection(-1, 0, moves, board, position);
             checkDirection(-1, 1, moves, board, position);
-            checkDirection(0, 1, moves, board, position);
         }
         return moves;
     }
