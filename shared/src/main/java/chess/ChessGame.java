@@ -10,6 +10,21 @@ import java.util.Collection;
  */
 public class ChessGame {
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
+    }
+
     public ChessGame() {
 
     }
