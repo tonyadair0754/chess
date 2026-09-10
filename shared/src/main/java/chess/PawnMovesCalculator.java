@@ -19,14 +19,16 @@ public class PawnMovesCalculator implements PieceMovesCalculator {
 
         ChessPiece pawn = board.getPiece(position);
         if (pawn.getTeamColor() == ChessGame.TeamColor.WHITE) {
-            if (position.getRow() == 2) {
+            if (position.getRow() == 2
+                    && board.getPiece(new ChessPosition(position.getRow() + 1, position.getColumn())) == null) {
                 checkDirection(2, 0, moves, board, position);
             }
             checkDirection(1, -1, moves, board, position);
             checkDirection(1, 1, moves, board, position);
             checkDirection(1, 0, moves, board, position);
         } else {
-            if (position.getRow() == 7) {
+            if (position.getRow() == 7
+                    && board.getPiece(new ChessPosition(position.getRow() - 1, position.getColumn())) == null) {
                 checkDirection(-2, 0, moves, board, position);
             }
             checkDirection(-1, -1, moves, board, position);
