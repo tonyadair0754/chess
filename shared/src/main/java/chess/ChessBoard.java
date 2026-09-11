@@ -13,8 +13,6 @@ public class ChessBoard {
     private ChessPiece[][] board = new ChessPiece[8][8];
 
     public ChessBoard() {
-        // We may want to remove this later
-        resetBoard();
     }
 
     @Override
