@@ -60,12 +60,12 @@ public class PawnMovesCalculator implements PieceMovesCalculator {
 
             // If the space the pawn moves to is empty
             if (piece == null) {
-                if (row == 8 || row == 1) {
+                if ((row == 8 || row == 1) && colChange == 0) {
                     moves.add(new ChessMove(position, newPos, ChessPiece.PieceType.ROOK));
                     moves.add(new ChessMove(position, newPos, ChessPiece.PieceType.BISHOP));
                     moves.add(new ChessMove(position, newPos, ChessPiece.PieceType.KNIGHT));
                     moves.add(new ChessMove(position, newPos, ChessPiece.PieceType.QUEEN));
-                } else {
+                } else if (colChange == 0){
                     moves.add(new ChessMove(position, newPos, null));
                 }
             } else {
