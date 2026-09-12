@@ -56,10 +56,8 @@ public class QueenMovesCalculator implements PieceMovesCalculator {
 
             if (piece.getTeamColor() != queen.getTeamColor()) {
                 moves.add(new ChessMove(position, newPos, null));
-                break;
-            } else {
-                break;
             }
+            break;
         }
     }
 }

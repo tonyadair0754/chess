@@ -25,6 +25,7 @@ public class KnightMovesCalculator implements PieceMovesCalculator {
         checkDirection(-2, 1, moves, board, position);
         checkDirection(-2, -1, moves, board, position);
         checkDirection(-1, -2, moves, board, position);
+
         return moves;
     }
 

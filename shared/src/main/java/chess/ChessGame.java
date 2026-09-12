@@ -82,6 +82,11 @@ public class ChessGame {
             ChessPosition endPos = move.getEndPosition();
             TeamColor pieceColor = board.getPiece(startPos).getTeamColor();
 
+            /*
+                Add piece to new position
+                Clear piece from old position
+                Set other team's turn
+             */
             if (move.getPromotionPiece() != null) {
                 board.addPiece(endPos, new ChessPiece (pieceColor, move.getPromotionPiece()));
             } else {
