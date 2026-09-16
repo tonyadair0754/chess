@@ -4,81 +4,67 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class PawnMovesCalculator implements PieceMovesCalculator {
+public class PawnMovesCalculator implements PieceMovesCalculator{
 
     /**
      * Defines where a pawn can move
      *
      * @param board
-     * @param position
+     * @param myPosition
      * @return A list of ChessMove objects
      */
-    @Override
-    public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
+    public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         List<ChessMove> moves = new ArrayList<>();
 
-        ChessPiece pawn = board.getPiece(position);
-        if (pawn.getTeamColor() == ChessGame.TeamColor.WHITE) {
-            if (position.getRow() == 2
-                    && board.getPiece(new ChessPosition(position.getRow() + 1, position.getColumn())) == null) {
-                checkMove(2, 0, moves, board, position);
+        if (board.getPiece(myPosition).getTeamColor() == ChessGame.TeamColor.WHITE) {
+            checkMove(1, -1, board, myPosition, moves);
+            checkMove(1, 0, board, myPosition, moves);
+            checkMove(1, 1, board, myPosition, moves);
+            if (myPosition.getRow() == 2
+                    && board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn())) == null) {
+                checkMove(2, 0, board, myPosition, moves);
             }
-            checkMove(1, -1, moves, board, position);
-            checkMove(1, 1, moves, board, position);
-            checkMove(1, 0, moves, board, position);
         } else {
-            if (position.getRow() == 7
-                    && board.getPiece(new ChessPosition(position.getRow() - 1, position.getColumn())) == null) {
-                checkMove(-2, 0, moves, board, position);
+            checkMove(-1, -1, board, myPosition, moves);
+            checkMove(-1, 0, board, myPosition, moves);
+            checkMove(-1, 1, board, myPosition, moves);
+            if (myPosition.getRow() == 7
+                    && board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn())) == null) {
+                checkMove(-2, 0, board, myPosition, moves);
             }
-            checkMove(-1, -1, moves, board, position);
-            checkMove(-1, 0, moves, board, position);
-            checkMove(-1, 1, moves, board, position);
         }
+
         return moves;
     }
 
     /**
-     * Helper method that checks whether the pawn can move to a specified space
+     * Helper method that checks whether the piece can move to a specified space
      *
      * @param rowChange
      * @param colChange
-     * @param moves
      * @param board
-     * @param position
+     * @param myPosition
+     * @param moves
      */
-    private void checkMove(int rowChange, int colChange, List<ChessMove> moves, ChessBoard board, ChessPosition position) {
-        int newRow = position.getRow() + rowChange;
-        int newCol = position.getColumn() + colChange;
+    private void checkMove(int rowChange, int colChange, ChessBoard board, ChessPosition myPosition, List<ChessMove> moves) {
+        int newRow = myPosition.getRow();
+        int newCol = myPosition.getColumn();
+        ChessPiece thisPiece = board.getPiece(myPosition);
 
-        // If destination is off board, return
-        if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
+        if (newRow + rowChange < 1 || newRow +rowChange > 8 || newCol + colChange < 1 || newCol + colChange > 8) {
             return;
         }
 
-        ChessPosition newPos = new ChessPosition(newRow, newCol);
-        ChessPiece pawn = board.getPiece(position);
-        ChessPiece piece = board.getPiece(newPos);
+        ChessPosition newPos = new ChessPosition(newRow + rowChange, newCol + colChange);
+        ChessPiece thatPiece = board.getPiece(newPos);
 
-        /*
-        If moving forward,
-            if destination is empty,
-                add move
-            return
-
-        if moving diagonally,
-            if destination contains enemy,
-                add move
-         */
         if (colChange == 0) {
-            if (piece == null) {
-                addMove(position, newPos, moves);
+            if (thatPiece == null) {
+                addMove(myPosition, newPos, moves);
             }
-            return;
-        }
-        if (piece != null) {
-            if (piece.getTeamColor() != pawn.getTeamColor()) {
-                addMove(position, newPos, moves);
+        } else if (thatPiece != null) {
+            if (thatPiece.getTeamColor() != thisPiece.getTeamColor()) {
+                addMove(myPosition, newPos, moves);
             }
         }
     }
@@ -86,18 +72,18 @@ public class PawnMovesCalculator implements PieceMovesCalculator {
     /**
      * Add move helper
      *
-     * @param start
-     * @param end
+     * @param myPosition
+     * @param newPos
      * @param moves
      */
-    private void addMove(ChessPosition start, ChessPosition end, List<ChessMove> moves) {
-        if (end.getRow() == 8 || end.getRow() == 1) {
-            moves.add(new ChessMove(start, end, ChessPiece.PieceType.ROOK));
-            moves.add(new ChessMove(start, end, ChessPiece.PieceType.BISHOP));
-            moves.add(new ChessMove(start, end, ChessPiece.PieceType.KNIGHT));
-            moves.add(new ChessMove(start, end, ChessPiece.PieceType.QUEEN));
+    private void addMove(ChessPosition myPosition, ChessPosition newPos, Collection<ChessMove> moves) {
+        if (newPos.getRow() == 1 || newPos.getRow() == 8) {
+            moves.add(new ChessMove(myPosition, newPos, ChessPiece.PieceType.ROOK));
+            moves.add(new ChessMove(myPosition, newPos, ChessPiece.PieceType.KNIGHT));
+            moves.add(new ChessMove(myPosition, newPos, ChessPiece.PieceType.BISHOP));
+            moves.add(new ChessMove(myPosition, newPos, ChessPiece.PieceType.QUEEN));
         } else {
-            moves.add(new ChessMove(start, end, null));
+            moves.add(new ChessMove(myPosition, newPos, null));
         }
     }
 }

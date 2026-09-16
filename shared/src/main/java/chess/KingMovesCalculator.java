@@ -4,57 +4,44 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class KingMovesCalculator implements PieceMovesCalculator {
-
-    /**
-     * Defines where a king can move
-     *
-     * @param board
-     * @param position
-     * @return A list of ChessMove objects
-     */
-    @Override
-    public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
+public class KingMovesCalculator implements PieceMovesCalculator{
+    public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         List<ChessMove> moves = new ArrayList<>();
 
-        checkDirection(1, 0, moves, board, position);
-        checkDirection(-1, 0, moves, board, position);
-        checkDirection(0, 1, moves, board, position);
-        checkDirection(0, -1, moves, board, position);
-        checkDirection(1, 1, moves, board, position);
-        checkDirection(1, -1, moves, board, position);
-        checkDirection(-1, 1, moves, board, position);
-        checkDirection(-1, -1, moves, board, position);
+        checkMove(1, 0, board, myPosition, moves);
+        checkMove(-1, 0, board, myPosition, moves);
+        checkMove(0, 1, board, myPosition, moves);
+        checkMove(0, -1, board, myPosition, moves);
+        checkMove(1, 1, board, myPosition, moves);
+        checkMove(-1, 1, board, myPosition, moves);
+        checkMove(-1, -1, board, myPosition, moves);
+        checkMove(1, -1, board, myPosition, moves);
 
         return moves;
     }
 
     /**
-     * Helper method that checks where the king can move in one direction
+     * Helper method that checks whether the piece can move to a specified space
      *
      * @param rowChange
      * @param colChange
-     * @param moves
      * @param board
-     * @param position
+     * @param myPosition
+     * @param moves
      */
-    private void checkDirection(int rowChange, int colChange, List<ChessMove> moves, ChessBoard board, ChessPosition position) {
-        ChessPiece king = board.getPiece(position);
-        int row = position.getRow();
-        int col = position.getColumn();
+    private void checkMove(int rowChange, int colChange, ChessBoard board, ChessPosition myPosition, List<ChessMove> moves) {
+        int newRow = myPosition.getRow();
+        int newCol = myPosition.getColumn();
+        ChessPiece myPiece = board.getPiece(myPosition);
 
-        if ((row + rowChange < 9 && row + rowChange > 0) && (col + colChange < 9 && col + colChange > 0)) {
-            row += rowChange;
-            col += colChange;
-            ChessPosition newPos = new ChessPosition(row, col);
-            ChessPiece piece = board.getPiece(newPos);
+        if (newRow + rowChange >= 1 && newRow +rowChange <= 8 && newCol + colChange >= 1 && newCol + colChange <= 8) {
+            ChessPosition newPos = new ChessPosition(newRow + rowChange, newCol + colChange);
+            ChessPiece thatPiece = board.getPiece(newPos);
 
-            if (piece == null) {
-                moves.add(new ChessMove(position, newPos, null));
-            } else {
-                if (piece.getTeamColor() != king.getTeamColor()) {
-                    moves.add(new ChessMove(position, newPos, null));
-                }
+            if (thatPiece == null) {
+                moves.add(new ChessMove(myPosition, newPos, null));
+            } else if (thatPiece.getTeamColor() != myPiece.getTeamColor()) {
+                moves.add(new ChessMove(myPosition, newPos, null));
             }
         }
     }

@@ -10,48 +10,48 @@ public class RookMovesCalculator implements PieceMovesCalculator {
      * Defines where a rook can move
      *
      * @param board
-     * @param position
+     * @param myPosition
      * @return A list of ChessMove objects
      */
-    @Override
-    public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
+    public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         List<ChessMove> moves = new ArrayList<>();
 
-        checkDirection(1, 0, moves, board, position);
-        checkDirection(-1, 0, moves, board, position);
-        checkDirection(0, 1, moves, board, position);
-        checkDirection(0, -1, moves, board, position);
+        checkDirection(1, 0, board, myPosition, moves);
+        checkDirection(-1, 0, board, myPosition, moves);
+        checkDirection(0, 1, board, myPosition, moves);
+        checkDirection(0, -1, board, myPosition, moves);
 
         return moves;
     }
 
     /**
-     * Helper method that checks where the rook can move in one direction
+     * Helper method that checks where the piece can move in one direction
      *
      * @param rowChange
      * @param colChange
-     * @param moves
      * @param board
-     * @param position
+     * @param myPosition
+     * @param moves
      */
-    private void checkDirection(int rowChange, int colChange, List<ChessMove> moves, ChessBoard board, ChessPosition position) {
-        ChessPiece rook = board.getPiece(position);
-        int row = position.getRow();
-        int col = position.getColumn();
+    private void checkDirection(int rowChange, int colChange, ChessBoard board, ChessPosition myPosition, List<ChessMove> moves) {
+        int newRow = myPosition.getRow();
+        int newCol = myPosition.getColumn();
+        ChessPiece myPiece = board.getPiece(myPosition);
 
-        while ((row + rowChange < 9 && row + rowChange > 0) && (col + colChange < 9 && col + colChange > 0)) {
-            row += rowChange;
-            col += colChange;
-            ChessPosition newPos = new ChessPosition(row, col);
-            ChessPiece piece = board.getPiece(newPos);
+        while (newRow + rowChange >= 1 && newRow + rowChange <= 8 && newCol + colChange >= 1 && newCol + colChange <= 8) {
+            newRow += rowChange;
+            newCol += colChange;
 
-            if (piece == null) {
-                moves.add(new ChessMove(position, newPos, null));
+            ChessPosition newPos = new ChessPosition(newRow, newCol);
+            ChessPiece thatPiece = board.getPiece(newPos);
+
+            if (thatPiece == null) {
+                moves.add(new ChessMove(myPosition, newPos, null));
                 continue;
             }
 
-            if (piece.getTeamColor() != rook.getTeamColor()) {
-                moves.add(new ChessMove(position, newPos, null));
+            if (thatPiece.getTeamColor() != myPiece.getTeamColor()) {
+                moves.add(new ChessMove(myPosition, newPos, null));
             }
             break;
         }
