@@ -88,11 +88,13 @@ public class ChessGame {
                 Set other team's turn
              */
             if (move.getPromotionPiece() != null) {
-                board.addPiece(endPos, new ChessPiece (pieceColor, move.getPromotionPiece()));
+                board.addPiece(endPos, new ChessPiece(pieceColor, move.getPromotionPiece()));
             } else {
                 board.addPiece(endPos, board.getPiece(startPos));
             }
+
             board.addPiece(startPos, null);
+
             if (pieceColor == TeamColor.WHITE && turn == TeamColor.WHITE) {
                 setTeamTurn(TeamColor.BLACK);
             } else if (turn == TeamColor.BLACK){
