@@ -72,6 +72,7 @@ public class ChessGame {
             return null;
         }
 
+        TeamColor movingPieceColor = movingPiece.getTeamColor();
         Collection<ChessMove> candidateMoves = movingPiece.pieceMoves(board, startPosition);
         Collection<ChessMove> validMoves = new ArrayList<>();
 
@@ -79,13 +80,12 @@ public class ChessGame {
             ChessPosition startPos = move.getStartPosition();
             ChessPosition endPos = move.getEndPosition();
             ChessPiece capturedPiece = board.getPiece(move.getEndPosition());
-            TeamColor movingPieceColor = board.getPiece(startPos).getTeamColor();
 
             // Temporarily add piece to new position
             if (move.getPromotionPiece() != null) {
                 board.addPiece(endPos, new ChessPiece(movingPieceColor, move.getPromotionPiece()));
             } else {
-                board.addPiece(endPos, board.getPiece(startPos));
+                board.addPiece(endPos, movingPiece);
             }
 
             // Temporarily clear piece from old position
@@ -112,33 +112,41 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        if (validMoves(move.getStartPosition()) == null) {
-            return;
+        ChessPiece piece = board.getPiece(move.getStartPosition());
+
+        if (piece == null) {
+            throw new InvalidMoveException("Invalid move - there is no piece at the specified location.");
         }
 
-        if (validMoves(move.getStartPosition()).contains(move)) {
-            ChessPosition startPos = move.getStartPosition();
-            ChessPosition endPos = move.getEndPosition();
-            TeamColor pieceColor = board.getPiece(startPos).getTeamColor();
+        ChessPosition startPos = move.getStartPosition();
+        ChessPosition endPos = move.getEndPosition();
+        TeamColor pieceColor = piece.getTeamColor();
 
-            // Add piece to new position
-            if (move.getPromotionPiece() != null) {
-                board.addPiece(endPos, new ChessPiece(pieceColor, move.getPromotionPiece()));
-            } else {
-                board.addPiece(endPos, board.getPiece(startPos));
-            }
+        if (turn != pieceColor) {
+            throw new InvalidMoveException("Invalid move - it is not that team's turn.");
+        }
 
-            // Clear piece from old position
-            board.removePiece(startPos);
+        Collection<ChessMove> validMoves = validMoves(startPos);
 
-            // Set other team's turn
-            if (pieceColor == TeamColor.WHITE && turn == TeamColor.WHITE) {
-                setTeamTurn(TeamColor.BLACK);
-            } else if (turn == TeamColor.BLACK){
-                setTeamTurn(TeamColor.WHITE);
-            }
+        if (!validMoves.contains(move)) {
+            throw new InvalidMoveException("Invalid move - that location is an invalid move for the specified piece.");
+        }
+
+        // Add piece to new position
+        if (move.getPromotionPiece() != null) {
+            board.addPiece(endPos, new ChessPiece(pieceColor, move.getPromotionPiece()));
         } else {
-            throw new InvalidMoveException("Invalid move");
+            board.addPiece(endPos, piece);
+        }
+
+        // Clear piece from old position
+        board.removePiece(startPos);
+
+        // Switch to other team's turn
+        if (pieceColor == TeamColor.WHITE) {
+            setTeamTurn(TeamColor.BLACK);
+        } else {
+            setTeamTurn(TeamColor.WHITE);
         }
     }
 
