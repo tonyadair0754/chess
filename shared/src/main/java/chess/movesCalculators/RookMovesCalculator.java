@@ -1,13 +1,17 @@
-package chess;
+package chess.movesCalculators;
+
+import chess.ChessBoard;
+import chess.ChessMove;
+import chess.ChessPosition;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class QueenMovesCalculator extends SlidingMovesCalculator {
+public class RookMovesCalculator extends SlidingMovesCalculator {
 
     /**
-     * Defines where a queen can move
+     * Defines where a rook can move
      *
      * @param board
      * @param myPosition
@@ -20,10 +24,6 @@ public class QueenMovesCalculator extends SlidingMovesCalculator {
         checkDirection(-1, 0, board, myPosition, moves);
         checkDirection(0, 1, board, myPosition, moves);
         checkDirection(0, -1, board, myPosition, moves);
-        checkDirection(1, 1, board, myPosition, moves);
-        checkDirection(-1, 1, board, myPosition, moves);
-        checkDirection(-1, -1, board, myPosition, moves);
-        checkDirection(1, -1, board, myPosition, moves);
 
         return moves;
     }

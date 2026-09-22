@@ -75,7 +75,7 @@ public class ChessGame {
         Collection<ChessMove> candidateMoves = movingPiece.pieceMoves(board, startPosition);
         Collection<ChessMove> validMoves = new ArrayList<>();
 
-        for (ChessMove move : movingPiece.pieceMoves(board, startPosition)) {
+        for (ChessMove move : candidateMoves) {
             ChessPosition startPos = move.getStartPosition();
             ChessPosition endPos = move.getEndPosition();
             ChessPiece capturedPiece = board.getPiece(move.getEndPosition());
@@ -89,7 +89,7 @@ public class ChessGame {
             }
 
             // Temporarily clear piece from old position
-            board.addPiece(startPos, null);
+            board.removePiece(startPos);
 
             // Add the move if it doesn't put that team's king in check
             if (!isInCheck(movingPieceColor)) {
@@ -129,7 +129,7 @@ public class ChessGame {
             }
 
             // Clear piece from old position
-            board.addPiece(startPos, null);
+            board.removePiece(startPos);
 
             // Set other team's turn
             if (pieceColor == TeamColor.WHITE && turn == TeamColor.WHITE) {
