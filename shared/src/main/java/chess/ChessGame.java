@@ -76,29 +76,28 @@ public class ChessGame {
         Collection<ChessMove> validMoves = new ArrayList<>();
 
         for (ChessMove move : movingPiece.pieceMoves(board, startPosition)) {
-            ChessPiece capturedPiece = board.getPiece(move.getEndPosition());
-
             ChessPosition startPos = move.getStartPosition();
             ChessPosition endPos = move.getEndPosition();
+            ChessPiece capturedPiece = board.getPiece(move.getEndPosition());
             TeamColor movingPieceColor = board.getPiece(startPos).getTeamColor();
 
-            /*
-                Add piece to new position
-                Clear piece from old position
-                Set other team's turn
-             */
+            // Temporarily add piece to new position
             if (move.getPromotionPiece() != null) {
                 board.addPiece(endPos, new ChessPiece(movingPieceColor, move.getPromotionPiece()));
             } else {
                 board.addPiece(endPos, board.getPiece(startPos));
             }
 
+            // Temporarily clear piece from old position
             board.addPiece(startPos, null);
 
+            // Add the move if it doesn't put that team's king in check
             if (!isInCheck(movingPieceColor)) {
                 validMoves.add(move);
             }
 
+            // Restore the board
+            // The move hasn't actually been made yet. That's makeMove()'s job
             board.addPiece(startPos, movingPiece);
             board.addPiece(endPos, capturedPiece);
         }
@@ -122,19 +121,17 @@ public class ChessGame {
             ChessPosition endPos = move.getEndPosition();
             TeamColor pieceColor = board.getPiece(startPos).getTeamColor();
 
-            /*
-                Add piece to new position
-                Clear piece from old position
-                Set other team's turn
-             */
+            // Add piece to new position
             if (move.getPromotionPiece() != null) {
                 board.addPiece(endPos, new ChessPiece(pieceColor, move.getPromotionPiece()));
             } else {
                 board.addPiece(endPos, board.getPiece(startPos));
             }
 
+            // Clear piece from old position
             board.addPiece(startPos, null);
 
+            // Set other team's turn
             if (pieceColor == TeamColor.WHITE && turn == TeamColor.WHITE) {
                 setTeamTurn(TeamColor.BLACK);
             } else if (turn == TeamColor.BLACK){
