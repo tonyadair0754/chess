@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -65,15 +66,44 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        ChessPiece piece = board.getPiece(startPosition);
+        ChessPiece movingPiece = board.getPiece(startPosition);
 
-        if (piece == null) {
+        if (movingPiece == null) {
             return null;
         }
 
+        Collection<ChessMove> candidateMoves = movingPiece.pieceMoves(board, startPosition);
+        Collection<ChessMove> validMoves = new ArrayList<>();
 
+        for (ChessMove move : movingPiece.pieceMoves(board, startPosition)) {
+            ChessPiece capturedPiece = board.getPiece(move.getEndPosition());
 
-        return piece.pieceMoves(board, startPosition);
+            ChessPosition startPos = move.getStartPosition();
+            ChessPosition endPos = move.getEndPosition();
+            TeamColor movingPieceColor = board.getPiece(startPos).getTeamColor();
+
+            /*
+                Add piece to new position
+                Clear piece from old position
+                Set other team's turn
+             */
+            if (move.getPromotionPiece() != null) {
+                board.addPiece(endPos, new ChessPiece(movingPieceColor, move.getPromotionPiece()));
+            } else {
+                board.addPiece(endPos, board.getPiece(startPos));
+            }
+
+            board.addPiece(startPos, null);
+
+            if (!isInCheck(movingPieceColor)) {
+                validMoves.add(move);
+            }
+
+            board.addPiece(startPos, movingPiece);
+            board.addPiece(endPos, capturedPiece);
+        }
+
+        return validMoves;
     }
 
     /**
