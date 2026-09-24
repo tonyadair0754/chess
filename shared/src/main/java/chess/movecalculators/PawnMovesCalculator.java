@@ -1,4 +1,4 @@
-package chess.movesCalculators;
+package chess.movecalculators;
 
 import chess.*;
 

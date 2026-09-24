@@ -106,6 +106,28 @@ public class ChessGame {
     }
 
     /**
+     * Determines if a given team has any valid moves
+     *
+     * @param teamColor
+     * @return True if the given team has any possible valid moves
+     */
+    private boolean hasValidMoves(TeamColor teamColor) {
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(pos);
+
+                if (piece != null && piece.getTeamColor() == teamColor) {
+                    if (!validMoves(pos).isEmpty()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Makes a move in the chess game
      *
      * @param move chess move to perform
@@ -217,22 +239,6 @@ public class ChessGame {
         }
 
         return !hasValidMoves(teamColor);
-    }
-
-    private boolean hasValidMoves(TeamColor teamColor) {
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
-                ChessPosition pos = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(pos);
-
-                if (piece != null && piece.getTeamColor() == teamColor) {
-                    if (!validMoves(pos).isEmpty()) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     /**
