@@ -113,19 +113,17 @@ public class ChessGame {
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
         ChessPiece piece = board.getPiece(move.getStartPosition());
-
         if (piece == null) {
             throw new InvalidMoveException("Invalid move - there is no piece at the specified location.");
         }
 
-        ChessPosition startPos = move.getStartPosition();
-        ChessPosition endPos = move.getEndPosition();
         TeamColor pieceColor = piece.getTeamColor();
-
         if (turn != pieceColor) {
             throw new InvalidMoveException("Invalid move - it is not that team's turn.");
         }
 
+        ChessPosition startPos = move.getStartPosition();
+        ChessPosition endPos = move.getEndPosition();
         Collection<ChessMove> validMoves = validMoves(startPos);
 
         if (!validMoves.contains(move)) {
@@ -173,7 +171,7 @@ public class ChessGame {
         }
 
         // Check all moves of the opposing team's pieces
-        // Return true if any of their positions are equal to the king's
+        // Return true if any of their moves are equal to the king's position
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition pos = new ChessPosition(row, col);

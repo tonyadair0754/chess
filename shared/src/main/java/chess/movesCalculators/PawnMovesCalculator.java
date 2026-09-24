@@ -53,7 +53,7 @@ public class PawnMovesCalculator implements PieceMovesCalculator{
         int newCol = myPosition.getColumn();
         ChessPiece thisPiece = board.getPiece(myPosition);
 
-        if (newRow + rowChange < 1 || newRow +rowChange > 8 || newCol + colChange < 1 || newCol + colChange > 8) {
+        if (!ChessPosition.inOnBoard(newRow + rowChange, newCol + colChange)) {
             return;
         }
 

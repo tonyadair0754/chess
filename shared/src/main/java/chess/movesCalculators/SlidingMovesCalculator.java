@@ -29,7 +29,7 @@ public abstract class SlidingMovesCalculator implements PieceMovesCalculator {
         int newCol = myPosition.getColumn();
         ChessPiece myPiece = board.getPiece(myPosition);
 
-        while (newRow + rowChange >= 1 && newRow + rowChange <= 8 && newCol + colChange >= 1 && newCol + colChange <= 8) {
+        while (ChessPosition.inOnBoard(newRow + rowChange, newCol + colChange)) {
             newRow += rowChange;
             newCol += colChange;
 

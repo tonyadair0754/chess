@@ -37,6 +37,17 @@ public class ChessPosition {
     }
 
     /**
+     * Checks whether a position is on the board
+     *
+     * @param row
+     * @param col
+     * @return
+     */
+    public static boolean inOnBoard(int row, int col) {
+        return row <= 8 && row >= 1 && col <= 8 && col >= 1;
+    }
+
+    /**
      * @return which row this position is in
      * 1 codes for the bottom row
      */

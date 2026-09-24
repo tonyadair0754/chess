@@ -29,7 +29,7 @@ public abstract class SingleStepMovesCalculator implements PieceMovesCalculator 
         int newCol = myPosition.getColumn();
         ChessPiece myPiece = board.getPiece(myPosition);
 
-        if (newRow + rowChange >= 1 && newRow + rowChange <= 8 && newCol + colChange >= 1 && newCol + colChange <= 8) {
+        if (ChessPosition.inOnBoard(newRow + rowChange, newCol + colChange)) {
             ChessPosition newPos = new ChessPosition(newRow + rowChange, newCol + colChange);
             ChessPiece thatPiece = board.getPiece(newPos);
 
