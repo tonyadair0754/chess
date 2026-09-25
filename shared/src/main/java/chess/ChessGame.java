@@ -252,6 +252,12 @@ public class ChessGame {
         }
 
         for (ChessMove move : piece.pieceMoves(board, piecePosition)) {
+            // Filter out a pawn's forward moves when determining whether that pawn is attacking
+            if (piece.getPieceType() == ChessPiece.PieceType.PAWN
+                    && move.getEndPosition().getColumn() - move.getStartPosition().getColumn() == 0) {
+                continue;
+            }
+
             if (move.getEndPosition().equals(targetPosition)) {
                 return true;
             }
