@@ -2,6 +2,7 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -13,6 +14,7 @@ import java.util.Objects;
 public class ChessGame {
     private ChessGame.TeamColor turn;
     private ChessBoard board;
+    private final List<GameState> gameHistory;
 
     @Override
     public boolean equals(Object o) {
@@ -32,6 +34,9 @@ public class ChessGame {
         board = new ChessBoard();
         board.resetBoard();
         turn = ChessGame.TeamColor.WHITE;
+
+        gameHistory = new ArrayList<>();
+        gameHistory.add(new GameState(board.getBoardSnapshot(), turn, null));
     }
 
     /**
@@ -134,6 +139,7 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        // Validate the move
         ChessPiece piece = board.getPiece(move.getStartPosition());
         if (piece == null) {
             throw new InvalidMoveException("Invalid move - there is no piece at the specified location.");
@@ -168,6 +174,9 @@ public class ChessGame {
         } else {
             setTeamTurn(TeamColor.WHITE);
         }
+
+        // Add history entry once the move has been successfully completed
+        gameHistory.add(new GameState(board.getBoardSnapshot(), turn, move));
     }
 
     /**
@@ -192,8 +201,7 @@ public class ChessGame {
             }
         }
 
-        // Check all moves of the opposing team's pieces
-        // Return true if any of their moves are equal to the king's position
+        // Check whether any opposing piece can attack the king
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition pos = new ChessPosition(row, col);
@@ -264,6 +272,10 @@ public class ChessGame {
         }
 
         return false;
+    }
+
+    public List<GameState> getGameHistory() {
+        return gameHistory;
     }
 
     /**

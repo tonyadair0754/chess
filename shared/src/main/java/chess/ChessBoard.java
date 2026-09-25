@@ -1,6 +1,7 @@
 package chess;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Objects;
 
 /**
@@ -71,6 +72,23 @@ public class ChessBoard {
         addPawns(7, ChessGame.TeamColor.BLACK);
         addBackRow(1, ChessGame.TeamColor.WHITE);
         addBackRow(8, ChessGame.TeamColor.BLACK);
+    }
+
+    public ChessBoard getBoardSnapshot() {
+        ChessBoard snapshot = new ChessBoard();
+
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition position = new ChessPosition(row, col);
+                ChessPiece piece = getPiece(position);
+
+                if (piece != null) {
+                    snapshot.addPiece(position, piece);
+                }
+            }
+        }
+
+        return snapshot;
     }
 
     public void addBackRow(int row, ChessGame.TeamColor color) {
