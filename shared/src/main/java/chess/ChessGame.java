@@ -117,10 +117,11 @@ public class ChessGame {
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
 
-                if (piece != null && piece.getTeamColor() == teamColor) {
-                    if (!validMoves(pos).isEmpty()) {
-                        return true;
-                    }
+                if (
+                        piece != null
+                        && piece.getTeamColor() == teamColor
+                        && !validMoves(pos).isEmpty()) {
+                    return true;
                 }
             }
         }
