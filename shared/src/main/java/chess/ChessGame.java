@@ -117,8 +117,7 @@ public class ChessGame {
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
 
-                if (
-                        piece != null
+                if (piece != null
                         && piece.getTeamColor() == teamColor
                         && !validMoves(pos).isEmpty()) {
                     return true;
@@ -185,10 +184,10 @@ public class ChessGame {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
-                if (piece != null) {
-                    if (piece.getPieceType() == ChessPiece.PieceType.KING && piece.getTeamColor() == teamColor) {
-                        kingPosition = pos;
-                    }
+                if (piece != null
+                    && piece.getPieceType() == ChessPiece.PieceType.KING
+                    && piece.getTeamColor() == teamColor) {
+                    kingPosition = pos;
                 }
             }
         }
@@ -198,14 +197,9 @@ public class ChessGame {
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition pos = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(pos);
 
-                if (piece != null && piece.getTeamColor() != teamColor) {
-                    for (ChessMove move : piece.pieceMoves(board, pos)) {
-                        if (move.getEndPosition().equals(kingPosition)) {
-                            return true;
-                        }
-                    }
+                if (canAttackPosition(pos, kingPosition, teamColor)) {
+                    return true;
                 }
             }
         }
@@ -240,6 +234,30 @@ public class ChessGame {
         }
 
         return !hasValidMoves(teamColor);
+    }
+
+    /**
+     * Checks whether a piece at piecePosition can attack a piece at targetPosition
+     *
+     * @param piecePosition
+     * @param targetPosition
+     * @param targetTeam
+     * @return True if the piece at the starting position can attack the piece at the target position
+     */
+    private boolean canAttackPosition(ChessPosition piecePosition, ChessPosition targetPosition, TeamColor targetTeam) {
+        ChessPiece piece = board.getPiece(piecePosition);
+
+        if (piece == null || piece.getTeamColor() == targetTeam) {
+            return false;
+        }
+
+        for (ChessMove move : piece.pieceMoves(board, piecePosition)) {
+            if (move.getEndPosition().equals(targetPosition)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
