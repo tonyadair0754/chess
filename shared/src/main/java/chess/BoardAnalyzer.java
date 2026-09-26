@@ -40,7 +40,11 @@ public class BoardAnalyzer {
      * @param defendingTeam
      * @return True if the piece at the starting position can attack the piece at the target position
      */
-    private static boolean canAttackPosition(ChessBoard board, ChessPosition piecePosition, ChessPosition targetPosition, ChessGame.TeamColor defendingTeam) {
+    private static boolean canAttackPosition(
+            ChessBoard board,
+            ChessPosition piecePosition,
+            ChessPosition targetPosition,
+            ChessGame.TeamColor defendingTeam) {
         ChessPiece piece = board.getPiece(piecePosition);
 
         if (piece == null || piece.getTeamColor() == defendingTeam) {
