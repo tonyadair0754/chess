@@ -2,7 +2,8 @@
 If an opposing pawn moved forward two spaces last turn,
 and if that pawn is now directly beside (same row) one of your pawns,
     the square that was passed is added to the list of valid moves of your pawn
-    if you do move your pawn to that square,
+    if you do use your pawn to attack the opponent's pawn,
+        your pawn performs a regular diagonal capture
         the opposing pawn is removed from the board
 
 # Castling

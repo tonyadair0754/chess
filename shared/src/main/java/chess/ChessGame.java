@@ -111,34 +111,49 @@ public class ChessGame {
         // --- Castling ---
         if (movingPiece.getPieceType() == ChessPiece.PieceType.KING && !hasPieceMoved(currentPosition)) {
             int row = (movingPieceColor == TeamColor.WHITE ? 1 : 8);
+            ChessPosition homeSquare = new ChessPosition(row, 5);
 
-            // Kingside castling
-            ChessPosition kingsideRookPos = new ChessPosition(row, 8);
-            if (!hasPieceMoved(kingsideRookPos)) {
-                ChessPosition colSix = new ChessPosition(row, 6);
-                ChessPosition colSeven = new ChessPosition(row, 7);
+            // A king that isn't on its home square can't castle
+            if (currentPosition.equals(homeSquare)) {
 
-                if (board.getPiece(colSix) == null && board.getPiece(colSeven) == null) {
-                    if (!isPositionAttacked(currentPosition, movingPieceColor) &&
-                            !isPositionAttacked(colSix, movingPieceColor) &&
-                            !isPositionAttacked(colSeven, movingPieceColor)) {
-                        candidateMoves.add(new ChessMove(currentPosition, colSeven, null, ChessMove.MoveType.CASTLING));
+                // Kingside castling
+                ChessPosition kingsideRookPos = new ChessPosition(row, 8);
+                ChessPiece kingsideRook = board.getPiece(kingsideRookPos);
+                boolean kingsideRookInPlace = kingsideRook != null
+                        && kingsideRook.getPieceType() == ChessPiece.PieceType.ROOK
+                        && kingsideRook.getTeamColor() == movingPieceColor;
+
+                if (kingsideRookInPlace && !hasPieceMoved(kingsideRookPos)) {
+                    ChessPosition colSix = new ChessPosition(row, 6);
+                    ChessPosition colSeven = new ChessPosition(row, 7);
+
+                    if (board.getPiece(colSix) == null && board.getPiece(colSeven) == null) {
+                        if (!isPositionAttacked(currentPosition, movingPieceColor) &&
+                                !isPositionAttacked(colSix, movingPieceColor) &&
+                                !isPositionAttacked(colSeven, movingPieceColor)) {
+                            candidateMoves.add(new ChessMove(currentPosition, colSeven, null, ChessMove.MoveType.CASTLING));
+                        }
                     }
                 }
-            }
 
-            // Queenside castling
-            ChessPosition queensideRookPos = new ChessPosition(row, 1);
-            if (!hasPieceMoved(queensideRookPos)) {
-                ChessPosition colTwo = new ChessPosition(row, 2);
-                ChessPosition colThree = new ChessPosition(row, 3);
-                ChessPosition colFour = new ChessPosition(row, 4);
+                // Queenside castling
+                ChessPosition queensideRookPos = new ChessPosition(row, 1);
+                ChessPiece queensideRook = board.getPiece(queensideRookPos);
+                boolean queensideRookInPlace = queensideRook != null
+                        && queensideRook.getPieceType() == ChessPiece.PieceType.ROOK
+                        && queensideRook.getTeamColor() == movingPieceColor;
 
-                if (board.getPiece(colTwo) == null && board.getPiece(colThree) == null && board.getPiece(colFour) == null) {
-                    if (!isPositionAttacked(currentPosition, movingPieceColor) &&
-                            !isPositionAttacked(colThree, movingPieceColor) &&
-                            !isPositionAttacked(colFour, movingPieceColor)) {
-                        candidateMoves.add(new ChessMove(currentPosition, colThree, null, ChessMove.MoveType.CASTLING));
+                if (queensideRookInPlace && !hasPieceMoved(queensideRookPos)) {
+                    ChessPosition colTwo = new ChessPosition(row, 2);
+                    ChessPosition colThree = new ChessPosition(row, 3);
+                    ChessPosition colFour = new ChessPosition(row, 4);
+
+                    if (board.getPiece(colTwo) == null && board.getPiece(colThree) == null && board.getPiece(colFour) == null) {
+                        if (!isPositionAttacked(currentPosition, movingPieceColor) &&
+                                !isPositionAttacked(colThree, movingPieceColor) &&
+                                !isPositionAttacked(colFour, movingPieceColor)) {
+                            candidateMoves.add(new ChessMove(currentPosition, colThree, null, ChessMove.MoveType.CASTLING));
+                        }
                     }
                 }
             }
@@ -271,6 +286,7 @@ public class ChessGame {
             throw new InvalidMoveException("Invalid move - that location is an invalid move for the specified .");
         }
 
+        // Actually make the move now that it's confirmed valid
         if (actualMove.getMoveType() == ChessMove.MoveType.NORMAL) {
             // Add piece to new position
             if (move.getPromotionPiece() != null) {
