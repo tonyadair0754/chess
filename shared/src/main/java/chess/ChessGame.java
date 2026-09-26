@@ -257,11 +257,21 @@ public class ChessGame {
         ChessPosition endPos = move.getEndPosition();
         Collection<ChessMove> validMoves = validMoves(startPos);
 
-        if (!validMoves.contains(move)) {
-            throw new InvalidMoveException("Invalid move - that location is an invalid move for the specified piece.");
+        // Find the matching move that ChessGame itself generated, since it carries the correct MoveType (NORMAL, EN_PASSANT, or CASTLING).
+        // The move passed in by the caller might be a regular 3-argument ChessMove, which defaults to NORMAL
+        ChessMove actualMove = null;
+        for (ChessMove candidate : validMoves) {
+            if (candidate.equals(move)) {
+                actualMove = candidate;
+                break;
+            }
         }
 
-        if (move.getMoveType() == ChessMove.MoveType.NORMAL) {
+        if (actualMove == null) {
+            throw new InvalidMoveException("Invalid move - that location is an invalid move for the specified .");
+        }
+
+        if (actualMove.getMoveType() == ChessMove.MoveType.NORMAL) {
             // Add piece to new position
             if (move.getPromotionPiece() != null) {
                 board.addPiece(endPos, new ChessPiece(pieceColor, move.getPromotionPiece()));
@@ -271,7 +281,7 @@ public class ChessGame {
 
             board.removePiece(startPos);
 
-        } else if (move.getMoveType() == ChessMove.MoveType.EN_PASSANT) {
+        } else if (actualMove.getMoveType() == ChessMove.MoveType.EN_PASSANT) {
             // Move pawn
             board.addPiece(endPos, piece);
             board.removePiece(startPos);
@@ -281,7 +291,8 @@ public class ChessGame {
             int capturedPawnCol = move.getEndPosition().getColumn();
             ChessPosition capturedPawnPos = new ChessPosition(capturedPawnRow, capturedPawnCol);
             board.removePiece(capturedPawnPos);
-        } else if (move.getMoveType() == ChessMove.MoveType.CASTLING) {
+
+        } else if (actualMove.getMoveType() == ChessMove.MoveType.CASTLING) {
             int row = startPos.getRow();
 
             // Rook is kingside
@@ -416,6 +427,13 @@ public class ChessGame {
         return false;
     }
 
+    /**
+     * Finds the position of a piece, given that piece's type and color (primarily used to find the king, as there is only one king per team)
+     *
+     * @param pieceType
+     * @param teamColor
+     * @return
+     */
     private ChessPosition findPiecePos(ChessPiece.PieceType pieceType, TeamColor teamColor) {
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
