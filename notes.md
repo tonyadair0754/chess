@@ -14,3 +14,80 @@ and if the square the king passes through is not attacked,
 and if the square the king ends on is not attacked,
     the king moves two squares toward the rook
     the rook jumps to the other side of the king to sit right next to it (same row)
+
+
+
+# Phase 3 outline
+Setup
+↓
+Model records
+↓
+DAO interfaces + memory implementations
+    UserData, GameData, AuthData records
+↓
+clear()
+↓
+register()
+↓
+login()
+↓
+logout()
+↓
+listGames()
+↓
+createGame()
+↓
+joinGame()
+
+
+Suppose /session receives:
+{
+"username": "Tony",
+"password": "abc123"
+}
+Then:
+record LoginRequest(String username, String password) {}
+record LoginResult(String username, String authToken) {}
+
+
+Server
+↓
+Handler
+↓
+Service
+↓
+DAO interfaces
+↓
+Memory DAO implementations
+
+interface UserDAO
+class UserDAOMemory implements UserDAO
+
+interface GameDAO
+class GameDAOMemory implements GameDAO
+
+interface AuthDAO
+class AuthDAOMemory implements AuthDAO
+
+UserService uses UserDAO
+GameService uses GameDAO
+AuthService uses AuthDAO
+
+
+server/
+├── Server
+├── Handler(s)
+├── Service
+└── dataaccess/
+    ├── UserDAO
+    ├── UserDAOMemory
+    ├── GameDAO
+    ├── GameDAOMemory
+    ├── AuthDAO
+    └── AuthDAOMemory
+
+shared/
+└── model/
+    ├── UserData
+    ├── GameData
+    └── AuthData
