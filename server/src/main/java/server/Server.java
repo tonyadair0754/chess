@@ -1,6 +1,11 @@
 package server;
 
+import com.google.gson.Gson;
+import handler.Handler;
 import io.javalin.*;
+import io.javalin.http.Context;
+
+import java.util.Map;
 
 /**
  * The Server receives network HTTP requests and sends them to the correct handler for processing.
@@ -14,7 +19,7 @@ public class Server {
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
-        // Register your endpoints and exception handlers here.
+        javalin.delete("/db", Handler::clearDb);
 
     }
 
