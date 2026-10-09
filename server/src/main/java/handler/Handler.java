@@ -1,6 +1,6 @@
 package handler;
 
-import com.google.gson.Gson;
+import dataaccess.DataAccessException;
 import io.javalin.http.Context;
 import service.DatabaseService;
 
@@ -14,13 +14,20 @@ import java.util.Map;
  * This could include converting thrown exception types into the appropriate HTTP status codes if necessary.
  */
 public class Handler {
-    public static void clearDb(Context ctx) {
-        DatabaseService.clear();
+    private final DatabaseService databaseService;
 
-        var r = Map.of();
-        var Gson = new Gson();
-        ctx.status(200);
-        ctx.json(Gson.toJson(r));
+    public Handler(DatabaseService databaseService) {
+        this.databaseService = databaseService;
     }
 
+    public void clearDb(Context ctx) {
+        try {
+            databaseService.clear();
+            ctx.status(200);
+            ctx.json(Map.of());
+        } catch (DataAccessException e) {
+            ctx.status(500);
+            ctx.json(Map.of("message", "Error: " + e.getMessage()));
+        }
+    }
 }

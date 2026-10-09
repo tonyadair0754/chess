@@ -21,10 +21,6 @@ public class AuthDAOMemory implements AuthDAO {
     }
 
     public void clear() throws DataAccessException {
-        try {
-            authTokens.clear();
-        } catch (Exception e) {
-            System.out.println("A data access exception occurred.");
-        }
+        authTokens.clear();
     }
 }
