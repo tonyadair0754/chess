@@ -1,7 +1,9 @@
 package dataaccess;
 
-public class UserDAO {
+import java.util.HashMap;
+
+public interface UserDAO {
     // createUser()
     // getUser();
-    // clear()
+    void clear() throws DataAccessException;
 }

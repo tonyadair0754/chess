@@ -1,9 +1,9 @@
 package dataaccess;
 
-public class GameDAO {
+public interface GameDAO {
     // createGame()
     // getGame()
     // listGames()
     // updateGame()
-    // clear
+    void clear() throws DataAccessException;
 }

@@ -14,21 +14,13 @@ import java.util.Map;
  * This could include converting thrown exception types into the appropriate HTTP status codes if necessary.
  */
 public class Handler {
-    // Method that takes an HTTP request (body contains a JSON object)
-    // this method turns the JSON object into usable objects and data
-    // this method calls UserService, GameService, or AuthService as needed
-
-    // Method that takes a usable java object
-    // this method turns that java object back into JSON
-    // this method returns the HTTP response and JSON object
-
     public static void clearDb(Context ctx) {
         DatabaseService.clear();
 
         var r = Map.of();
-        var json = new Gson();
+        var Gson = new Gson();
         ctx.status(200);
-        ctx.json(json.toJson(r));
+        ctx.json(Gson.toJson(r));
     }
 
 }

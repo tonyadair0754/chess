@@ -1,6 +1,8 @@
 package server;
 
 import com.google.gson.Gson;
+import dataaccess.UserDAO;
+import dataaccess.UserDAOMemory;
 import handler.Handler;
 import io.javalin.*;
 import io.javalin.http.Context;
@@ -21,6 +23,7 @@ public class Server {
 
         javalin.delete("/db", Handler::clearDb);
 
+        UserDAO userDAOMemory = new UserDAOMemory();
     }
 
     public int run(int desiredPort) {
