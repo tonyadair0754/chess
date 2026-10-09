@@ -9,7 +9,7 @@ import java.util.Map;
 public class UserDAOMemory implements UserDAO {
     private final Map<String, UserData> UserData = new HashMap<>();
 
-    public void createUser(UserData userData) {
+    public void createUser(UserData userData) throws DataAccessException{
         UserData.put(userData.username(), userData);
         UserData.put(userData.password(), userData);
         UserData.put(userData.email(), userData);

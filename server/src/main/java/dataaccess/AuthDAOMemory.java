@@ -20,7 +20,7 @@ public class AuthDAOMemory implements AuthDAO {
         authTokens.remove(authToken);
     }
 
-    public void clear() throws DataAccessException{
+    public void clear() throws DataAccessException {
         try {
             authTokens.clear();
         } catch (Exception e) {

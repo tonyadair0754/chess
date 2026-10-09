@@ -14,7 +14,7 @@ public class GameDAOMemory implements GameDAO {
         games.put(gameData.gameID(), gameData);
     }
 
-    public GameData getGame(int gameID) throws DataAccessException{
+    public GameData getGame(int gameID) throws DataAccessException {
         return games.get(gameID);
     }
 
@@ -27,7 +27,7 @@ public class GameDAOMemory implements GameDAO {
         games.put(gameData.gameID(), gameData);
     }
 
-    public void clear() throws DataAccessException{
+    public void clear() throws DataAccessException {
         try {
             games.clear();
         } catch (Exception e) {

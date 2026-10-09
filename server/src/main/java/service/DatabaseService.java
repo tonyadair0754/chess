@@ -1,21 +1,24 @@
 package service;
 
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 
 public class DatabaseService {
-    private UserDAO UserDAO;
-    private AuthDAO AuthDAO;
-    private GameDAO GameDAO;
+    private UserDAO userDao;
+    private AuthDAO authDao;
+    private GameDAO gameDao;
 
-    public DatabaseService(UserDAO UserDAO, AuthDAO AuthDAO, GameDAO GameDAO) {
-        this.UserDAO = UserDAO;
-        this.AuthDAO = AuthDAO;
-        this.GameDAO = GameDAO;
+    public DatabaseService(UserDAO userDao, AuthDAO authDao, GameDAO gameDao) {
+        this.userDao = userDao;
+        this.authDao = authDao;
+        this.gameDao = gameDao;
     }
 
-    public void clear() {
-
+    public void clear() throws DataAccessException {
+        userDao.clear();
+        authDao.clear();
+        gameDao.clear();
     }
 }
