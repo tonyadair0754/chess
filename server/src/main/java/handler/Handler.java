@@ -1,5 +1,6 @@
 package handler;
 
+import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import io.javalin.http.Context;
 import service.DatabaseService;
@@ -15,6 +16,7 @@ import java.util.Map;
  */
 public class Handler {
     private final DatabaseService databaseService;
+    private final Gson gson = new Gson();
 
     public Handler(DatabaseService databaseService) {
         this.databaseService = databaseService;
@@ -24,10 +26,12 @@ public class Handler {
         try {
             databaseService.clear();
             ctx.status(200);
-            ctx.json(Map.of());
+            ctx.result(gson.toJson(Map.of()));
+            ctx.contentType("application/json");
         } catch (DataAccessException e) {
             ctx.status(500);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
+            ctx.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
+            ctx.contentType("application/json");
         }
     }
 }

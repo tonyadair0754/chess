@@ -1,13 +1,9 @@
 package server;
 
-import com.google.gson.Gson;
-import dataaccess.UserDAO;
-import dataaccess.UserDAOMemory;
+import dataaccess.*;
 import handler.Handler;
 import io.javalin.*;
-import io.javalin.http.Context;
-
-import java.util.Map;
+import service.DatabaseService;
 
 /**
  * The Server receives network HTTP requests and sends them to the correct handler for processing.
@@ -19,11 +15,19 @@ public class Server {
     private final Javalin javalin;
 
     public Server() {
+        // --- Create new instances for all layers ---
+        UserDAO userDao = new UserDAOMemory();
+        AuthDAO authDao = new AuthDAOMemory();
+        GameDAO gameDao = new GameDAOMemory();
+
+        DatabaseService databaseService = new DatabaseService(userDao, authDao, gameDao);
+
+        Handler handler = new Handler(databaseService);
+
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
-        javalin.delete("/db", Handler::clearDb);
-
-        UserDAO userDAOMemory = new UserDAOMemory();
+        // --- Endpoints ---
+        javalin.delete("/db", handler::clearDb);
     }
 
     public int run(int desiredPort) {
