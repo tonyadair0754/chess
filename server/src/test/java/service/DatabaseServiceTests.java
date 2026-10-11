@@ -40,7 +40,7 @@ public class DatabaseServiceTests {
         // 2. Act (Call the method you want to test)
         databaseService.clear();
 
-        // 3. Assert (Check that the result matches what you expect)
+        // 3. Assert (Verify that the result matches what you expect)
         assertNull(userDao.getUser("mrMe"), "User should be null after clearing database");
         assertNull(authDao.getAuth("auth-token"), "Auth token should be null after clearing database");
         assertTrue(gameDao.listGames().isEmpty(), "Game list should be empty after clearing database");

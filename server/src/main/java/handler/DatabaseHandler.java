@@ -14,24 +14,26 @@ import java.util.Map;
  * When the service responds, the handler converts the response object back to JSON and sends the HTTP response.
  * This could include converting thrown exception types into the appropriate HTTP status codes if necessary.
  */
-public class Handler {
+public class DatabaseHandler {
     private final DatabaseService databaseService;
     private final Gson gson = new Gson();
 
-    public Handler(DatabaseService databaseService) {
+    public DatabaseHandler(DatabaseService databaseService) {
         this.databaseService = databaseService;
     }
 
     public void clearDb(Context ctx) {
         try {
             databaseService.clear();
-            ctx.status(200);
-            ctx.result(gson.toJson(Map.of()));
-            ctx.contentType("application/json");
+            sendJsonResponse(ctx, 200, Map.of());
         } catch (DataAccessException e) {
-            ctx.status(500);
-            ctx.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
-            ctx.contentType("application/json");
+            sendJsonResponse(ctx, 500, Map.of("message", e.getMessage()));
         }
+    }
+
+    private void sendJsonResponse(Context ctx, int status, Object body) {
+        ctx.status(status);
+        ctx.contentType("application/json");
+        ctx.result(gson.toJson(body));
     }
 }

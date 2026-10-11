@@ -1,9 +1,11 @@
 package server;
 
 import dataaccess.*;
-import handler.Handler;
+import handler.DatabaseHandler;
+import handler.UserHandler;
 import io.javalin.*;
 import service.DatabaseService;
+import service.UserService;
 
 /**
  * The Server receives network HTTP requests and sends them to the correct handler for processing.
@@ -21,13 +23,16 @@ public class Server {
         GameDAO gameDao = new GameDAOMemory();
 
         DatabaseService databaseService = new DatabaseService(userDao, authDao, gameDao);
+        UserService userService = new UserService(userDao, authDao);
 
-        Handler handler = new Handler(databaseService);
+        DatabaseHandler databaseHandler = new DatabaseHandler(databaseService);
+        UserHandler userHandler = new UserHandler(userService);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
         // --- Endpoints ---
-        javalin.delete("/db", handler::clearDb);
+        javalin.delete("/db", databaseHandler::clearDb);
+        javalin.post("/user", userHandler::registerUser);
     }
 
     public int run(int desiredPort) {

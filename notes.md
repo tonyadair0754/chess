@@ -47,7 +47,7 @@ joinGame ()
 2. AAA pattern:
    Arrange: Create objects and set up test data
    Act: Call the method you want to test
-   Assert: Check that the result matches what you expect
+   Assert: Verify that the result matches what you expect
 
 3. Assertions: helper methods that pass or fail the test
    assertEquals (expected, actual) : Checks if two values are equal
