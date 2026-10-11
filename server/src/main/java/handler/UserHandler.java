@@ -4,10 +4,9 @@ import com.google.gson.Gson;
 import dataaccess.AlreadyTakenException;
 import dataaccess.BadRequestException;
 import dataaccess.DataAccessException;
+import dataaccess.UnauthorizedException;
 import io.javalin.http.Context;
-import service.RegisterRequest;
-import service.RegisterResult;
-import service.UserService;
+import service.*;
 
 import java.util.Map;
 
@@ -36,6 +35,21 @@ public class UserHandler {
             sendJsonResponse(ctx, 400, Map.of("message", e.getMessage()));
         } catch (AlreadyTakenException e) {
             sendJsonResponse(ctx, 403, Map.of("message", e.getMessage()));
+        } catch (DataAccessException e) {
+            sendJsonResponse(ctx, 500, Map.of("message", e.getMessage()));
+        }
+    }
+
+    public void loginUser(Context ctx) {
+        try {
+            LoginRequest request = gson.fromJson(ctx.body(), LoginRequest.class);
+            LoginResult result = userService.login(request);
+            sendJsonResponse(ctx, 200, result);
+
+        } catch (BadRequestException e) {
+            sendJsonResponse(ctx, 400, Map.of("message", e.getMessage()));
+        } catch (UnauthorizedException e) {
+            sendJsonResponse(ctx, 401, Map.of("message", e.getMessage()));
         } catch (DataAccessException e) {
             sendJsonResponse(ctx, 500, Map.of("message", e.getMessage()));
         }

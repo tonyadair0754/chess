@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class UserServiceTests {
 
-    // Successful
     @Test
     public void registerSuccess() throws Exception {
 
@@ -44,9 +43,8 @@ public class UserServiceTests {
         assertEquals("mrMe", storedAuth.username());
     }
 
-    // Already Taken Exception
     @Test
-    void usernameAlreadyTaken() throws Exception {
+    void registerUsernameAlreadyTaken() throws Exception {
         // Arrange
         UserDAO userDao = new UserDAOMemory();
         AuthDAO authDao = new AuthDAOMemory();
@@ -54,17 +52,14 @@ public class UserServiceTests {
         UserService userService = new UserService(userDao, authDao);
 
         RegisterRequest first = new RegisterRequest("mrMe", "password123", "mrMe@example.com");
-
-        // Act
         userService.register(first);
 
         RegisterRequest duplicate = new RegisterRequest("mrMe", "differentPassword", "differentEmail@example.com");
 
-        // Assert
+        // Act and assert
         assertThrows(dataaccess.AlreadyTakenException.class, () -> userService.register(duplicate));
     }
 
-    // Bad Request Exception
     @Test
     void registerMissingUsername() throws Exception {
         // Arrange
@@ -72,13 +67,75 @@ public class UserServiceTests {
         AuthDAO authDao = new AuthDAOMemory();
 
         UserService userService = new UserService(userDao, authDao);
-
-        // Act
         RegisterRequest request = new RegisterRequest(null, "password123", "mrMe@example.com"
         );
 
-        // Assert
+        // Act and assert
         assertThrows(dataaccess.BadRequestException.class, () -> userService.register(request)
         );
+    }
+
+    @Test
+    public void loginSuccess() throws Exception {
+
+        // Arrange
+        UserDAO userDao = new UserDAOMemory();
+        AuthDAO authDao = new AuthDAOMemory();
+        UserService userService = new UserService(userDao, authDao);
+
+        // Register a user and prepare login request
+        userService.register(new RegisterRequest("mrMe", "password123", "mrMe@example.com"));
+        LoginRequest request = new LoginRequest("mrMe", "password123");
+
+        // Act
+        LoginResult result = userService.login(request);
+
+        // Assert: verify the result
+        assertEquals("mrMe", result.username());
+        assertNotNull(result.authToken());
+        assertFalse(result.authToken().isBlank());
+
+        // Assert: verify the auth token was stored
+        AuthData storedAuth = authDao.getAuth(result.authToken());
+        assertNotNull(storedAuth);
+        assertEquals("mrMe", storedAuth.username());
+    }
+
+    @Test
+    void loginIncorrectPassword() throws Exception {
+        // Arrange
+        UserDAO userDao = new UserDAOMemory();
+        AuthDAO authDao = new AuthDAOMemory();
+        UserService userService = new UserService(userDao, authDao);
+
+        userService.register(new RegisterRequest("mrMe", "password123", "mrMe@example.com"));
+        LoginRequest request = new LoginRequest("mrMe", "incorrectPassword");
+
+        // Act and assert
+        assertThrows(UnauthorizedException.class, () -> userService.login(request));
+    }
+
+    @Test
+    void loginUnknownUsername() throws Exception {
+        // Arrange
+        UserDAO userDao = new UserDAOMemory();
+        AuthDAO authDao = new AuthDAOMemory();
+        UserService userService = new UserService(userDao, authDao);
+
+        LoginRequest request = new LoginRequest("unknownUser", "password123");
+
+        // Act and assert
+        assertThrows(UnauthorizedException.class, () -> userService.login(request));
+    }
+
+    @Test
+    void loginMissingPassword() throws Exception {
+        UserDAO userDao = new UserDAOMemory();
+        AuthDAO authDao = new AuthDAOMemory();
+        UserService userService = new UserService(userDao, authDao);
+
+        LoginRequest request = new LoginRequest("mrMe", null);
+
+        assertThrows(BadRequestException.class, () -> userService.login(request));
     }
 }

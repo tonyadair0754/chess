@@ -33,6 +33,7 @@ public class Server {
         // --- Endpoints ---
         javalin.delete("/db", databaseHandler::clearDb);
         javalin.post("/user", userHandler::registerUser);
+        javalin.post("/session", userHandler::loginUser);
     }
 
     public int run(int desiredPort) {

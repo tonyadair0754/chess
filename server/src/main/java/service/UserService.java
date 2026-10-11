@@ -17,6 +17,7 @@ public class UserService {
 
     public RegisterResult register(RegisterRequest registerRequest)
             throws DataAccessException, AlreadyTakenException, BadRequestException {
+
         // Validate inputs
         if (registerRequest == null ||
                 registerRequest.username() == null || registerRequest.username().isBlank() ||
@@ -45,6 +46,32 @@ public class UserService {
 
         return new RegisterResult(registerRequest.username(), token);
     }
-    // public LoginResult login(LoginRequest loginRequest) {}
+
+    public LoginResult login(LoginRequest loginRequest)
+            throws DataAccessException, UnauthorizedException, BadRequestException {
+
+        // Validate inputs
+        if (loginRequest == null ||
+                loginRequest.username() == null || loginRequest.username().isBlank() ||
+                loginRequest.password() == null || loginRequest.password().isBlank()) {
+            throw new BadRequestException("Error: bad request");
+        }
+
+        // Fetch stored user record from DAO
+        UserData user = userDao.getUser(loginRequest.username());
+
+        // Check if username already exists and if passwords match
+        if (userDao.getUser(loginRequest.username()) == null
+                || !user.password().equals(loginRequest.password())) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        // Create and save new auth token
+        String token = UUID.randomUUID().toString();
+        AuthData newAuth = new AuthData(token, loginRequest.username());
+        authDao.createAuth(newAuth);
+
+        return new LoginResult(loginRequest.username(), token);
+    }
     // public void logout(LogoutRequest logoutRequest) {}
 }
