@@ -55,6 +55,20 @@ public class UserHandler {
         }
     }
 
+    public void logoutUser(Context ctx) {
+        try {
+            String authToken = ctx.header("authorization");
+            LogoutRequest request = new LogoutRequest(authToken);
+            userService.logout(request);
+            sendJsonResponse(ctx, 200, Map.of());
+
+        } catch (UnauthorizedException e) {
+            sendJsonResponse(ctx, 401, Map.of("message", e.getMessage()));
+        } catch (DataAccessException e) {
+            sendJsonResponse(ctx, 500, Map.of("message", e.getMessage()));
+        }
+    }
+
     private void sendJsonResponse(Context ctx, int status, Object body) {
         ctx.status(status);
         ctx.contentType("application/json");

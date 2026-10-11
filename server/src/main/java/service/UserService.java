@@ -73,5 +73,25 @@ public class UserService {
 
         return new LoginResult(loginRequest.username(), token);
     }
-    // public void logout(LogoutRequest logoutRequest) {}
+
+    public void logout(LogoutRequest logoutRequest)
+            throws DataAccessException, UnauthorizedException {
+
+        // Validate inputs
+        if (logoutRequest == null ||
+                logoutRequest.authToken() == null || logoutRequest.authToken().isBlank()){
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        // Fetch stored auth record from DAO
+        AuthData auth = authDao.getAuth(logoutRequest.authToken());
+
+        // Check if token exists in database/memory
+        if (auth == null) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        // Delete session token
+        authDao.deleteAuth(logoutRequest.authToken());
+    }
 }

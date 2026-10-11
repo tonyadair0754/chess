@@ -138,4 +138,65 @@ public class UserServiceTests {
 
         assertThrows(BadRequestException.class, () -> userService.login(request));
     }
+
+    @Test
+    public void logoutSuccess() throws Exception {
+
+        // Arrange
+        UserDAO userDao = new UserDAOMemory();
+        AuthDAO authDao = new AuthDAOMemory();
+        UserService userService = new UserService(userDao, authDao);
+
+        // Register and login a user to obtain an auth token
+        userService.register(new RegisterRequest("mrMe", "password123", "mrMe@example.com"));
+        LoginRequest loginRequest = new LoginRequest("mrMe", "password123");
+        LoginResult loginResult = userService.login(loginRequest);
+
+        String token = loginResult.authToken();
+        LogoutRequest logoutRequest = new LogoutRequest(token);
+
+        // Verify token exists before trying to logout
+        assertNotNull(authDao.getAuth(token));
+
+        // Act
+        userService.logout(logoutRequest);
+
+        // Assert: the token should no longer exist
+        assertNull(authDao.getAuth(token));
+    }
+
+    @Test
+    void logoutInvalidToken() throws Exception {
+        // Arrange
+        UserDAO userDao = new UserDAOMemory();
+        AuthDAO authDao = new AuthDAOMemory();
+        UserService userService = new UserService(userDao, authDao);
+
+        String token = "not-a-real-token";
+        LogoutRequest logoutRequest = new LogoutRequest(token);
+
+        // Act and assert
+        assertThrows(UnauthorizedException.class, () -> userService.logout(logoutRequest));
+    }
+
+    @Test
+    void logoutTwice() throws Exception {
+        // Arrange
+        UserDAO userDao = new UserDAOMemory();
+        AuthDAO authDao = new AuthDAOMemory();
+        UserService userService = new UserService(userDao, authDao);
+
+        userService.register(new RegisterRequest("mrMe", "password123", "mrMe@example.com"));
+
+        LoginResult loginResult = userService.login(new LoginRequest("mrMe", "password123"));
+
+        String token = loginResult.authToken();
+        LogoutRequest logoutRequest = new LogoutRequest(token);
+
+        // Act: first logout succeeds
+        userService.logout(logoutRequest);
+
+        // Assert: second logout should fail
+        assertThrows(UnauthorizedException.class, () -> userService.logout(logoutRequest));
+    }
 }
