@@ -2,9 +2,11 @@ package server;
 
 import dataaccess.*;
 import handler.DatabaseHandler;
+import handler.GameHandler;
 import handler.UserHandler;
 import io.javalin.*;
 import service.DatabaseService;
+import service.GameService;
 import service.UserService;
 
 /**
@@ -24,9 +26,11 @@ public class Server {
 
         DatabaseService databaseService = new DatabaseService(userDao, authDao, gameDao);
         UserService userService = new UserService(userDao, authDao);
+        GameService gameService = new GameService(authDao, gameDao);
 
         DatabaseHandler databaseHandler = new DatabaseHandler(databaseService);
         UserHandler userHandler = new UserHandler(userService);
+        GameHandler gameHandler = new GameHandler(gameService);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
@@ -35,6 +39,7 @@ public class Server {
         javalin.post("/user", userHandler::registerUser);
         javalin.post("/session", userHandler::loginUser);
         javalin.delete("/session", userHandler::logoutUser);
+        javalin.get("/game", gameHandler::listGames);
     }
 
     public int run(int desiredPort) {

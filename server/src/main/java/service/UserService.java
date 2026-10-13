@@ -79,14 +79,12 @@ public class UserService {
 
         // Validate inputs
         if (logoutRequest == null ||
-                logoutRequest.authToken() == null || logoutRequest.authToken().isBlank()){
+                logoutRequest.authToken() == null || logoutRequest.authToken().isBlank()) {
             throw new UnauthorizedException("Error: unauthorized");
         }
 
-        // Fetch stored auth record from DAO
-        AuthData auth = authDao.getAuth(logoutRequest.authToken());
-
         // Check if token exists in database/memory
+        AuthData auth = authDao.getAuth(logoutRequest.authToken());
         if (auth == null) {
             throw new UnauthorizedException("Error: unauthorized");
         }

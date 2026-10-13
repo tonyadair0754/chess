@@ -4,40 +4,56 @@ import dataaccess.*;
 import model.AuthData;
 import model.UserData;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserServiceTests {
+    private UserDAO userDao;
+    private AuthDAO authDao;
+    private UserService userService;
+
+    @BeforeEach
+    void setUp() {
+        userDao = new UserDAOMemory();
+        authDao = new AuthDAOMemory();
+        userService = new UserService(userDao, authDao);
+    }
+
+    private void registerTestUser() throws Exception {
+        userService.register(new RegisterRequest("mrMe", "password123", "mrMe@example.com"));
+    }
+
+    private String loginTestUser() throws Exception {
+        registerTestUser();
+
+        LoginResult result = userService.login(new LoginRequest("mrMe", "password123"));
+
+        return result.authToken();
+    }
 
     @Test
     public void registerSuccess() throws Exception {
-
-        // 1. Arrange (Create objects and set up test data)
-        UserDAO userDao = new UserDAOMemory();
-        AuthDAO authDao = new AuthDAOMemory();
-
-        UserService userService = new UserService(userDao, authDao);
-
         // Create sample data records
         RegisterRequest request = new RegisterRequest("mrMe", "password123", "mrMe@example.com");
 
-        // 2. Act (Call the method you want to test)
+        // Call the method we want to test
         RegisterResult result = userService.register(request);
 
-        // 3. Assert: verify result
+        // Verify result
         assertEquals("mrMe", result.username());
         assertNotNull(result.authToken());
         assertFalse(result.authToken().isBlank());
 
-        // Assert: verify the user was stored
+        // Verify the user was stored
         UserData storedUser = userDao.getUser("mrMe");
         assertNotNull(storedUser);
         assertEquals("mrMe", storedUser.username());
         assertEquals("password123", storedUser.password());
         assertEquals("mrMe@example.com", storedUser.email());
 
-        // Assert: verify the auth token was stored
+        // Verify the auth token was stored
         AuthData storedAuth = authDao.getAuth(result.authToken());
         assertNotNull(storedAuth);
         assertEquals("mrMe", storedAuth.username());
@@ -45,12 +61,6 @@ public class UserServiceTests {
 
     @Test
     void registerUsernameAlreadyTaken() throws Exception {
-        // Arrange
-        UserDAO userDao = new UserDAOMemory();
-        AuthDAO authDao = new AuthDAOMemory();
-
-        UserService userService = new UserService(userDao, authDao);
-
         RegisterRequest first = new RegisterRequest("mrMe", "password123", "mrMe@example.com");
         userService.register(first);
 
@@ -62,11 +72,6 @@ public class UserServiceTests {
 
     @Test
     void registerMissingUsername() throws Exception {
-        // Arrange
-        UserDAO userDao = new UserDAOMemory();
-        AuthDAO authDao = new AuthDAOMemory();
-
-        UserService userService = new UserService(userDao, authDao);
         RegisterRequest request = new RegisterRequest(null, "password123", "mrMe@example.com"
         );
 
@@ -77,14 +82,8 @@ public class UserServiceTests {
 
     @Test
     public void loginSuccess() throws Exception {
-
-        // Arrange
-        UserDAO userDao = new UserDAOMemory();
-        AuthDAO authDao = new AuthDAOMemory();
-        UserService userService = new UserService(userDao, authDao);
-
         // Register a user and prepare login request
-        userService.register(new RegisterRequest("mrMe", "password123", "mrMe@example.com"));
+        registerTestUser();
         LoginRequest request = new LoginRequest("mrMe", "password123");
 
         // Act
@@ -103,12 +102,7 @@ public class UserServiceTests {
 
     @Test
     void loginIncorrectPassword() throws Exception {
-        // Arrange
-        UserDAO userDao = new UserDAOMemory();
-        AuthDAO authDao = new AuthDAOMemory();
-        UserService userService = new UserService(userDao, authDao);
-
-        userService.register(new RegisterRequest("mrMe", "password123", "mrMe@example.com"));
+        registerTestUser();
         LoginRequest request = new LoginRequest("mrMe", "incorrectPassword");
 
         // Act and assert
@@ -117,11 +111,6 @@ public class UserServiceTests {
 
     @Test
     void loginUnknownUsername() throws Exception {
-        // Arrange
-        UserDAO userDao = new UserDAOMemory();
-        AuthDAO authDao = new AuthDAOMemory();
-        UserService userService = new UserService(userDao, authDao);
-
         LoginRequest request = new LoginRequest("unknownUser", "password123");
 
         // Act and assert
@@ -130,10 +119,6 @@ public class UserServiceTests {
 
     @Test
     void loginMissingPassword() throws Exception {
-        UserDAO userDao = new UserDAOMemory();
-        AuthDAO authDao = new AuthDAOMemory();
-        UserService userService = new UserService(userDao, authDao);
-
         LoginRequest request = new LoginRequest("mrMe", null);
 
         assertThrows(BadRequestException.class, () -> userService.login(request));
@@ -141,37 +126,21 @@ public class UserServiceTests {
 
     @Test
     public void logoutSuccess() throws Exception {
-
-        // Arrange
-        UserDAO userDao = new UserDAOMemory();
-        AuthDAO authDao = new AuthDAOMemory();
-        UserService userService = new UserService(userDao, authDao);
-
-        // Register and login a user to obtain an auth token
-        userService.register(new RegisterRequest("mrMe", "password123", "mrMe@example.com"));
-        LoginRequest loginRequest = new LoginRequest("mrMe", "password123");
-        LoginResult loginResult = userService.login(loginRequest);
-
-        String token = loginResult.authToken();
+        String token = loginTestUser();
         LogoutRequest logoutRequest = new LogoutRequest(token);
 
         // Verify token exists before trying to logout
         assertNotNull(authDao.getAuth(token));
 
-        // Act
+        // Logout
         userService.logout(logoutRequest);
 
-        // Assert: the token should no longer exist
+        // Verify that the token no longer exists
         assertNull(authDao.getAuth(token));
     }
 
     @Test
     void logoutInvalidToken() throws Exception {
-        // Arrange
-        UserDAO userDao = new UserDAOMemory();
-        AuthDAO authDao = new AuthDAOMemory();
-        UserService userService = new UserService(userDao, authDao);
-
         String token = "not-a-real-token";
         LogoutRequest logoutRequest = new LogoutRequest(token);
 
@@ -181,22 +150,13 @@ public class UserServiceTests {
 
     @Test
     void logoutTwice() throws Exception {
-        // Arrange
-        UserDAO userDao = new UserDAOMemory();
-        AuthDAO authDao = new AuthDAOMemory();
-        UserService userService = new UserService(userDao, authDao);
-
-        userService.register(new RegisterRequest("mrMe", "password123", "mrMe@example.com"));
-
-        LoginResult loginResult = userService.login(new LoginRequest("mrMe", "password123"));
-
-        String token = loginResult.authToken();
+        String token = loginTestUser();
         LogoutRequest logoutRequest = new LogoutRequest(token);
 
-        // Act: first logout succeeds
+        // First logout succeeds
         userService.logout(logoutRequest);
 
-        // Assert: second logout should fail
+        // Second logout should fail
         assertThrows(UnauthorizedException.class, () -> userService.logout(logoutRequest));
     }
 }

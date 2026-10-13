@@ -1,8 +1,14 @@
 package handler;
 
 import com.google.gson.Gson;
+import dataaccess.AlreadyTakenException;
+import dataaccess.BadRequestException;
+import dataaccess.DataAccessException;
+import dataaccess.UnauthorizedException;
 import io.javalin.http.Context;
-import service.GameService;
+import service.*;
+
+import java.util.Map;
 
 /**
  * The server handler classes serve as a translator between HTTP and Java.
@@ -17,6 +23,19 @@ public class GameHandler {
 
     public GameHandler(GameService gameService) {
         this.gameService = gameService;
+    }
+
+    public void listGames(Context ctx) {
+        try {
+            ListGamesRequest request = gson.fromJson(ctx.body(), ListGamesRequest.class);
+            ListGamesResult result = gameService.listGames(request);
+            sendJsonResponse(ctx, 200, result);
+
+        } catch (UnauthorizedException e) {
+            sendJsonResponse(ctx, 401, Map.of("message", e.getMessage()));
+        } catch (DataAccessException e) {
+            sendJsonResponse(ctx, 500, Map.of("message", e.getMessage()));
+        }
     }
 
     private void sendJsonResponse(Context ctx, int status, Object body) {
