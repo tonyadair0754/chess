@@ -15,81 +15,81 @@ public class UserService {
         this.authDao = authDao;
     }
 
-    public RegisterResult register(RegisterRequest registerRequest)
+    public RegisterResult register(RegisterRequest request)
             throws DataAccessException, AlreadyTakenException, BadRequestException {
 
         // Validate inputs
-        if (registerRequest == null ||
-                registerRequest.username() == null || registerRequest.username().isBlank() ||
-                registerRequest.password() == null || registerRequest.password().isBlank() ||
-                registerRequest.email() == null || registerRequest.email().isBlank()) {
+        if (request == null ||
+                request.username() == null || request.username().isBlank() ||
+                request.password() == null || request.password().isBlank() ||
+                request.email() == null || request.email().isBlank()) {
             throw new BadRequestException("Error: bad request");
         }
 
         // Check if username is already taken
-        if (userDao.getUser(registerRequest.username()) != null) {
+        if (userDao.getUser(request.username()) != null) {
             throw new AlreadyTakenException("Error: already taken");
         }
 
         // Create and save new user
         UserData newUser = new UserData(
-                registerRequest.username(),
-                registerRequest.password(),
-                registerRequest.email()
+                request.username(),
+                request.password(),
+                request.email()
         );
         userDao.createUser(newUser);
 
         // Create and save new auth token
         String token = UUID.randomUUID().toString();
-        AuthData newAuth = new AuthData(token, registerRequest.username());
+        AuthData newAuth = new AuthData(token, request.username());
         authDao.createAuth(newAuth);
 
-        return new RegisterResult(registerRequest.username(), token);
+        return new RegisterResult(request.username(), token);
     }
 
-    public LoginResult login(LoginRequest loginRequest)
+    public LoginResult login(LoginRequest request)
             throws DataAccessException, UnauthorizedException, BadRequestException {
 
         // Validate inputs
-        if (loginRequest == null ||
-                loginRequest.username() == null || loginRequest.username().isBlank() ||
-                loginRequest.password() == null || loginRequest.password().isBlank()) {
+        if (request == null ||
+                request.username() == null || request.username().isBlank() ||
+                request.password() == null || request.password().isBlank()) {
             throw new BadRequestException("Error: bad request");
         }
 
         // Fetch stored user record from DAO
-        UserData user = userDao.getUser(loginRequest.username());
+        UserData user = userDao.getUser(request.username());
 
         // Check if username already exists and if passwords match
-        if (userDao.getUser(loginRequest.username()) == null
-                || !user.password().equals(loginRequest.password())) {
+        if (userDao.getUser(request.username()) == null
+                || !user.password().equals(request.password())) {
             throw new UnauthorizedException("Error: unauthorized");
         }
 
         // Create and save new auth token
         String token = UUID.randomUUID().toString();
-        AuthData newAuth = new AuthData(token, loginRequest.username());
+        AuthData newAuth = new AuthData(token, request.username());
         authDao.createAuth(newAuth);
 
-        return new LoginResult(loginRequest.username(), token);
+        return new LoginResult(request.username(), token);
     }
 
-    public void logout(LogoutRequest logoutRequest)
+    public void logout(LogoutRequest request)
             throws DataAccessException, UnauthorizedException {
 
         // Validate inputs
-        if (logoutRequest == null ||
-                logoutRequest.authToken() == null || logoutRequest.authToken().isBlank()) {
+        if (request == null ||
+                request.authToken() == null || request.authToken().isBlank()) {
             throw new UnauthorizedException("Error: unauthorized");
         }
 
         // Check if token exists in database/memory
-        AuthData auth = authDao.getAuth(logoutRequest.authToken());
+        AuthData auth = authDao.getAuth(request.authToken());
         if (auth == null) {
             throw new UnauthorizedException("Error: unauthorized");
         }
 
         // Delete session token
-        authDao.deleteAuth(logoutRequest.authToken());
+        authDao.deleteAuth(request.authToken());
     }
 }

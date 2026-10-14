@@ -39,9 +39,37 @@ public class GameHandler {
         }
     }
 
+    public void createGame(Context ctx) {
+        try {
+            // Get auth from header
+            String authToken = ctx.header("authorization");
+
+            // Extract gameName from Body
+            CreateGameBody body = gson.fromJson(ctx.body(), CreateGameBody.class);
+
+            // Handle body or game name being null
+            String gameName = (body != null) ? body.gameName() : null;
+
+            CreateGameRequest request = new CreateGameRequest(authToken, gameName);
+            CreateGameResult result = gameService.createGame(request);
+
+            sendJsonResponse(ctx, 200, result);
+
+        } catch (BadRequestException e) {
+            sendJsonResponse(ctx, 400, Map.of("message", e.getMessage()));
+        } catch (UnauthorizedException e) {
+            sendJsonResponse(ctx, 401, Map.of("message", e.getMessage()));
+        } catch (DataAccessException e) {
+            sendJsonResponse(ctx, 500, Map.of("message", e.getMessage()));
+        }
+    }
+
     private void sendJsonResponse(Context ctx, int status, Object body) {
         ctx.status(status);
         ctx.contentType("application/json");
         ctx.result(gson.toJson(body));
+    }
+
+    private record CreateGameBody(String gameName) {
     }
 }
