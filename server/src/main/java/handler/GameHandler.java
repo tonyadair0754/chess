@@ -27,7 +27,8 @@ public class GameHandler {
 
     public void listGames(Context ctx) {
         try {
-            ListGamesRequest request = gson.fromJson(ctx.body(), ListGamesRequest.class);
+            String authToken = ctx.header("authorization");
+            ListGamesRequest request = new ListGamesRequest(authToken);
             ListGamesResult result = gameService.listGames(request);
             sendJsonResponse(ctx, 200, result);
 
