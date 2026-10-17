@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChessPieceTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess</a> &gt; <span class="el_source">ChessPieceTests.java</span></div><h1>ChessPieceTests.java</h1><pre class="source lang-java linenums">package passoff.chess;
+
+import chess.ChessBoard;
+import chess.ChessGame;
+import chess.ChessPiece;
+import chess.ChessPosition;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+public class ChessPieceTests extends EqualsTestingUtility&lt;ChessPiece&gt; {
+    public ChessPieceTests() {
+<span class="nc" id="L17">        super(&quot;ChessPiece&quot;, &quot;pieces&quot;);</span>
+<span class="nc" id="L18">    }</span>
+
+    @Override
+    protected ChessPiece buildOriginal() {
+<span class="nc" id="L22">        return new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KING);</span>
+    }
+
+    @Override
+    protected Collection&lt;ChessPiece&gt; buildAllDifferent() {
+<span class="nc" id="L27">        return List.of(</span>
+                new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KING),
+                new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.QUEEN),
+                new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.QUEEN),
+                new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN),
+                new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN)
+        );
+    }
+
+
+    @Test
+    @DisplayName(&quot;Piece Move on All Pieces&quot;)
+    public void pieceMoveAllPieces() {
+<span class="nc" id="L40">        var board = new ChessBoard();</span>
+
+        // 6 piece types * 2 team colors = 12 different pieces
+        Collection&lt;ChessPiece&gt; allPossiblePieces =
+<span class="nc" id="L44">                Arrays.stream(ChessPiece.PieceType.values())</span>
+<span class="nc" id="L45">                .flatMap(pieceType -&gt; Arrays.stream(ChessGame.TeamColor.values())</span>
+<span class="nc" id="L46">                .map(teamColor -&gt; new ChessPiece(teamColor, pieceType)))</span>
+<span class="nc" id="L47">                .toList();</span>
+
+        // 8 rows * 8 cols * 12 pieces = 768 evaluations - 32 pawns on back rows
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        for (int i = 1; i &lt;= 8; i++) {</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            for (int j = 1; j &lt;= 8; j++) {</span>
+<span class="nc" id="L52">                ChessPosition position = new ChessPosition(i, j);</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">                for (var piece : allPossiblePieces) {</span>
+<span class="nc bnc" id="L55" title="All 6 branches missed.">                    if (piece.getPieceType() == ChessPiece.PieceType.PAWN &amp;&amp; (i == 1 || i == 8)) {</span>
+<span class="nc" id="L56">                        continue;</span>
+                    }
+
+<span class="nc" id="L59">                    board.addPiece(position, piece);</span>
+<span class="nc" id="L60">                    Assertions.assertDoesNotThrow(</span>
+<span class="nc" id="L61">                            () -&gt; piece.pieceMoves(board, position),</span>
+                            &quot;No pieces anywhere on the board should throw an error. &quot;
+                            + &quot;Tested: &quot; + piece + &quot; at &quot; + position + &quot;.&quot;);
+<span class="nc" id="L64">                }</span>
+
+<span class="nc" id="L66">                board.addPiece(position, null);</span>
+            }
+        }
+<span class="nc" id="L69">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

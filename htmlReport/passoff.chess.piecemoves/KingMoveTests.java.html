@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KingMoveTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess.piecemoves</a> &gt; <span class="el_source">KingMoveTests.java</span></div><h1>KingMoveTests.java</h1><pre class="source lang-java linenums">package passoff.chess.piecemoves;
+
+import chess.ChessPosition;
+import org.junit.jupiter.api.Test;
+import passoff.chess.TestUtilities;
+
+<span class="nc" id="L7">public class KingMoveTests {</span>
+
+    @Test
+    public void kingMiddleOfBoard() {
+<span class="nc" id="L11">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | |K| | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(3, 6),
+                new int[][]{{4, 6}, {4, 7}, {3, 7}, {2, 7}, {2, 6}, {2, 5}, {3, 5}, {4, 5}}
+        );
+<span class="nc" id="L24">    }</span>
+
+
+    @Test
+    public void kingCaptureEnemy() {
+<span class="nc" id="L29">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | |N|n| | | |
+                        | | | |k| | | | |
+                        | | |P|b|p| | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(3, 4),
+                new int[][]{{4, 4}, {3, 5}, {2, 3}, {3, 3}, {4, 3}}
+        );
+<span class="nc" id="L42">    }</span>
+
+
+    @Test
+    public void kingBlocked() {
+<span class="nc" id="L47">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | |r|k|
+                        | | | | | | |p|p|
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(8, 8),
+                new int[][]{}
+        );
+<span class="nc" id="L60">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChessGameTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess.game</a> &gt; <span class="el_source">ChessGameTests.java</span></div><h1>ChessGameTests.java</h1><pre class="source lang-java linenums">package passoff.chess.game;
+
+import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPosition;
+import chess.InvalidMoveException;
+import passoff.chess.EqualsTestingUtility;
+import passoff.chess.TestUtilities;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+public class ChessGameTests extends EqualsTestingUtility&lt;ChessGame&gt; {
+    public ChessGameTests() {
+<span class="nc" id="L15">        super(&quot;ChessGame&quot;, &quot;games&quot;);</span>
+<span class="nc" id="L16">    }</span>
+
+    @Override
+    protected ChessGame buildOriginal() {
+<span class="nc" id="L20">        return new ChessGame();</span>
+    }
+
+    @Override
+    protected Collection&lt;ChessGame&gt; buildAllDifferent() {
+<span class="nc" id="L25">        Collection&lt;ChessGame&gt; differentGames = new ArrayList&lt;&gt;();</span>
+
+        try {
+            // Different team turn
+<span class="nc" id="L29">            ChessGame game1 = new ChessGame();</span>
+<span class="nc" id="L30">            game1.setTeamTurn(ChessGame.TeamColor.BLACK);</span>
+<span class="nc" id="L31">            differentGames.add(game1);</span>
+
+            // Move pawn
+<span class="nc" id="L34">            ChessGame game2 = new ChessGame();</span>
+<span class="nc" id="L35">            game2.makeMove(new ChessMove(</span>
+                    new ChessPosition(2, 5),
+                    new ChessPosition(4, 5),
+                    null));
+<span class="nc" id="L39">            differentGames.add(game2);</span>
+
+            // Move knight
+<span class="nc" id="L42">            ChessGame game3 = new ChessGame();</span>
+<span class="nc" id="L43">            game3.makeMove(new ChessMove(</span>
+                    new ChessPosition(1, 7),
+                    new ChessPosition(3, 6),
+                    null));
+<span class="nc" id="L47">            differentGames.add(game3);</span>
+
+            // Set board
+<span class="nc" id="L50">            ChessGame game4 = new ChessGame();</span>
+<span class="nc" id="L51">            game4.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                    | | | |R| | | | |
+                    | | | | | | | | |
+                    | | |p|n|p| | | |
+                    |R| |n|k|r| | |R|
+                    | | |p|q| | | | |
+                    | | | | | |K| | |
+                    | | | | |P| | | |
+                    | | | |R| | | | |
+                    &quot;&quot;&quot;));
+<span class="nc" id="L61">            differentGames.add(game4);</span>
+
+<span class="nc" id="L63">        } catch (InvalidMoveException e) {</span>
+<span class="nc" id="L64">            throw new RuntimeException(&quot;All moves in ChessGameTests are valid and should be allowed.&quot;, e);</span>
+<span class="nc" id="L65">        }</span>
+
+<span class="nc" id="L67">        return differentGames;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

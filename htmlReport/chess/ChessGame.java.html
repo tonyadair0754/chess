@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChessGame.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">chess</a> &gt; <span class="el_source">ChessGame.java</span></div><h1>ChessGame.java</h1><pre class="source lang-java linenums">package chess;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * A class that can manage a chess game, making moves on a board
+ * &lt;p&gt;
+ * Note: You can add to this class, but you may not alter
+ * signature of the existing methods.
+ */
+public class ChessGame {
+    private ChessGame.TeamColor turn;
+    private ChessBoard board;
+    private final List&lt;GameState&gt; gameHistory;
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L21" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L22">            return false;</span>
+        }
+<span class="nc" id="L24">        ChessGame chessGame = (ChessGame) o;</span>
+<span class="nc bnc" id="L25" title="All 4 branches missed.">        return turn == chessGame.turn &amp;&amp; Objects.equals(board, chessGame.board);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L30">        return Objects.hash(turn, board);</span>
+    }
+
+<span class="fc" id="L33">    public ChessGame() {</span>
+<span class="fc" id="L34">        board = new ChessBoard();</span>
+<span class="fc" id="L35">        board.resetBoard();</span>
+<span class="fc" id="L36">        turn = ChessGame.TeamColor.WHITE;</span>
+
+<span class="fc" id="L38">        gameHistory = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L39">        gameHistory.add(new GameState(board.getBoardSnapshot(), turn, null));</span>
+<span class="fc" id="L40">    }</span>
+
+    /**
+     * @return Which team's turn it is
+     */
+    public TeamColor getTeamTurn() {
+<span class="nc" id="L46">        return turn;</span>
+    }
+
+    /**
+     * Sets which teams turn it is
+     *
+     * @param team the team whose turn it is
+     */
+    public void setTeamTurn(TeamColor team) {
+<span class="nc" id="L55">        turn = team;</span>
+<span class="nc" id="L56">    }</span>
+
+    /**
+     * Enum identifying the 2 possible teams in a chess game
+     */
+<span class="fc" id="L61">    public enum TeamColor {</span>
+<span class="fc" id="L62">        WHITE,</span>
+<span class="fc" id="L63">        BLACK</span>
+    }
+
+    /**
+     * Gets all valid moves for a piece at the given location
+     *
+     * @param currentPosition the piece to get valid moves for
+     * @return Set of valid moves for requested piece, or null if no piece at
+     * currentPosition
+     */
+    public Collection&lt;ChessMove&gt; validMoves(ChessPosition currentPosition) {
+<span class="nc" id="L74">        ChessPiece movingPiece = board.getPiece(currentPosition);</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (movingPiece == null) {</span>
+<span class="nc" id="L77">            return null;</span>
+        }
+
+<span class="nc" id="L80">        TeamColor movingPieceColor = movingPiece.getTeamColor();</span>
+<span class="nc" id="L81">        Collection&lt;ChessMove&gt; candidateMoves = movingPiece.pieceMoves(board, currentPosition);</span>
+
+<span class="nc" id="L83">        addEnPassantMove(currentPosition, movingPiece, candidateMoves);</span>
+<span class="nc" id="L84">        addCastlingMoves(currentPosition, movingPiece, candidateMoves);</span>
+
+        // --- Temporarily perform the move to see if it places the king in check, then restore the board ---
+<span class="nc" id="L87">        Collection&lt;ChessMove&gt; validMoves = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        for (ChessMove move : candidateMoves) {</span>
+<span class="nc" id="L90">            ChessPosition startPos = move.getStartPosition();</span>
+<span class="nc" id="L91">            ChessPosition endPos = move.getEndPosition();</span>
+<span class="nc" id="L92">            ChessPiece capturedPiece = board.getPiece(move.getEndPosition());</span>
+
+<span class="nc" id="L94">            ChessPosition epCapturedPos = null;</span>
+<span class="nc" id="L95">            ChessPiece epCapturedPiece = null;</span>
+
+<span class="nc" id="L97">            ChessPosition rookStartPos = null;</span>
+<span class="nc" id="L98">            ChessPosition rookEndPos = null;</span>
+<span class="nc" id="L99">            ChessPiece castleRook = null;</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">            if (move.getMoveType() == ChessMove.MoveType.EN_PASSANT) {</span>
+<span class="nc" id="L102">                epCapturedPos = new ChessPosition(startPos.getRow(), endPos.getColumn());</span>
+<span class="nc" id="L103">                epCapturedPiece = board.getPiece(epCapturedPos);</span>
+<span class="nc" id="L104">                board.removePiece(epCapturedPos);</span>
+            }
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            if (move.getMoveType() == ChessMove.MoveType.CASTLING) {</span>
+<span class="nc" id="L108">                int row = startPos.getRow();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                if (endPos.getColumn() == 7) { // Kingside</span>
+<span class="nc" id="L110">                    rookStartPos = new ChessPosition(row, 8);</span>
+<span class="nc" id="L111">                    rookEndPos = new ChessPosition(row, 6);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                } else if (endPos.getColumn() == 3) { // Queenside</span>
+<span class="nc" id="L113">                    rookStartPos = new ChessPosition(row, 1);</span>
+<span class="nc" id="L114">                    rookEndPos = new ChessPosition(row, 4);</span>
+                }
+
+<span class="nc" id="L117">                castleRook = board.getPiece(rookStartPos);</span>
+<span class="nc" id="L118">                board.addPiece(rookEndPos, castleRook);</span>
+<span class="nc" id="L119">                board.removePiece(rookStartPos);</span>
+            }
+
+            // Temporarily add piece to new position
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            if (move.getPromotionPiece() != null) {</span>
+<span class="nc" id="L124">                board.addPiece(endPos, new ChessPiece(movingPieceColor, move.getPromotionPiece()));</span>
+            } else {
+<span class="nc" id="L126">                board.addPiece(endPos, movingPiece);</span>
+            }
+
+            // Temporarily clear piece from old position
+<span class="nc" id="L130">            board.removePiece(startPos);</span>
+
+            // Add the move if it doesn't put that team's king in check
+<span class="nc bnc" id="L133" title="All 2 branches missed.">            if (!isInCheck(movingPieceColor)) {</span>
+<span class="nc" id="L134">                validMoves.add(move);</span>
+            }
+
+            // Restore the board
+            // The move hasn't actually been made yet. That's makeMove()'s job
+<span class="nc" id="L139">            board.addPiece(startPos, movingPiece);</span>
+<span class="nc" id="L140">            board.addPiece(endPos, capturedPiece);</span>
+
+<span class="nc bnc" id="L142" title="All 2 branches missed.">            if (move.getMoveType() == ChessMove.MoveType.EN_PASSANT) {</span>
+<span class="nc" id="L143">                board.addPiece(epCapturedPos, epCapturedPiece);</span>
+            }
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">            if (move.getMoveType() == ChessMove.MoveType.CASTLING) {</span>
+<span class="nc" id="L147">                board.addPiece(rookStartPos, castleRook);</span>
+<span class="nc" id="L148">                board.removePiece(rookEndPos);</span>
+            }
+<span class="nc" id="L150">        }</span>
+
+<span class="nc" id="L152">        return validMoves;</span>
+    }
+
+    /**
+     * Determines if a given team has any valid moves
+     *
+     * @param teamColor
+     * @return True if the given team has any possible valid moves
+     */
+    private boolean hasValidMoves(TeamColor teamColor) {
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        for (int row = 1; row &lt;= 8; row++) {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">            for (int col = 1; col &lt;= 8; col++) {</span>
+<span class="nc" id="L164">                ChessPosition pos = new ChessPosition(row, col);</span>
+<span class="nc" id="L165">                ChessPiece piece = board.getPiece(pos);</span>
+
+<span class="nc bnc" id="L167" title="All 2 branches missed.">                if (piece != null</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                        &amp;&amp; piece.getTeamColor() == teamColor</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                        &amp;&amp; !validMoves(pos).isEmpty()) {</span>
+<span class="nc" id="L170">                    return true;</span>
+                }
+            }
+        }
+<span class="nc" id="L174">        return false;</span>
+    }
+
+    /**
+     * Makes a move in the chess game
+     *
+     * @param move chess move to perform
+     * @throws InvalidMoveException if move is invalid
+     */
+    public void makeMove(ChessMove move) throws InvalidMoveException {
+        // Validate the move
+<span class="nc" id="L185">        ChessPiece piece = board.getPiece(move.getStartPosition());</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">        if (piece == null) {</span>
+<span class="nc" id="L187">            throw new InvalidMoveException(&quot;Invalid move - there is no piece at the specified location.&quot;);</span>
+        }
+
+<span class="nc" id="L190">        TeamColor pieceColor = piece.getTeamColor();</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        if (turn != pieceColor) {</span>
+<span class="nc" id="L192">            throw new InvalidMoveException(&quot;Invalid move - it is not that team's turn.&quot;);</span>
+        }
+
+<span class="nc" id="L195">        ChessPosition startPos = move.getStartPosition();</span>
+<span class="nc" id="L196">        ChessPosition endPos = move.getEndPosition();</span>
+<span class="nc" id="L197">        Collection&lt;ChessMove&gt; validMoves = validMoves(startPos);</span>
+
+        // Find the matching move that ChessGame itself generated, since it carries the correct MoveType (NORMAL, EN_PASSANT, or CASTLING).
+        // The move passed in by the caller might be a regular 3-argument ChessMove, which defaults to NORMAL
+<span class="nc" id="L201">        ChessMove actualMove = null;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        for (ChessMove candidate : validMoves) {</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">            if (candidate.equals(move)) {</span>
+<span class="nc" id="L204">                actualMove = candidate;</span>
+<span class="nc" id="L205">                break;</span>
+            }
+<span class="nc" id="L207">        }</span>
+
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (actualMove == null) {</span>
+<span class="nc" id="L210">            throw new InvalidMoveException(&quot;Invalid move - that location is an invalid move for the specified .&quot;);</span>
+        }
+
+        // Actually make the move now that it's confirmed valid
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        if (actualMove.getMoveType() == ChessMove.MoveType.NORMAL) {</span>
+            // Add piece to new position
+<span class="nc bnc" id="L216" title="All 2 branches missed.">            if (move.getPromotionPiece() != null) {</span>
+<span class="nc" id="L217">                board.addPiece(endPos, new ChessPiece(pieceColor, move.getPromotionPiece()));</span>
+            } else {
+<span class="nc" id="L219">                board.addPiece(endPos, piece);</span>
+            }
+
+<span class="nc" id="L222">            board.removePiece(startPos);</span>
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">        } else if (actualMove.getMoveType() == ChessMove.MoveType.EN_PASSANT) {</span>
+            // Move pawn
+<span class="nc" id="L226">            board.addPiece(endPos, piece);</span>
+<span class="nc" id="L227">            board.removePiece(startPos);</span>
+
+            // Remove captured pawn
+<span class="nc" id="L230">            int capturedPawnRow = move.getStartPosition().getRow();</span>
+<span class="nc" id="L231">            int capturedPawnCol = move.getEndPosition().getColumn();</span>
+<span class="nc" id="L232">            ChessPosition capturedPawnPos = new ChessPosition(capturedPawnRow, capturedPawnCol);</span>
+<span class="nc" id="L233">            board.removePiece(capturedPawnPos);</span>
+
+<span class="nc bnc" id="L235" title="All 2 branches missed.">        } else if (actualMove.getMoveType() == ChessMove.MoveType.CASTLING) {</span>
+<span class="nc" id="L236">            int row = startPos.getRow();</span>
+
+            // Rook is kingside
+<span class="nc bnc" id="L239" title="All 2 branches missed.">            if (endPos.getColumn() == 7) {</span>
+<span class="nc" id="L240">                ChessPiece king = board.getPiece(new ChessPosition(row, 5));</span>
+<span class="nc" id="L241">                board.addPiece(new ChessPosition(row, 7), king);</span>
+<span class="nc" id="L242">                board.removePiece(new ChessPosition(row, 5));</span>
+
+<span class="nc" id="L244">                ChessPiece rook = board.getPiece(new ChessPosition(row, 8));</span>
+<span class="nc" id="L245">                board.addPiece(new ChessPosition(row, 6), rook);</span>
+<span class="nc" id="L246">                board.removePiece(new ChessPosition(row, 8));</span>
+
+            // Rook is queenside
+<span class="nc bnc" id="L249" title="All 2 branches missed.">            } else if (endPos.getColumn() == 3) {</span>
+<span class="nc" id="L250">                ChessPiece king = board.getPiece(new ChessPosition(row, 5));</span>
+<span class="nc" id="L251">                board.addPiece(new ChessPosition(row, 3), king);</span>
+<span class="nc" id="L252">                board.removePiece(new ChessPosition(row, 5));</span>
+
+<span class="nc" id="L254">                ChessPiece rook = board.getPiece(new ChessPosition(row, 1));</span>
+<span class="nc" id="L255">                board.addPiece(new ChessPosition(row, 4), rook);</span>
+<span class="nc" id="L256">                board.removePiece(new ChessPosition(row, 1));</span>
+            }
+        }
+
+        // Switch to other team's turn
+<span class="nc bnc" id="L261" title="All 2 branches missed.">        if (pieceColor == TeamColor.WHITE) {</span>
+<span class="nc" id="L262">            setTeamTurn(TeamColor.BLACK);</span>
+        } else {
+<span class="nc" id="L264">            setTeamTurn(TeamColor.WHITE);</span>
+        }
+
+        // Add history entry once the move has been successfully completed
+<span class="nc" id="L268">        gameHistory.add(new GameState(board.getBoardSnapshot(), turn, move));</span>
+<span class="nc" id="L269">    }</span>
+
+    /**
+     * Adds an en passant capture to candidateMoves, if movingPiece is a pawn that is eligible to perform en passant
+     *
+     * @param currentPosition
+     * @param movingPiece
+     * @param candidateMoves
+     */
+    private void addEnPassantMove(ChessPosition currentPosition, ChessPiece movingPiece, Collection&lt;ChessMove&gt; candidateMoves) {
+<span class="nc bnc" id="L279" title="All 2 branches missed.">        if (movingPiece.getPieceType() != ChessPiece.PieceType.PAWN) {</span>
+<span class="nc" id="L280">            return;</span>
+        }
+
+<span class="nc" id="L283">        ChessMove lastMove = gameHistory.get(gameHistory.size() - 1).getLastMove();</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">        if (lastMove == null) {</span>
+<span class="nc" id="L285">            return;</span>
+        }
+
+<span class="nc" id="L288">        ChessPiece lastMovedPiece = board.getPiece(lastMove.getEndPosition());</span>
+<span class="nc bnc" id="L289" title="All 4 branches missed.">        if (lastMovedPiece == null || lastMovedPiece.getPieceType() != ChessPiece.PieceType.PAWN) {</span>
+<span class="nc" id="L290">            return;</span>
+        }
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        if (lastMovedPiece.getTeamColor() == movingPiece.getTeamColor()) {</span>
+<span class="nc" id="L293">            return;</span>
+        }
+
+<span class="nc" id="L296">        int startRow = lastMove.getStartPosition().getRow();</span>
+<span class="nc" id="L297">        int endRow = lastMove.getEndPosition().getRow();</span>
+<span class="nc" id="L298">        int endCol = lastMove.getEndPosition().getColumn();</span>
+
+<span class="nc bnc" id="L300" title="All 2 branches missed.">        boolean oppMovedTwoRows = Math.abs(startRow - endRow) == 2;</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">        boolean isAdjacentColumn = Math.abs(endCol - currentPosition.getColumn()) == 1;</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">        boolean isSameRow = currentPosition.getRow() == endRow;</span>
+
+<span class="nc bnc" id="L304" title="All 6 branches missed.">        if (!oppMovedTwoRows || !isSameRow || !isAdjacentColumn) {</span>
+<span class="nc" id="L305">            return;</span>
+        }
+
+        // Calculate the target en passant square halfway between start and end
+<span class="nc" id="L309">        int epRow = (startRow + endRow) / 2;</span>
+<span class="nc" id="L310">        ChessPosition epDestination = new ChessPosition(epRow, endCol);</span>
+
+        // Add the valid en passant move
+<span class="nc" id="L313">        candidateMoves.add(new ChessMove(currentPosition, epDestination, null, ChessMove.MoveType.EN_PASSANT));</span>
+<span class="nc" id="L314">    }</span>
+
+    /**
+     * Adds castling moves to candidateMoves, if the king at currentPosition is eligible to castle
+     *
+     * @param currentPosition
+     * @param movingPiece
+     * @param candidateMoves
+     */
+    private void addCastlingMoves(ChessPosition currentPosition, ChessPiece movingPiece, Collection&lt;ChessMove&gt; candidateMoves) {
+<span class="nc bnc" id="L324" title="All 4 branches missed.">        if (movingPiece.getPieceType() == ChessPiece.PieceType.KING &amp;&amp; !hasPieceMoved(currentPosition)) {</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">            if (movingPiece.getPieceType() != ChessPiece.PieceType.KING) {</span>
+<span class="nc" id="L326">                return;</span>
+            }
+
+<span class="nc bnc" id="L329" title="All 2 branches missed.">            if (hasPieceMoved(currentPosition)) {</span>
+<span class="nc" id="L330">                return;</span>
+            }
+
+<span class="nc" id="L333">            TeamColor movingPieceColor = movingPiece.getTeamColor();</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">            int row = (movingPieceColor == TeamColor.WHITE ? 1 : 8);</span>
+<span class="nc" id="L335">            ChessPosition homeSquare = new ChessPosition(row, 5);</span>
+
+            // A king that isn't on its home square can't castle
+<span class="nc bnc" id="L338" title="All 2 branches missed.">            if (!currentPosition.equals(homeSquare)) {</span>
+<span class="nc" id="L339">                return;</span>
+            }
+
+            // Kingside castling
+<span class="nc" id="L343">            ChessPosition kingsideRookPos = new ChessPosition(row, 8);</span>
+<span class="nc" id="L344">            ChessPiece kingsideRook = board.getPiece(kingsideRookPos);</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">            boolean kingsideRookInPlace = kingsideRook != null</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">                    &amp;&amp; kingsideRook.getPieceType() == ChessPiece.PieceType.ROOK</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">                    &amp;&amp; kingsideRook.getTeamColor() == movingPieceColor;</span>
+
+<span class="nc bnc" id="L349" title="All 4 branches missed.">            if (kingsideRookInPlace &amp;&amp; !hasPieceMoved(kingsideRookPos)) {</span>
+<span class="nc" id="L350">                ChessPosition colSix = new ChessPosition(row, 6);</span>
+<span class="nc" id="L351">                ChessPosition colSeven = new ChessPosition(row, 7);</span>
+
+<span class="nc bnc" id="L353" title="All 4 branches missed.">                if (board.getPiece(colSix) != null || board.getPiece(colSeven) != null) {</span>
+<span class="nc" id="L354">                    return;</span>
+                }
+
+<span class="nc bnc" id="L357" title="All 2 branches missed.">                if (!BoardAnalyzer.isPositionAttacked(board, currentPosition, movingPieceColor) &amp;&amp;</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">                        !BoardAnalyzer.isPositionAttacked(board, colSix, movingPieceColor) &amp;&amp;</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">                        !BoardAnalyzer.isPositionAttacked(board, colSeven, movingPieceColor)) {</span>
+<span class="nc" id="L360">                    candidateMoves.add(new ChessMove(currentPosition, colSeven, null, ChessMove.MoveType.CASTLING));</span>
+                }
+            }
+
+            // Queenside castling
+<span class="nc" id="L365">            ChessPosition queensideRookPos = new ChessPosition(row, 1);</span>
+<span class="nc" id="L366">            ChessPiece queensideRook = board.getPiece(queensideRookPos);</span>
+<span class="nc bnc" id="L367" title="All 2 branches missed.">            boolean queensideRookInPlace = queensideRook != null</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">                    &amp;&amp; queensideRook.getPieceType() == ChessPiece.PieceType.ROOK</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">                    &amp;&amp; queensideRook.getTeamColor() == movingPieceColor;</span>
+
+<span class="nc bnc" id="L371" title="All 4 branches missed.">            if (queensideRookInPlace &amp;&amp; !hasPieceMoved(queensideRookPos)) {</span>
+<span class="nc" id="L372">                ChessPosition colTwo = new ChessPosition(row, 2);</span>
+<span class="nc" id="L373">                ChessPosition colThree = new ChessPosition(row, 3);</span>
+<span class="nc" id="L374">                ChessPosition colFour = new ChessPosition(row, 4);</span>
+
+<span class="nc bnc" id="L376" title="All 6 branches missed.">                if (board.getPiece(colTwo) != null || board.getPiece(colThree) != null || board.getPiece(colFour) != null) {</span>
+<span class="nc" id="L377">                    return;</span>
+                }
+
+<span class="nc bnc" id="L380" title="All 2 branches missed.">                if (!BoardAnalyzer.isPositionAttacked(board, currentPosition, movingPieceColor) &amp;&amp;</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">                        !BoardAnalyzer.isPositionAttacked(board, colThree, movingPieceColor) &amp;&amp;</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">                        !BoardAnalyzer.isPositionAttacked(board, colFour, movingPieceColor)) {</span>
+<span class="nc" id="L383">                    candidateMoves.add(new ChessMove(currentPosition, colThree, null, ChessMove.MoveType.CASTLING));</span>
+                }
+            }
+        }
+<span class="nc" id="L387">    }</span>
+
+    /**
+     * Determines if the given team is in check
+     *
+     * @param teamColor which team to check for check
+     * @return True if the specified team’s king could be captured by an opposing piece.
+     */
+    public boolean isInCheck(TeamColor teamColor) {
+<span class="nc" id="L396">        ChessPosition kingPosition = BoardAnalyzer.findPiecePos(board, ChessPiece.PieceType.KING, teamColor);</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">        if (BoardAnalyzer.isPositionAttacked(board, kingPosition, teamColor)) {</span>
+<span class="nc" id="L398">            return true;</span>
+        } else {
+<span class="nc" id="L400">            return false;</span>
+        }
+    }
+
+    /**
+     * Determines if the given team is in checkmate
+     *
+     * @param teamColor which team to check for checkmate
+     * @return True if the given team has no way to protect their king from being captured.
+     */
+    public boolean isInCheckmate(TeamColor teamColor) {
+<span class="nc bnc" id="L411" title="All 2 branches missed.">        if (!isInCheck(teamColor)) {</span>
+<span class="nc" id="L412">            return false;</span>
+        }
+
+<span class="nc bnc" id="L415" title="All 2 branches missed.">        return !hasValidMoves(teamColor);</span>
+    }
+
+    /**
+     * Determines if the given team is in stalemate, which here is defined as having
+     * no valid moves while not in check.
+     *
+     * @param teamColor which team to check for stalemate
+     * @return True if the given team has no legal moves but their king is not in immediate danger.
+     */
+    public boolean isInStalemate(TeamColor teamColor) {
+<span class="nc bnc" id="L426" title="All 2 branches missed.">        if (isInCheck(teamColor)) {</span>
+<span class="nc" id="L427">            return false;</span>
+        }
+
+<span class="nc bnc" id="L430" title="All 2 branches missed.">        return !hasValidMoves(teamColor);</span>
+    }
+
+    public List&lt;GameState&gt; getGameHistory() {
+<span class="nc" id="L434">        return gameHistory;</span>
+    }
+
+    /**
+     * Used for castling
+     * position should be the piece's original starting position
+     *
+     * @param position
+     * @return True if the specified piece has ever moved before during the game
+     */
+    public boolean hasPieceMoved(ChessPosition position) {
+<span class="nc bnc" id="L445" title="All 2 branches missed.">        for (GameState state : gameHistory) {</span>
+<span class="nc" id="L446">            ChessMove move = state.getLastMove();</span>
+
+<span class="nc bnc" id="L448" title="All 4 branches missed.">            if (move != null &amp;&amp; move.getStartPosition().equals(position)) {</span>
+<span class="nc" id="L449">                return true;</span>
+            }
+<span class="nc" id="L451">        }</span>
+
+<span class="nc" id="L453">        return false;</span>
+    }
+
+    /**
+     * Sets this game's chessboard to a given board
+     *
+     * @param board the new board to use
+     */
+    public void setBoard(ChessBoard board) {
+<span class="nc" id="L462">        this.board = board;</span>
+<span class="nc" id="L463">    }</span>
+
+    /**
+     * Gets the current chessboard
+     *
+     * @return the chessboard
+     */
+    public ChessBoard getBoard() {
+<span class="nc" id="L471">        return board;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

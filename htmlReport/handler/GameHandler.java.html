@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">handler</a> &gt; <span class="el_source">GameHandler.java</span></div><h1>GameHandler.java</h1><pre class="source lang-java linenums">package handler;
+
+import chess.ChessGame;
+import com.google.gson.Gson;
+import dataaccess.AlreadyTakenException;
+import dataaccess.BadRequestException;
+import dataaccess.DataAccessException;
+import dataaccess.UnauthorizedException;
+import io.javalin.http.Context;
+import service.*;
+
+import java.util.Map;
+
+/**
+ * The server handler classes serve as a translator between HTTP and Java.
+ * Your handlers will convert an HTTP request into Java usable objects &amp; data.
+ * The handler then calls the appropriate service.
+ * When the service responds, the handler converts the response object back to JSON and sends the HTTP response.
+ * This could include converting thrown exception types into the appropriate HTTP status codes if necessary.
+ */
+public class GameHandler {
+    private final GameService gameService;
+<span class="fc" id="L23">    private final Gson gson = new Gson();</span>
+
+<span class="fc" id="L25">    public GameHandler(GameService gameService) {</span>
+<span class="fc" id="L26">        this.gameService = gameService;</span>
+<span class="fc" id="L27">    }</span>
+
+    public void listGames(Context ctx) {
+        try {
+<span class="fc" id="L31">            String authToken = ctx.header(&quot;authorization&quot;);</span>
+<span class="fc" id="L32">            ListGamesRequest request = new ListGamesRequest(authToken);</span>
+<span class="fc" id="L33">            ListGamesResult result = gameService.listGames(request);</span>
+<span class="fc" id="L34">            sendJsonResponse(ctx, 200, result);</span>
+
+<span class="fc" id="L36">        } catch (UnauthorizedException e) {</span>
+<span class="fc" id="L37">            sendJsonResponse(ctx, 401, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="nc" id="L38">        } catch (DataAccessException e) {</span>
+<span class="nc" id="L39">            sendJsonResponse(ctx, 500, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="fc" id="L40">        }</span>
+<span class="fc" id="L41">    }</span>
+
+    public void createGame(Context ctx) {
+        try {
+            // Get auth from header
+<span class="fc" id="L46">            String authToken = ctx.header(&quot;authorization&quot;);</span>
+
+            // Extract gameName from Body
+<span class="fc" id="L49">            CreateGameBody body = gson.fromJson(ctx.body(), CreateGameBody.class);</span>
+
+            // Handle body or game name being null
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">            String gameName = (body != null) ? body.gameName() : null;</span>
+
+<span class="fc" id="L54">            CreateGameRequest request = new CreateGameRequest(authToken, gameName);</span>
+<span class="fc" id="L55">            CreateGameResult result = gameService.createGame(request);</span>
+
+<span class="fc" id="L57">            sendJsonResponse(ctx, 200, result);</span>
+
+<span class="fc" id="L59">        } catch (BadRequestException e) {</span>
+<span class="fc" id="L60">            sendJsonResponse(ctx, 400, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="fc" id="L61">        } catch (UnauthorizedException e) {</span>
+<span class="fc" id="L62">            sendJsonResponse(ctx, 401, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="nc" id="L63">        } catch (DataAccessException e) {</span>
+<span class="nc" id="L64">            sendJsonResponse(ctx, 500, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="fc" id="L65">        }</span>
+<span class="fc" id="L66">    }</span>
+
+    public void joinGame(Context ctx) {
+        try {
+            // Get auth from header
+<span class="fc" id="L71">            String authToken = ctx.header(&quot;authorization&quot;);</span>
+
+<span class="fc" id="L73">            JoinGameBody body = gson.fromJson(ctx.body(), JoinGameBody.class);</span>
+
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">            ChessGame.TeamColor playerColor = (body != null) ? body.playerColor() : null;</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">            Integer gameID = (body != null) ? body.gameID() : null;</span>
+
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            int finalGameID = (gameID != null) ? gameID : 0;</span>
+
+<span class="fc" id="L80">            JoinGameRequest request = new JoinGameRequest(authToken, playerColor, finalGameID);</span>
+<span class="fc" id="L81">            gameService.joinGame(request);</span>
+
+<span class="fc" id="L83">            sendJsonResponse(ctx, 200, Map.of());</span>
+
+<span class="fc" id="L85">        } catch (BadRequestException e) {</span>
+<span class="fc" id="L86">            sendJsonResponse(ctx, 400, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="fc" id="L87">        } catch (UnauthorizedException e) {</span>
+<span class="fc" id="L88">            sendJsonResponse(ctx, 401, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="fc" id="L89">        } catch (AlreadyTakenException e) {</span>
+<span class="fc" id="L90">            sendJsonResponse(ctx, 403, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="nc" id="L91">        } catch (DataAccessException e) {</span>
+<span class="nc" id="L92">            sendJsonResponse(ctx, 500, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="fc" id="L93">        }</span>
+<span class="fc" id="L94">    }</span>
+
+    private void sendJsonResponse(Context ctx, int status, Object body) {
+<span class="fc" id="L97">        ctx.status(status);</span>
+<span class="fc" id="L98">        ctx.contentType(&quot;application/json&quot;);</span>
+<span class="fc" id="L99">        ctx.result(gson.toJson(body));</span>
+<span class="fc" id="L100">    }</span>
+
+<span class="fc" id="L102">    private record CreateGameBody(String gameName) {</span>
+    }
+
+<span class="fc" id="L105">    private record JoinGameBody(ChessGame.TeamColor playerColor, Integer gameID) {</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

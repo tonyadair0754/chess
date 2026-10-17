@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChessPiece.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">chess</a> &gt; <span class="el_source">ChessPiece.java</span></div><h1>ChessPiece.java</h1><pre class="source lang-java linenums">package chess;
+
+import chess.movecalculators.*;
+
+import java.util.Collection;
+import java.util.Objects;
+
+/**
+ * Represents a single chess piece
+ * &lt;p&gt;
+ * Note: You can add to this class, but you may not alter
+ * signature of the existing methods.
+ */
+public class ChessPiece {
+    private ChessGame.TeamColor pieceColor;
+    private ChessPiece.PieceType type;
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L20" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L21">            return false;</span>
+        }
+<span class="nc" id="L23">        ChessPiece that = (ChessPiece) o;</span>
+<span class="nc bnc" id="L24" title="All 4 branches missed.">        return pieceColor == that.pieceColor &amp;&amp; type == that.type;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L29">        return Objects.hash(pieceColor, type);</span>
+    }
+
+    /**
+     * Stores a piece's team color and type
+     *
+     * @param pieceColor  piece's team color
+     * @param type        type of piece (bishop, rook, etc.)
+     */
+<span class="fc" id="L38">    public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {</span>
+<span class="fc" id="L39">        this.pieceColor = pieceColor;</span>
+<span class="fc" id="L40">        this.type = type;</span>
+<span class="fc" id="L41">    }</span>
+
+    /**
+     * The various different chess piece options
+     */
+<span class="fc" id="L46">    public enum PieceType {</span>
+<span class="fc" id="L47">        KING,</span>
+<span class="fc" id="L48">        QUEEN,</span>
+<span class="fc" id="L49">        BISHOP,</span>
+<span class="fc" id="L50">        KNIGHT,</span>
+<span class="fc" id="L51">        ROOK,</span>
+<span class="fc" id="L52">        PAWN</span>
+    }
+
+    /**
+     * @return Which team this chess piece belongs to
+     */
+    public ChessGame.TeamColor getTeamColor() {
+<span class="nc" id="L59">        return pieceColor;</span>
+    }
+
+    /**
+     * @return which type of chess piece this piece is
+     */
+    public PieceType getPieceType() {
+<span class="nc" id="L66">        return type;</span>
+    }
+
+    /**
+     * Calculates all the positions a chess piece can move to
+     * Does not take into account moves that are illegal due to leaving the king in
+     * danger
+     *
+     * @return Collection of valid moves
+     */
+    public Collection&lt;ChessMove&gt; pieceMoves(ChessBoard board, ChessPosition myPosition) {
+<span class="nc bnc" id="L77" title="All 6 branches missed.">        return switch (type) {</span>
+<span class="nc" id="L78">            case KING -&gt; new KingMovesCalculator().pieceMoves(board, myPosition);</span>
+<span class="nc" id="L79">            case PAWN -&gt; new PawnMovesCalculator().pieceMoves(board, myPosition);</span>
+<span class="nc" id="L80">            case ROOK -&gt; new RookMovesCalculator().pieceMoves(board, myPosition);</span>
+<span class="nc" id="L81">            case QUEEN -&gt; new QueenMovesCalculator().pieceMoves(board, myPosition);</span>
+<span class="nc" id="L82">            case BISHOP -&gt; new BishopMovesCalculator().pieceMoves(board, myPosition);</span>
+<span class="nc" id="L83">            case KNIGHT -&gt; new KnightMovesCalculator().pieceMoves(board, myPosition);</span>
+        };
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

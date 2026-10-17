@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChessBoardTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess</a> &gt; <span class="el_source">ChessBoardTests.java</span></div><h1>ChessBoardTests.java</h1><pre class="source lang-java linenums">package passoff.chess;
+
+import chess.ChessBoard;
+import chess.ChessGame;
+import chess.ChessPiece;
+import chess.ChessPosition;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+public class ChessBoardTests extends EqualsTestingUtility&lt;ChessBoard&gt; {
+    public ChessBoardTests() {
+<span class="nc" id="L17">        super(&quot;ChessBoard&quot;, &quot;boards&quot;);</span>
+<span class="nc" id="L18">    }</span>
+
+    @Test
+    @DisplayName(&quot;Construct Empty ChessBoard&quot;)
+    public void constructChessBoard() {
+<span class="nc" id="L23">        ChessBoard board = new ChessBoard();</span>
+
+<span class="nc bnc" id="L25" title="All 2 branches missed.">        for (int row = 1; row &lt;= 8; row++) {</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">            for (int col = 1; col &lt;= 8; col++) {</span>
+<span class="nc" id="L27">                Assertions.assertNull(</span>
+<span class="nc" id="L28">                        board.getPiece(new ChessPosition(row, col)),</span>
+                        &quot;Immediately upon construction, a ChessBoard should be empty.&quot;
+                );
+            }
+        }
+
+<span class="nc" id="L34">    }</span>
+
+    @Test
+    @DisplayName(&quot;Add and Get Piece&quot;)
+    public void getAddPiece() {
+<span class="nc" id="L39">        ChessPosition position = new ChessPosition(4, 4);</span>
+<span class="nc" id="L40">        ChessPiece piece = new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP);</span>
+
+<span class="nc" id="L42">        var board = new ChessBoard();</span>
+<span class="nc" id="L43">        board.addPiece(position, piece);</span>
+
+<span class="nc" id="L45">        ChessPiece foundPiece = board.getPiece(position);</span>
+
+<span class="nc" id="L47">        Assertions.assertNotNull(foundPiece, &quot;getPiece returned null for a position just added&quot;);</span>
+<span class="nc" id="L48">        Assertions.assertEquals(piece.getPieceType(), foundPiece.getPieceType(),</span>
+                &quot;ChessPiece returned by getPiece had the wrong piece type&quot;);
+<span class="nc" id="L50">        Assertions.assertEquals(piece.getTeamColor(), foundPiece.getTeamColor(),</span>
+                &quot;ChessPiece returned by getPiece had the wrong team color&quot;);
+<span class="nc" id="L52">    }</span>
+
+    @Test
+    @DisplayName(&quot;Reset Board&quot;)
+    public void defaultGameBoard() {
+<span class="nc" id="L57">        var expectedBoard = TestUtilities.defaultBoard();</span>
+
+<span class="nc" id="L59">        var actualBoard = new ChessBoard();</span>
+<span class="nc" id="L60">        actualBoard.resetBoard();</span>
+
+<span class="nc" id="L62">        Assertions.assertEquals(expectedBoard, actualBoard, &quot;Reset board did not create the correct board&quot;);</span>
+<span class="nc" id="L63">    }</span>
+
+    @Override
+    protected ChessBoard buildOriginal() {
+<span class="nc" id="L67">        var basicBoard = new ChessBoard();</span>
+<span class="nc" id="L68">        basicBoard.resetBoard();</span>
+<span class="nc" id="L69">        return basicBoard;</span>
+    }
+
+    @Override
+    protected Collection&lt;ChessBoard&gt; buildAllDifferent() {
+<span class="nc" id="L74">        List&lt;ChessBoard&gt; differentBoards = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L76">        differentBoards.add(new ChessBoard()); // An empty board</span>
+
+<span class="nc" id="L78">        ChessPiece.PieceType[] pieceSchedule = {</span>
+                ChessPiece.PieceType.ROOK, ChessPiece.PieceType.KNIGHT,
+                ChessPiece.PieceType.BISHOP, ChessPiece.PieceType.QUEEN,
+                ChessPiece.PieceType.KING, ChessPiece.PieceType.PAWN,
+                ChessPiece.PieceType.KING, ChessPiece.PieceType.ROOK,
+        };
+
+        // Generate boards each with one piece added from a static list.
+        // The color is assigned in a mixed pattern.
+        ChessPiece.PieceType type;
+        boolean isWhite;
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        for (int col = 1; col &lt;= 8; col++) {</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">            for (int row = 1; row &lt;= 8; row++) {</span>
+<span class="nc" id="L91">                type = pieceSchedule[row-1];</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">                isWhite = (row + col) % 2 == 0;</span>
+<span class="nc" id="L93">                differentBoards.add(createBoardWithPiece(row, col, type, isWhite));</span>
+            }
+        }
+
+<span class="nc" id="L97">        return differentBoards;</span>
+    }
+
+    private ChessBoard createBoardWithPiece(int row, int col, ChessPiece.PieceType type, boolean isWhite) {
+<span class="nc" id="L101">        var board = new ChessBoard();</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        var teamColor = isWhite ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;</span>
+<span class="nc" id="L104">        var piece = new ChessPiece(teamColor, type);</span>
+
+<span class="nc" id="L106">        var position = new ChessPosition(row, col);</span>
+<span class="nc" id="L107">        board.addPiece(position, piece);</span>
+
+<span class="nc" id="L109">        return board;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

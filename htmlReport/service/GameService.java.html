@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">service</a> &gt; <span class="el_source">GameService.java</span></div><h1>GameService.java</h1><pre class="source lang-java linenums">package service;
+
+import chess.ChessGame;
+import dataaccess.*;
+import model.AuthData;
+import model.GameData;
+
+import java.util.Collection;
+
+public class GameService {
+    private final AuthDAO authDao;
+    private final GameDAO gameDao;
+<span class="fc" id="L13">    private static int nextGameID = 1;</span>
+
+<span class="fc" id="L15">    public GameService(AuthDAO authDao, GameDAO gameDao) {</span>
+<span class="fc" id="L16">        this.authDao = authDao;</span>
+<span class="fc" id="L17">        this.gameDao = gameDao;</span>
+<span class="fc" id="L18">    }</span>
+
+    public ListGamesResult listGames(ListGamesRequest request)
+            throws DataAccessException, UnauthorizedException {
+
+        // Validate inputs
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        if (request == null ||</span>
+<span class="fc bfc" id="L25" title="All 4 branches covered.">                request.authToken() == null || request.authToken().isBlank()) {</span>
+<span class="fc" id="L26">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
+        }
+
+        // Verify token exists in database/memory
+<span class="fc" id="L30">        AuthData auth = authDao.getAuth(request.authToken());</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L32">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
+        }
+
+        // Retrieve games from GameDAO
+<span class="fc" id="L36">        Collection&lt;GameData&gt; games = gameDao.listGames();</span>
+
+<span class="fc" id="L38">        return new ListGamesResult(games);</span>
+    }
+
+    public CreateGameResult createGame(CreateGameRequest request)
+            throws DataAccessException, BadRequestException, UnauthorizedException {
+
+        // Validate auth token exists
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (request == null ||</span>
+<span class="fc bfc" id="L46" title="All 4 branches covered.">                request.authToken() == null || request.authToken().isBlank()) {</span>
+<span class="fc" id="L47">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
+        }
+
+        // Verify token exists in database/memory
+<span class="fc" id="L51">        AuthData auth = authDao.getAuth(request.authToken());</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L53">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
+        }
+
+        // Validate gameName exists
+<span class="fc bfc" id="L57" title="All 4 branches covered.">        if (request.gameName() == null || request.gameName().isBlank()) {</span>
+<span class="fc" id="L58">            throw new BadRequestException(&quot;Error: bad request&quot;);</span>
+        }
+
+        // Generate new gameID
+<span class="fc" id="L62">        int gameID = generateGameID();</span>
+
+        // Create a new GameData object
+        // Parameters: (gameID, whiteUsername, blackUsername, gameName, chessGame)
+<span class="fc" id="L66">        GameData newGame = new GameData(gameID, null, null, request.gameName(), new ChessGame());</span>
+
+        // Save in DAO
+<span class="fc" id="L69">        gameDao.createGame(newGame);</span>
+
+<span class="fc" id="L71">        return new CreateGameResult(gameID);</span>
+    }
+
+    public void joinGame(JoinGameRequest request)
+            throws DataAccessException, AlreadyTakenException, BadRequestException, UnauthorizedException {
+
+        // Validate auth token exists
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (request == null ||</span>
+<span class="fc bfc" id="L79" title="All 4 branches covered.">                request.authToken() == null || request.authToken().isBlank()) {</span>
+<span class="fc" id="L80">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
+        }
+
+        // Verify token exists in database/memory
+<span class="fc" id="L84">        AuthData auth = authDao.getAuth(request.authToken());</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L86">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
+        }
+
+        // Validate input parameters exist
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (request.playerColor() == null) {</span>
+<span class="fc" id="L91">            throw new BadRequestException(&quot;Error: bad request&quot;);</span>
+        }
+
+<span class="fc" id="L94">        GameData game = gameDao.getGame(request.gameID());</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (game == null) {</span>
+<span class="fc" id="L96">            throw new BadRequestException(&quot;Error: bad request&quot;);</span>
+        }
+
+<span class="fc" id="L99">        String newWhiteUser = game.whiteUsername();</span>
+<span class="fc" id="L100">        String newBlackUser = game.blackUsername();</span>
+
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (request.playerColor().equals(ChessGame.TeamColor.WHITE)) {</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            if (game.whiteUsername() != null) {</span>
+<span class="fc" id="L104">                throw new AlreadyTakenException(&quot;Error: already taken&quot;);</span>
+            }
+<span class="fc" id="L106">            newWhiteUser = auth.username();</span>
+        } else {
+<span class="fc bfc" id="L108" title="All 2 branches covered.">            if (game.blackUsername() != null) {</span>
+<span class="fc" id="L109">                throw new AlreadyTakenException(&quot;Error: already taken&quot;);</span>
+            }
+<span class="fc" id="L111">            newBlackUser = auth.username();</span>
+        }
+
+        // Save in DAO
+<span class="fc" id="L115">        GameData updatedGame = new GameData(</span>
+<span class="fc" id="L116">                game.gameID(),</span>
+                newWhiteUser,
+                newBlackUser,
+<span class="fc" id="L119">                game.gameName(),</span>
+<span class="fc" id="L120">                game.game()</span>
+        );
+<span class="fc" id="L122">        gameDao.updateGame(updatedGame);</span>
+<span class="fc" id="L123">    }</span>
+
+    private int generateGameID() {
+<span class="fc" id="L126">        return nextGameID++;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

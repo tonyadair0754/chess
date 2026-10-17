@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StandardAPITests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.server</a> &gt; <span class="el_source">StandardAPITests.java</span></div><h1>StandardAPITests.java</h1><pre class="source lang-java linenums">package passoff.server;
+
+import chess.ChessGame;
+import org.junit.jupiter.api.*;
+import passoff.model.*;
+import server.Server;
+
+import java.net.HttpURLConnection;
+import java.util.*;
+
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+<span class="fc" id="L12">public class StandardAPITests {</span>
+
+    private static TestUser existingUser;
+    private static TestUser newUser;
+    private static TestCreateRequest createRequest;
+    private static TestServerFacade serverFacade;
+    private static Server server;
+    private String existingAuth;
+
+    // ### TESTING SETUP/CLEANUP ###
+
+    @AfterAll
+    static void stopServer() {
+<span class="fc" id="L25">        server.stop();</span>
+<span class="fc" id="L26">    }</span>
+
+    @BeforeAll
+    public static void init() {
+<span class="fc" id="L30">        server = new Server();</span>
+<span class="fc" id="L31">        var port = server.run(0);</span>
+<span class="fc" id="L32">        System.out.println(&quot;Started test HTTP server on &quot; + port);</span>
+
+<span class="fc" id="L34">        serverFacade = new TestServerFacade(&quot;localhost&quot;, Integer.toString(port));</span>
+<span class="fc" id="L35">        existingUser = new TestUser(&quot;ExistingUser&quot;, &quot;existingUserPassword&quot;, &quot;eu@mail.com&quot;);</span>
+<span class="fc" id="L36">        newUser = new TestUser(&quot;NewUser&quot;, &quot;newUserPassword&quot;, &quot;nu@mail.com&quot;);</span>
+<span class="fc" id="L37">        createRequest = new TestCreateRequest(&quot;testGame&quot;);</span>
+<span class="fc" id="L38">    }</span>
+
+    @BeforeEach
+    public void setup() {
+<span class="fc" id="L42">        serverFacade.clear();</span>
+
+        //one user already logged in
+<span class="fc" id="L45">        TestAuthResult regResult = serverFacade.register(existingUser);</span>
+<span class="fc" id="L46">        existingAuth = regResult.getAuthToken();</span>
+<span class="fc" id="L47">    }</span>
+
+    // ### SERVER-LEVEL API TESTS ###
+
+    @Test
+    @Order(1)
+    @DisplayName(&quot;Static Files&quot;)
+    public void staticFilesSuccess() {
+<span class="fc" id="L55">        String htmlFromServer = serverFacade.file(&quot;/&quot;).replaceAll(&quot;\r&quot;, &quot;&quot;);</span>
+<span class="fc" id="L56">        Assertions.assertEquals(HttpURLConnection.HTTP_OK, serverFacade.getStatusCode(),</span>
+                &quot;Server response code was not 200 OK&quot;);
+<span class="fc" id="L58">        Assertions.assertNotNull(htmlFromServer, &quot;Server returned an empty file&quot;);</span>
+<span class="fc" id="L59">        Assertions.assertTrue(htmlFromServer.contains(&quot;CS 240 Chess Server Web API&quot;),</span>
+                &quot;file returned did not contain an exact match of text from provided index.html&quot;);
+<span class="fc" id="L61">    }</span>
+
+    @Test
+    @Order(2)
+    @DisplayName(&quot;Normal User Login&quot;)
+    public void loginSuccess() {
+<span class="fc" id="L67">        TestAuthResult loginResult = serverFacade.login(existingUser);</span>
+
+<span class="fc" id="L69">        assertHttpOk(loginResult);</span>
+<span class="fc" id="L70">        Assertions.assertEquals(existingUser.getUsername(), loginResult.getUsername(),</span>
+                &quot;Response did not give the same username as user&quot;);
+<span class="fc" id="L72">        Assertions.assertNotNull(loginResult.getAuthToken(), &quot;Response did not return authentication String&quot;);</span>
+<span class="fc" id="L73">    }</span>
+
+    @Test
+    @Order(3)
+    @DisplayName(&quot;Login Bad Request&quot;)
+    public void loginBadRequest() {
+<span class="fc" id="L79">        TestUser[] incompleteLoginRequests = {</span>
+<span class="fc" id="L80">            new TestUser(null, existingUser.getPassword()),</span>
+<span class="fc" id="L81">            new TestUser(existingUser.getUsername(), null),</span>
+        };
+
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        for (TestUser incompleteLoginRequest : incompleteLoginRequests) {</span>
+<span class="fc" id="L85">            TestAuthResult loginResult = serverFacade.login(incompleteLoginRequest);</span>
+
+<span class="fc" id="L87">            assertHttpBadRequest(loginResult);</span>
+<span class="fc" id="L88">            assertAuthFieldsMissing(loginResult);</span>
+        }
+<span class="fc" id="L90">    }</span>
+
+    @Test
+    @Order(4)
+    @DisplayName(&quot;Login Unauthorized (Multiple Forms)&quot;)
+    public void loginUnauthorized() {
+<span class="fc" id="L96">        TestUser[] unauthorizedLoginRequests = { newUser, new TestUser(existingUser.getUsername(), &quot;BAD!PASSWORD&quot;) };</span>
+
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        for (TestUser unauthorizedLoginRequest : unauthorizedLoginRequests) {</span>
+<span class="fc" id="L99">            TestAuthResult loginResult = serverFacade.login(unauthorizedLoginRequest);</span>
+
+<span class="fc" id="L101">            assertHttpUnauthorized(loginResult);</span>
+<span class="fc" id="L102">            assertAuthFieldsMissing(loginResult);</span>
+        }
+<span class="fc" id="L104">    }</span>
+
+    @Test
+    @Order(5)
+    @DisplayName(&quot;Normal User Registration&quot;)
+    public void registerSuccess() {
+        //submit register request
+<span class="fc" id="L111">        TestAuthResult registerResult = serverFacade.register(newUser);</span>
+
+<span class="fc" id="L113">        assertHttpOk(registerResult);</span>
+<span class="fc" id="L114">        Assertions.assertEquals(newUser.getUsername(), registerResult.getUsername(),</span>
+                &quot;Response did not have the same username as was registered&quot;);
+<span class="fc" id="L116">        Assertions.assertNotNull(registerResult.getAuthToken(), &quot;Response did not contain an authentication string&quot;);</span>
+<span class="fc" id="L117">    }</span>
+
+    @Test
+    @Order(6)
+    @DisplayName(&quot;Re-Register User&quot;)
+    public void registerTwice() {
+        //submit register request trying to register existing user
+<span class="fc" id="L124">        TestAuthResult registerResult = serverFacade.register(existingUser);</span>
+
+<span class="fc" id="L126">        assertHttpForbidden(registerResult);</span>
+<span class="fc" id="L127">        assertAuthFieldsMissing(registerResult);</span>
+<span class="fc" id="L128">    }</span>
+
+    @Test
+    @Order(7)
+    @DisplayName(&quot;Register Bad Request&quot;)
+    public void registerBadRequest() {
+        //attempt to register a user without a password
+<span class="fc" id="L135">        TestUser registerRequest = new TestUser(newUser.getUsername(), null, newUser.getEmail());</span>
+<span class="fc" id="L136">        TestAuthResult registerResult = serverFacade.register(registerRequest);</span>
+
+<span class="fc" id="L138">        assertHttpBadRequest(registerResult);</span>
+<span class="fc" id="L139">        assertAuthFieldsMissing(registerResult);</span>
+<span class="fc" id="L140">    }</span>
+
+    @Test
+    @Order(8)
+    @DisplayName(&quot;Normal Logout&quot;)
+    public void logoutSuccess() {
+        //log out existing user
+<span class="fc" id="L147">        TestResult result = serverFacade.logout(existingAuth);</span>
+
+<span class="fc" id="L149">        assertHttpOk(result);</span>
+<span class="fc" id="L150">    }</span>
+
+    @Test
+    @Order(9)
+    @DisplayName(&quot;Invalid Auth Logout&quot;)
+    public void logoutTwice() {
+        //log out user twice
+        //second logout should fail
+<span class="fc" id="L158">        serverFacade.logout(existingAuth);</span>
+<span class="fc" id="L159">        TestResult result = serverFacade.logout(existingAuth);</span>
+
+<span class="fc" id="L161">        assertHttpUnauthorized(result);</span>
+<span class="fc" id="L162">    }</span>
+
+    @Test
+    @Order(10)
+    @DisplayName(&quot;Valid Creation&quot;)
+    public void createGameSuccess() {
+<span class="fc" id="L168">        TestCreateResult createResult = serverFacade.createGame(createRequest, existingAuth);</span>
+
+<span class="fc" id="L170">        assertHttpOk(createResult);</span>
+<span class="fc" id="L171">        Assertions.assertNotNull(createResult.getGameID(), &quot;Result did not return a game ID&quot;);</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">        Assertions.assertTrue(createResult.getGameID() &gt; 0, &quot;Result returned invalid game ID&quot;);</span>
+<span class="fc" id="L173">    }</span>
+
+    @Test
+    @Order(11)
+    @DisplayName(&quot;Create with Bad Authentication&quot;)
+    public void createGameUnauthorized() {
+        //log out user so auth is invalid
+<span class="fc" id="L180">        serverFacade.logout(existingAuth);</span>
+
+<span class="fc" id="L182">        TestCreateResult createResult = serverFacade.createGame(createRequest, existingAuth);</span>
+
+<span class="fc" id="L184">        assertHttpUnauthorized(createResult);</span>
+<span class="fc" id="L185">        Assertions.assertNull(createResult.getGameID(), &quot;Bad result returned a game ID&quot;);</span>
+<span class="fc" id="L186">    }</span>
+
+    @Test
+    @Order(12)
+    @DisplayName(&quot;Create Bad Request&quot;)
+    public void createGameBadRequest() {
+<span class="fc" id="L192">        TestCreateResult createResult = serverFacade.createGame(new TestCreateRequest(null), existingAuth);</span>
+
+<span class="fc" id="L194">        assertHttpBadRequest(createResult);</span>
+<span class="fc" id="L195">        Assertions.assertNull(createResult.getGameID(), &quot;Bad result returned a game ID&quot;);</span>
+<span class="fc" id="L196">    }</span>
+
+    @Test
+    @Order(13)
+    @DisplayName(&quot;Join Created Game&quot;)
+    public void joinGameSuccess() {
+        //create game
+<span class="fc" id="L203">        TestCreateResult createResult = serverFacade.createGame(createRequest, existingAuth);</span>
+
+        //join as white
+<span class="fc" id="L206">        TestJoinRequest joinRequest = new TestJoinRequest(ChessGame.TeamColor.WHITE, createResult.getGameID());</span>
+
+        //try join
+<span class="fc" id="L209">        TestResult joinResult = serverFacade.joinPlayer(joinRequest, existingAuth);</span>
+
+        //check
+<span class="fc" id="L212">        assertHttpOk(joinResult);</span>
+
+<span class="fc" id="L214">        TestListResult listResult = serverFacade.listGames(existingAuth);</span>
+
+<span class="fc" id="L216">        Assertions.assertNotNull(listResult.getGames(), &quot;List result did not contain games&quot;);</span>
+<span class="fc" id="L217">        Assertions.assertEquals(1, listResult.getGames().length, &quot;List result is incorrect size&quot;);</span>
+<span class="fc" id="L218">        Assertions.assertEquals(existingUser.getUsername(), listResult.getGames()[0].getWhiteUsername(),</span>
+                &quot;Username of joined player not present in list result&quot;);
+<span class="fc" id="L220">        Assertions.assertNull(listResult.getGames()[0].getBlackUsername(), &quot;Username present on non-joined color&quot;);</span>
+<span class="fc" id="L221">    }</span>
+
+    @Test
+    @Order(14)
+    @DisplayName(&quot;Join Bad Authentication&quot;)
+    public void joinGameUnauthorized() {
+        //create game
+<span class="fc" id="L228">        TestCreateResult createResult = serverFacade.createGame(createRequest, existingAuth);</span>
+
+        //try join as white
+<span class="fc" id="L231">        TestJoinRequest joinRequest = new TestJoinRequest(ChessGame.TeamColor.WHITE, createResult.getGameID());</span>
+<span class="fc" id="L232">        TestResult joinResult = serverFacade.joinPlayer(joinRequest, existingAuth + &quot;bad stuff&quot;);</span>
+
+        //check
+<span class="fc" id="L235">        assertHttpUnauthorized(joinResult);</span>
+<span class="fc" id="L236">    }</span>
+
+    @Test
+    @Order(15)
+    @DisplayName(&quot;Join Bad Team Color&quot;)
+    public void joinGameBadColor() {
+<span class="fc" id="L242">        TestCreateResult createResult = serverFacade.createGame(createRequest, existingAuth);</span>
+<span class="fc" id="L243">        int gameID = createResult.getGameID();</span>
+
+        //If you use deserialize to the TeamColor enum instead of a String each of these will be read as null
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        for(String color : new String[]{null, &quot;&quot;, &quot;GREEN&quot;}) {</span>
+<span class="fc" id="L247">            assertHttpBadRequest(serverFacade.joinPlayer(new TestJoinRequest(color, gameID), existingAuth));</span>
+        }
+<span class="fc" id="L249">    }</span>
+
+    @Test
+    @Order(16)
+    @DisplayName(&quot;Join Steal Team Color&quot;)
+    public void joinGameStealColor() {
+        //create game
+<span class="fc" id="L256">        TestCreateResult createResult = serverFacade.createGame(createRequest, existingAuth);</span>
+
+        //add existing user as black
+<span class="fc" id="L259">        TestJoinRequest joinRequest = new TestJoinRequest(ChessGame.TeamColor.BLACK, createResult.getGameID());</span>
+<span class="fc" id="L260">        serverFacade.joinPlayer(joinRequest, existingAuth);</span>
+
+        //register second user
+<span class="fc" id="L263">        TestAuthResult registerResult = serverFacade.register(newUser);</span>
+
+        //join request trying to also join  as black
+<span class="fc" id="L266">        TestResult joinResult = serverFacade.joinPlayer(joinRequest, registerResult.getAuthToken());</span>
+
+        //check failed
+<span class="fc" id="L269">        assertHttpForbidden(joinResult);</span>
+<span class="fc" id="L270">    }</span>
+
+    @Test
+    @Order(17)
+    @DisplayName(&quot;Join Bad Game ID&quot;)
+    public void joinGameBadGameId() {
+        //create game
+<span class="fc" id="L277">        createRequest = new TestCreateRequest(&quot;Bad Join&quot;);</span>
+<span class="fc" id="L278">        serverFacade.createGame(createRequest, existingAuth);</span>
+
+        //try join as white
+<span class="fc" id="L281">        TestJoinRequest joinRequest = new TestJoinRequest(ChessGame.TeamColor.WHITE, null);</span>
+<span class="fc" id="L282">        TestResult joinResult = serverFacade.joinPlayer(joinRequest, existingAuth);</span>
+
+        //check
+<span class="fc" id="L285">        assertHttpBadRequest(joinResult);</span>
+<span class="fc" id="L286">    }</span>
+
+    @Test
+    @Order(18)
+    @DisplayName(&quot;List No Games&quot;)
+    public void listGamesEmpty() {
+<span class="fc" id="L292">        TestListResult result = serverFacade.listGames(existingAuth);</span>
+
+<span class="fc" id="L294">        assertHttpOk(result);</span>
+<span class="fc" id="L295">        Assertions.assertNotNull(result.getGames(), &quot;List result did not contain an empty game list&quot;);</span>
+<span class="fc" id="L296">        Assertions.assertEquals(0, result.getGames().length, &quot;Found games when none should be there&quot;);</span>
+<span class="fc" id="L297">    }</span>
+
+    @Test
+    @Order(19)
+    @DisplayName(&quot;List Multiple Games&quot;)
+    public void listGamesSuccess() {
+        //register a few users to create games
+<span class="fc" id="L304">        TestUser userA = new TestUser(&quot;a&quot;, &quot;A&quot;, &quot;a@mail.com&quot;);</span>
+<span class="fc" id="L305">        TestUser userB = new TestUser(&quot;b&quot;, &quot;B&quot;, &quot;b@mail.com&quot;);</span>
+<span class="fc" id="L306">        TestUser userC = new TestUser(&quot;c&quot;, &quot;C&quot;, &quot;c@mail.com&quot;);</span>
+
+<span class="fc" id="L308">        TestAuthResult authA = serverFacade.register(userA);</span>
+<span class="fc" id="L309">        TestAuthResult authB = serverFacade.register(userB);</span>
+<span class="fc" id="L310">        TestAuthResult authC = serverFacade.register(userC);</span>
+
+        //create games
+<span class="fc" id="L313">        TestListEntry[] expectedList = new TestListEntry[4];</span>
+
+        //1 as black from A
+<span class="fc" id="L316">        String game1Name = &quot;I'm numbah one!&quot;;</span>
+<span class="fc" id="L317">        TestCreateResult game1 = serverFacade.createGame(new TestCreateRequest(game1Name), authA.getAuthToken());</span>
+<span class="fc" id="L318">        serverFacade.joinPlayer(new TestJoinRequest(ChessGame.TeamColor.BLACK, game1.getGameID()), authA.getAuthToken());</span>
+<span class="fc" id="L319">        expectedList[0] = new TestListEntry(game1.getGameID(), game1Name, null, authA.getUsername());</span>
+
+
+        //1 as white from B
+<span class="fc" id="L323">        String game2Name = &quot;Lonely&quot;;</span>
+<span class="fc" id="L324">        TestCreateResult game2 = serverFacade.createGame(new TestCreateRequest(game2Name), authB.getAuthToken());</span>
+<span class="fc" id="L325">        serverFacade.joinPlayer(new TestJoinRequest(ChessGame.TeamColor.WHITE, game2.getGameID()), authB.getAuthToken());</span>
+<span class="fc" id="L326">        expectedList[1] = new TestListEntry(game2.getGameID(), game2Name, authB.getUsername(), null);</span>
+
+
+        //1 of each from C
+<span class="fc" id="L330">        String game3Name = &quot;GG&quot;;</span>
+<span class="fc" id="L331">        TestCreateResult game3 = serverFacade.createGame(new TestCreateRequest(game3Name), authC.getAuthToken());</span>
+<span class="fc" id="L332">        serverFacade.joinPlayer(new TestJoinRequest(ChessGame.TeamColor.WHITE, game3.getGameID()), authC.getAuthToken());</span>
+<span class="fc" id="L333">        serverFacade.joinPlayer(new TestJoinRequest(ChessGame.TeamColor.BLACK, game3.getGameID()), authA.getAuthToken());</span>
+<span class="fc" id="L334">        expectedList[2] = new TestListEntry(game3.getGameID(), game3Name, authC.getUsername(), authA.getUsername());</span>
+
+
+        //C play self
+<span class="fc" id="L338">        String game4Name = &quot;All by myself&quot;;</span>
+<span class="fc" id="L339">        TestCreateResult game4 = serverFacade.createGame(new TestCreateRequest(game4Name), authC.getAuthToken());</span>
+<span class="fc" id="L340">        serverFacade.joinPlayer(new TestJoinRequest(ChessGame.TeamColor.WHITE, game4.getGameID()), authC.getAuthToken());</span>
+<span class="fc" id="L341">        serverFacade.joinPlayer(new TestJoinRequest(ChessGame.TeamColor.BLACK, game4.getGameID()), authC.getAuthToken());</span>
+<span class="fc" id="L342">        expectedList[3] = new TestListEntry(game4.getGameID(), game4Name, authC.getUsername(), authC.getUsername());</span>
+
+
+        //list games
+<span class="fc" id="L346">        TestListResult listResult = serverFacade.listGames(existingAuth);</span>
+<span class="fc" id="L347">        assertHttpOk(listResult);</span>
+<span class="fc" id="L348">        TestListEntry[] returnedList = listResult.getGames();</span>
+<span class="fc" id="L349">        Assertions.assertNotNull(returnedList, &quot;List result did not contain a list of games&quot;);</span>
+<span class="fc" id="L350">        Comparator&lt;TestListEntry&gt; gameIdComparator = Comparator.comparingInt(TestListEntry::getGameID);</span>
+<span class="fc" id="L351">        Arrays.sort(expectedList, gameIdComparator);</span>
+<span class="fc" id="L352">        Arrays.sort(returnedList, gameIdComparator);</span>
+
+        //check
+<span class="fc" id="L355">        Assertions.assertArrayEquals(expectedList, returnedList, &quot;Returned Games list was incorrect&quot;);</span>
+<span class="fc" id="L356">    }</span>
+
+    @Test
+    @Order(20)
+    @DisplayName(&quot;Unique Authtoken Each Login&quot;)
+    public void uniqueAuthorizationTokens() {
+<span class="fc" id="L362">        TestAuthResult loginOne = serverFacade.login(existingUser);</span>
+<span class="fc" id="L363">        assertHttpOk(loginOne);</span>
+<span class="fc" id="L364">        Assertions.assertNotNull(loginOne.getAuthToken(), &quot;Login result did not contain an authToken&quot;);</span>
+
+<span class="fc" id="L366">        TestAuthResult loginTwo = serverFacade.login(existingUser);</span>
+<span class="fc" id="L367">        assertHttpOk(loginTwo);</span>
+<span class="fc" id="L368">        Assertions.assertNotNull(loginTwo.getAuthToken(), &quot;Login result did not contain an authToken&quot;);</span>
+
+<span class="fc" id="L370">        Assertions.assertNotEquals(existingAuth, loginOne.getAuthToken(),</span>
+                &quot;Authtoken returned by login matched authtoken from prior register&quot;);
+<span class="fc" id="L372">        Assertions.assertNotEquals(existingAuth, loginTwo.getAuthToken(),</span>
+                &quot;Authtoken returned by login matched authtoken from prior register&quot;);
+<span class="fc" id="L374">        Assertions.assertNotEquals(loginOne.getAuthToken(), loginTwo.getAuthToken(),</span>
+                &quot;Authtoken returned by login matched authtoken from prior login&quot;);
+<span class="fc" id="L376">    }</span>
+
+    @Test
+    @Order(21)
+    @DisplayName(&quot;Authtokens Valid Individually&quot;) 
+    public void uniqueAuthorizationTokensAllWork(){
+<span class="fc" id="L382">        TestAuthResult loginOne = serverFacade.login(existingUser);</span>
+<span class="fc" id="L383">        assertHttpOk(loginOne);</span>
+<span class="fc" id="L384">        Assertions.assertNotNull(loginOne.getAuthToken(), &quot;Login result did not contain an authToken&quot;);</span>
+
+<span class="fc" id="L386">        TestAuthResult loginTwo = serverFacade.login(existingUser);</span>
+<span class="fc" id="L387">        assertHttpOk(loginTwo);</span>
+<span class="fc" id="L388">        Assertions.assertNotNull(loginTwo.getAuthToken(), &quot;Login result did not contain an authToken&quot;);</span>
+
+<span class="fc" id="L390">        TestCreateResult createResult = serverFacade.createGame(createRequest, existingAuth);</span>
+<span class="fc" id="L391">        assertHttpOk(createResult);</span>
+
+
+<span class="fc" id="L394">        TestResult logoutResult = serverFacade.logout(existingAuth);</span>
+<span class="fc" id="L395">        assertHttpOk(logoutResult);</span>
+
+
+<span class="fc" id="L398">        TestJoinRequest joinRequest = new TestJoinRequest(ChessGame.TeamColor.WHITE, createResult.getGameID());</span>
+<span class="fc" id="L399">        TestResult joinResult = serverFacade.joinPlayer(joinRequest, loginOne.getAuthToken());</span>
+<span class="fc" id="L400">        assertHttpOk(joinResult);</span>
+
+
+<span class="fc" id="L403">        TestListResult listResult = serverFacade.listGames(loginTwo.getAuthToken());</span>
+<span class="fc" id="L404">        assertHttpOk(listResult);</span>
+<span class="fc" id="L405">        Assertions.assertNotNull(listResult.getGames(), &quot;List result did not contain games&quot;);</span>
+<span class="fc" id="L406">        Assertions.assertEquals(1, listResult.getGames().length, &quot;List result contains incorrect number of games&quot;);</span>
+<span class="fc" id="L407">        Assertions.assertEquals(existingUser.getUsername(), listResult.getGames()[0].getWhiteUsername(),</span>
+                &quot;incorrect username on joined game&quot;);
+<span class="fc" id="L409">    }</span>
+
+    @Test
+    @Order(22)
+    @DisplayName(&quot;Clear Test&quot;)
+    public void clearData() {
+        //create filler games
+<span class="fc" id="L416">        serverFacade.createGame(new TestCreateRequest(&quot;Mediocre game&quot;), existingAuth);</span>
+<span class="fc" id="L417">        serverFacade.createGame(new TestCreateRequest(&quot;Awesome game&quot;), existingAuth);</span>
+
+        //log in new user
+<span class="fc" id="L420">        TestUser user = new TestUser(&quot;ClearMe&quot;, &quot;cleared&quot;, &quot;clear@mail.com&quot;);</span>
+<span class="fc" id="L421">        TestAuthResult registerResult = serverFacade.register(user);</span>
+
+        //create and join game for new user
+<span class="fc" id="L424">        TestCreateResult createResult = serverFacade.createGame(new TestCreateRequest(&quot;Clear game&quot;),</span>
+<span class="fc" id="L425">                registerResult.getAuthToken());</span>
+
+<span class="fc" id="L427">        TestJoinRequest joinRequest = new TestJoinRequest(ChessGame.TeamColor.WHITE, createResult.getGameID());</span>
+<span class="fc" id="L428">        serverFacade.joinPlayer(joinRequest, registerResult.getAuthToken());</span>
+
+        //do clear
+<span class="fc" id="L431">        TestResult clearResult = serverFacade.clear();</span>
+
+        //test clear successful
+<span class="fc" id="L434">        assertHttpOk(clearResult);</span>
+
+        //make sure neither user can log in
+        //first user
+<span class="fc" id="L438">        TestAuthResult loginResult = serverFacade.login(existingUser);</span>
+<span class="fc" id="L439">        assertHttpUnauthorized(loginResult);</span>
+
+        //second user
+<span class="fc" id="L442">        loginResult = serverFacade.login(user);</span>
+<span class="fc" id="L443">        assertHttpUnauthorized(loginResult);</span>
+
+        //try to use old auth token to list games
+<span class="fc" id="L446">        TestListResult listResult = serverFacade.listGames(existingAuth);</span>
+<span class="fc" id="L447">        assertHttpUnauthorized(listResult);</span>
+
+        //log in new user and check that list is empty
+<span class="fc" id="L450">        registerResult = serverFacade.register(user);</span>
+<span class="fc" id="L451">        assertHttpOk(registerResult);</span>
+<span class="fc" id="L452">        listResult = serverFacade.listGames(registerResult.getAuthToken());</span>
+<span class="fc" id="L453">        assertHttpOk(listResult);</span>
+
+        //check listResult
+<span class="fc" id="L456">        Assertions.assertNotNull(listResult.getGames(), &quot;List result did not contain an empty list of games&quot;);</span>
+<span class="fc" id="L457">        Assertions.assertEquals(0, listResult.getGames().length, &quot;list result did not return 0 games after clear&quot;);</span>
+<span class="fc" id="L458">    }</span>
+
+    @Test
+    @Order(23)
+    @DisplayName(&quot;Multiple Clears&quot;)
+    public void clearMultipleTimes() {
+
+        //clear multiple times
+<span class="fc" id="L466">        serverFacade.clear();</span>
+<span class="fc" id="L467">        serverFacade.clear();</span>
+<span class="fc" id="L468">        TestResult result = serverFacade.clear();</span>
+
+        //make sure returned good
+<span class="fc" id="L471">        assertHttpOk(result);</span>
+<span class="fc" id="L472">    }</span>
+
+    // ### HELPER ASSERTIONS ###
+
+    private void assertHttpOk(TestResult result) {
+<span class="fc" id="L477">        Assertions.assertEquals(HttpURLConnection.HTTP_OK, serverFacade.getStatusCode(),</span>
+<span class="fc" id="L478">                &quot;Server response code was not 200 OK (message: %s)&quot;.formatted(result.getMessage()));</span>
+<span class="pc bpc" id="L479" title="1 of 2 branches missed.">        Assertions.assertFalse(result.getMessage() != null &amp;&amp;</span>
+<span class="pc bnc" id="L480" title="All 2 branches missed.">                        result.getMessage().toLowerCase(Locale.ROOT).contains(&quot;error&quot;),</span>
+                &quot;Result returned an error message&quot;);
+<span class="fc" id="L482">    }</span>
+
+    private void assertHttpBadRequest(TestResult result) {
+<span class="fc" id="L485">        assertHttpError(result, HttpURLConnection.HTTP_BAD_REQUEST, &quot;Bad Request&quot;);</span>
+<span class="fc" id="L486">    }</span>
+
+    private void assertHttpUnauthorized(TestResult result) {
+<span class="fc" id="L489">        assertHttpError(result, HttpURLConnection.HTTP_UNAUTHORIZED, &quot;Unauthorized&quot;);</span>
+<span class="fc" id="L490">    }</span>
+
+    private void assertHttpForbidden(TestResult result) {
+<span class="fc" id="L493">        assertHttpError(result, HttpURLConnection.HTTP_FORBIDDEN, &quot;Forbidden&quot;);</span>
+<span class="fc" id="L494">    }</span>
+
+    private void assertHttpError(TestResult result, int statusCode, String message) {
+<span class="fc" id="L497">        Assertions.assertEquals(statusCode, serverFacade.getStatusCode(),</span>
+<span class="fc" id="L498">                &quot;Server response code was not %d %s (message: %s)&quot;.formatted(statusCode, message, result.getMessage()));</span>
+<span class="fc" id="L499">        Assertions.assertNotNull(result.getMessage(), &quot;Invalid Request didn't return an error message&quot;);</span>
+<span class="fc" id="L500">        Assertions.assertTrue(result.getMessage().toLowerCase(Locale.ROOT).contains(&quot;error&quot;),</span>
+                &quot;Error message didn't contain the word \&quot;Error\&quot;&quot;);
+<span class="fc" id="L502">    }</span>
+
+    private void assertAuthFieldsMissing(TestAuthResult result) {
+<span class="fc" id="L505">        Assertions.assertNull(result.getUsername(), &quot;Response incorrectly returned username&quot;);</span>
+<span class="fc" id="L506">        Assertions.assertNull(result.getAuthToken(), &quot;Response incorrectly return authentication String&quot;);</span>
+<span class="fc" id="L507">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

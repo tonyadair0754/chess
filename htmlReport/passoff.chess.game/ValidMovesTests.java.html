@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValidMovesTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess.game</a> &gt; <span class="el_source">ValidMovesTests.java</span></div><h1>ValidMovesTests.java</h1><pre class="source lang-java linenums">package passoff.chess.game;
+
+import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPosition;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import passoff.chess.TestUtilities;
+
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="nc" id="L14">public class ValidMovesTests {</span>
+    private static final String TRAPPED_PIECE_MOVES = &quot;ChessGame validMoves returned valid moves for a trapped piece&quot;;
+
+    @Test
+    @DisplayName(&quot;Check Forces Movement&quot;)
+    public void forcedMove() {
+
+<span class="nc" id="L21">        var game = new ChessGame();</span>
+<span class="nc" id="L22">        game.setTeamTurn(ChessGame.TeamColor.BLACK);</span>
+<span class="nc" id="L23">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                    | | | | | | | | |
+                    | | | | | | | | |
+                    | |B| | | | | | |
+                    | | | | | |K| | |
+                    | | |n| | | | | |
+                    | | | | | | | | |
+                    | | | |q| |k| | |
+                    | | | | | | | | |
+                    &quot;&quot;&quot;));
+
+        // Knight moves
+<span class="nc" id="L35">        ChessPosition knightPosition = new ChessPosition(4, 3);</span>
+<span class="nc" id="L36">        var validMoves = TestUtilities.loadMoves(knightPosition, new int[][]{{3, 5}, {6, 2}});</span>
+<span class="nc" id="L37">        assertMoves(game, validMoves, knightPosition);</span>
+
+        // Queen Moves
+<span class="nc" id="L40">        ChessPosition queenPosition = new ChessPosition(2, 4);</span>
+<span class="nc" id="L41">        validMoves = TestUtilities.loadMoves(queenPosition, new int[][]{{3, 5}, {4, 4}});</span>
+<span class="nc" id="L42">        assertMoves(game, validMoves, queenPosition);</span>
+<span class="nc" id="L43">    }</span>
+
+
+    @Test
+    @DisplayName(&quot;Piece Partially Trapped&quot;)
+    public void moveIntoCheck() {
+
+<span class="nc" id="L50">        var game = new ChessGame();</span>
+<span class="nc" id="L51">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                    | | | | | | | | |
+                    | | | | | | | | |
+                    | | | | | | | | |
+                    |k|r| | | |R| |K|
+                    | | | | | | | | |
+                    | | | | | | | | |
+                    | | | | | | | | |
+                    | | | | | | | | |
+                    &quot;&quot;&quot;));
+
+<span class="nc" id="L62">        ChessPosition rookPosition = new ChessPosition(5, 6);</span>
+<span class="nc" id="L63">        var validMoves = TestUtilities.loadMoves(rookPosition, new int[][]{</span>
+                {5, 7}, {5, 5}, {5, 4}, {5, 3}, {5, 2}
+        });
+
+<span class="nc" id="L67">        assertMoves(game, validMoves, rookPosition);</span>
+<span class="nc" id="L68">    }</span>
+
+    @Test
+    @DisplayName(&quot;Piece Completely Trapped&quot;)
+    public void rookPinnedToKing() {
+
+<span class="nc" id="L74">        var game = new ChessGame();</span>
+<span class="nc" id="L75">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                    |K| | | | | | |Q|
+                    | | | | | | | | |
+                    | | | | | | | | |
+                    | | | | | | | | |
+                    | | | |r| | | | |
+                    | | | | | | | | |
+                    | |k| | | | | | |
+                    | | | | | | | | |
+                    &quot;&quot;&quot;));
+
+<span class="nc" id="L86">        ChessPosition position = new ChessPosition(4, 4);</span>
+<span class="nc" id="L87">        Assertions.assertTrue(game.validMoves(position).isEmpty(), TRAPPED_PIECE_MOVES);</span>
+<span class="nc" id="L88">    }</span>
+
+
+    @Test
+    @DisplayName(&quot;Pieces Cannot Eliminate Check&quot;)
+    public void kingInDanger() {
+
+<span class="nc" id="L95">        var game = new ChessGame();</span>
+<span class="nc" id="L96">        game.setTeamTurn(ChessGame.TeamColor.BLACK);</span>
+<span class="nc" id="L97">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                    |R| | | | | | | |
+                    | | | |k| | | |b|
+                    | | | | |P| | | |
+                    |K| |Q|n| | | | |
+                    | | | | | | | | |
+                    | | | | | | | |r|
+                    | | | | | |p| | |
+                    | |q| | | | | | |
+                    &quot;&quot;&quot;));
+
+        //get positions
+<span class="nc" id="L109">        ChessPosition kingPosition = new ChessPosition(7, 4);</span>
+<span class="nc" id="L110">        ChessPosition pawnPosition = new ChessPosition(2, 6);</span>
+<span class="nc" id="L111">        ChessPosition bishopPosition = new ChessPosition(7, 8);</span>
+<span class="nc" id="L112">        ChessPosition queenPosition = new ChessPosition(1, 2);</span>
+<span class="nc" id="L113">        ChessPosition knightPosition = new ChessPosition(5, 4);</span>
+<span class="nc" id="L114">        ChessPosition rookPosition = new ChessPosition(3, 8);</span>
+
+
+<span class="nc" id="L117">        var validMoves = TestUtilities.loadMoves(kingPosition, new int[][]{{6, 5}});</span>
+
+<span class="nc" id="L119">        assertMoves(game, validMoves, kingPosition);</span>
+
+        //make sure teams other pieces are not allowed to move
+<span class="nc" id="L122">        Assertions.assertTrue(game.validMoves(pawnPosition).isEmpty(), TRAPPED_PIECE_MOVES);</span>
+<span class="nc" id="L123">        Assertions.assertTrue(game.validMoves(bishopPosition).isEmpty(), TRAPPED_PIECE_MOVES);</span>
+<span class="nc" id="L124">        Assertions.assertTrue(game.validMoves(queenPosition).isEmpty(), TRAPPED_PIECE_MOVES);</span>
+<span class="nc" id="L125">        Assertions.assertTrue(game.validMoves(knightPosition).isEmpty(), TRAPPED_PIECE_MOVES);</span>
+<span class="nc" id="L126">        Assertions.assertTrue(game.validMoves(rookPosition).isEmpty(), TRAPPED_PIECE_MOVES);</span>
+<span class="nc" id="L127">    }</span>
+
+
+    @Test
+    @DisplayName(&quot;King Cannot Move Into Check&quot;)
+    public void noPutSelfInDanger() {
+
+<span class="nc" id="L134">        var game = new ChessGame();</span>
+<span class="nc" id="L135">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                    | | | | | | | | |
+                    | | | | | | | | |
+                    | | | | | | | | |
+                    | | | | | | | | |
+                    | | | | | |k| | |
+                    | | | | | | | | |
+                    | | | | | |K| | |
+                    | | | | | | | | |
+                    &quot;&quot;&quot;));
+
+<span class="nc" id="L146">        ChessPosition position = new ChessPosition(2, 6);</span>
+<span class="nc" id="L147">        var validMoves = TestUtilities.loadMoves(position, new int[][]{</span>
+                {1, 5}, {1, 6}, {1, 7}, {2, 5}, {2, 7},
+        });
+<span class="nc" id="L150">        assertMoves(game, validMoves, position);</span>
+<span class="nc" id="L151">    }</span>
+
+    @Test
+    @DisplayName(&quot;Valid Moves Independent of Team Turn&quot;)
+    public void validMovesOtherTeam() {
+<span class="nc" id="L156">        var game = new ChessGame();</span>
+<span class="nc" id="L157">        game.setBoard(TestUtilities.defaultBoard());</span>
+<span class="nc" id="L158">        game.setTeamTurn(ChessGame.TeamColor.BLACK);</span>
+
+<span class="nc" id="L160">        ChessPosition position = new ChessPosition(2, 5);</span>
+<span class="nc" id="L161">        var validMoves = TestUtilities.loadMoves(position, new int[][]{</span>
+                {3, 5}, {4, 5}
+        });
+<span class="nc" id="L164">        assertMoves(game, validMoves, position);</span>
+<span class="nc" id="L165">    }</span>
+
+    private static void assertMoves(ChessGame game, List&lt;ChessMove&gt; validMoves, ChessPosition position) {
+<span class="nc" id="L168">        var generatedMoves = game.validMoves(position);</span>
+<span class="nc" id="L169">        var actualMoves = new ArrayList&lt;&gt;(generatedMoves);</span>
+<span class="nc" id="L170">        TestUtilities.validateMoves(validMoves, actualMoves);</span>
+<span class="nc" id="L171">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

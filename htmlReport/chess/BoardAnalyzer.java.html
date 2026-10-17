@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BoardAnalyzer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">chess</a> &gt; <span class="el_source">BoardAnalyzer.java</span></div><h1>BoardAnalyzer.java</h1><pre class="source lang-java linenums">package chess;
+
+/**
+ * Contains utility methods for analyzing a chess board
+ */
+public class BoardAnalyzer {
+
+<span class="nc" id="L8">    public BoardAnalyzer() {</span>
+
+<span class="nc" id="L10">    }</span>
+
+    /**
+     * Finds the position of a piece, given that piece's type and color (primarily used to find the king, as there is only one king per team)
+     *
+     * @param pieceType
+     * @param teamColor
+     * @return The position of the matching piece, or null if it isn't on the board
+     */
+    public static ChessPosition findPiecePos(ChessBoard board, ChessPiece.PieceType pieceType, ChessGame.TeamColor teamColor) {
+<span class="nc bnc" id="L20" title="All 2 branches missed.">        for (int row = 1; row &lt;= 8; row++) {</span>
+<span class="nc bnc" id="L21" title="All 2 branches missed.">            for (int col = 1; col &lt;= 8; col++) {</span>
+<span class="nc" id="L22">                ChessPosition pos = new ChessPosition(row, col);</span>
+<span class="nc" id="L23">                ChessPiece piece = board.getPiece(pos);</span>
+<span class="nc bnc" id="L24" title="All 2 branches missed.">                if (piece != null</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">                        &amp;&amp; piece.getPieceType() == pieceType</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">                        &amp;&amp; piece.getTeamColor() == teamColor) {</span>
+<span class="nc" id="L27">                    return pos;</span>
+                }
+            }
+        }
+<span class="nc" id="L31">        return null;</span>
+    }
+
+    /**
+     * Checks whether a piece at piecePosition can attack a piece at targetPosition
+     *
+     * @param board
+     * @param piecePosition
+     * @param targetPosition
+     * @param defendingTeam
+     * @return True if the piece at the starting position can attack the piece at the target position
+     */
+    private static boolean canAttackPosition(
+            ChessBoard board,
+            ChessPosition piecePosition,
+            ChessPosition targetPosition,
+            ChessGame.TeamColor defendingTeam) {
+<span class="nc" id="L48">        ChessPiece piece = board.getPiece(piecePosition);</span>
+
+<span class="nc bnc" id="L50" title="All 4 branches missed.">        if (piece == null || piece.getTeamColor() == defendingTeam) {</span>
+<span class="nc" id="L51">            return false;</span>
+        }
+
+        // Pawns attack diagonally, regardless of whether the target square is empty
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (piece.getPieceType() == ChessPiece.PieceType.PAWN) {</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">            int direction = (piece.getTeamColor() == ChessGame.TeamColor.WHITE) ? 1 : -1;</span>
+<span class="nc" id="L57">            int rowDiff = targetPosition.getRow() - piecePosition.getRow();</span>
+<span class="nc" id="L58">            int colDiff = Math.abs(targetPosition.getColumn() - piecePosition.getColumn());</span>
+
+<span class="nc bnc" id="L60" title="All 4 branches missed.">            return rowDiff == direction &amp;&amp; colDiff == 1;</span>
+        }
+
+        // Standard piece attacks
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        for (ChessMove move : piece.pieceMoves(board, piecePosition)) {</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">            if (move.getEndPosition().equals(targetPosition)) {</span>
+<span class="nc" id="L66">                return true;</span>
+            }
+<span class="nc" id="L68">        }</span>
+
+<span class="nc" id="L70">        return false;</span>
+    }
+
+    /**
+     * Evaluates whether targetPosition is under attack by any opposing piece
+     *
+     * @param targetPosition
+     * @param defendingTeam
+     * @return
+     */
+    public static boolean isPositionAttacked(ChessBoard board, ChessPosition targetPosition, ChessGame.TeamColor defendingTeam) {
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        for (int row = 1; row &lt;= 8; row++) {</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            for (int col = 1; col &lt;= 8; col++) {</span>
+<span class="nc" id="L83">                ChessPosition pos = new ChessPosition(row, col);</span>
+
+<span class="nc bnc" id="L85" title="All 2 branches missed.">                if (canAttackPosition(board, pos, targetPosition, defendingTeam)) {</span>
+<span class="nc" id="L86">                    return true;</span>
+                }
+            }
+        }
+
+<span class="nc" id="L91">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

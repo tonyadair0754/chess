@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TestUtilities.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess</a> &gt; <span class="el_source">TestUtilities.java</span></div><h1>TestUtilities.java</h1><pre class="source lang-java linenums">package passoff.chess;
+
+import chess.*;
+import org.junit.jupiter.api.Assertions;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
+<span class="nc" id="L11">public class TestUtilities {</span>
+    public static void validateMoves(String boardText, ChessPosition startPosition, int[][] endPositions) {
+<span class="nc" id="L13">        var board = loadBoard(boardText);</span>
+<span class="nc" id="L14">        var testPiece = board.getPiece(startPosition);</span>
+<span class="nc" id="L15">        Assertions.assertNotNull(testPiece, &quot;Could not find piece on board&quot;);</span>
+<span class="nc" id="L16">        var validMoves = loadMoves(startPosition, endPositions);</span>
+<span class="nc" id="L17">        validateMoves(board, testPiece, startPosition, validMoves);</span>
+<span class="nc" id="L18">    }</span>
+
+    public static void validateMoves(ChessBoard board, ChessPiece testPiece, ChessPosition startPosition,
+                                     List&lt;ChessMove&gt; validMoves) {
+<span class="nc" id="L22">        var pieceMoves = testPiece.pieceMoves(board, startPosition);</span>
+<span class="nc" id="L23">        Assertions.assertNotNull(pieceMoves, &quot;pieceMoves returned null&quot;);</span>
+<span class="nc" id="L24">        validateMoves(validMoves, new ArrayList&lt;&gt;(pieceMoves));</span>
+<span class="nc" id="L25">    }</span>
+
+    public static void validateMoves(List&lt;ChessMove&gt; expected, List&lt;ChessMove&gt; actual) {
+<span class="nc" id="L28">        Comparator&lt;ChessMove&gt; comparator = Comparator.comparingInt(TestUtilities::moveToInt);</span>
+<span class="nc" id="L29">        expected.sort(comparator);</span>
+<span class="nc" id="L30">        actual.sort(comparator);</span>
+
+<span class="nc" id="L32">        Assertions.assertEquals(expected, actual, &quot;Wrong moves&quot;);</span>
+<span class="nc" id="L33">    }</span>
+
+
+<span class="nc" id="L36">    private static final Map&lt;Character, ChessPiece.PieceType&gt; CHAR_TO_TYPE_MAP = Map.of(</span>
+<span class="nc" id="L37">            'p', ChessPiece.PieceType.PAWN,</span>
+<span class="nc" id="L38">            'n', ChessPiece.PieceType.KNIGHT,</span>
+<span class="nc" id="L39">            'r', ChessPiece.PieceType.ROOK,</span>
+<span class="nc" id="L40">            'q', ChessPiece.PieceType.QUEEN,</span>
+<span class="nc" id="L41">            'k', ChessPiece.PieceType.KING,</span>
+<span class="nc" id="L42">            'b', ChessPiece.PieceType.BISHOP);</span>
+
+    public static ChessBoard loadBoard(String boardText) {
+<span class="nc" id="L45">        var board = new ChessBoard();</span>
+<span class="nc" id="L46">        int row = 8;</span>
+<span class="nc" id="L47">        int column = 1;</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        for (var c : boardText.toCharArray()) {</span>
+<span class="nc bnc" id="L49" title="All 4 branches missed.">            switch (c) {</span>
+                case '\n' -&gt; {
+<span class="nc" id="L51">                    column = 1;</span>
+<span class="nc" id="L52">                    row--;</span>
+<span class="nc" id="L53">                }</span>
+<span class="nc" id="L54">                case ' ' -&gt; column++;</span>
+                case '|' -&gt; {
+<span class="nc" id="L56">                }</span>
+                default -&gt; {
+<span class="nc bnc" id="L58" title="All 2 branches missed.">                    ChessGame.TeamColor color = Character.isLowerCase(c) ? ChessGame.TeamColor.BLACK</span>
+<span class="nc" id="L59">                            : ChessGame.TeamColor.WHITE;</span>
+<span class="nc" id="L60">                    var type = CHAR_TO_TYPE_MAP.get(Character.toLowerCase(c));</span>
+<span class="nc" id="L61">                    var position = new ChessPosition(row, column);</span>
+<span class="nc" id="L62">                    var piece = new ChessPiece(color, type);</span>
+<span class="nc" id="L63">                    board.addPiece(position, piece);</span>
+<span class="nc" id="L64">                    column++;</span>
+                }
+            }
+        }
+<span class="nc" id="L68">        return board;</span>
+    }
+
+    public static ChessBoard defaultBoard() {
+<span class="nc" id="L72">        return loadBoard(&quot;&quot;&quot;</span>
+                |r|n|b|q|k|b|n|r|
+                |p|p|p|p|p|p|p|p|
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |P|P|P|P|P|P|P|P|
+                |R|N|B|Q|K|B|N|R|
+                &quot;&quot;&quot;);
+    }
+
+    public static List&lt;ChessMove&gt; loadMoves(ChessPosition startPosition, int[][] endPositions) {
+<span class="nc" id="L85">        var validMoves = new ArrayList&lt;ChessMove&gt;();</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        for (var endPosition : endPositions) {</span>
+<span class="nc" id="L87">            validMoves.add(new ChessMove(startPosition,</span>
+                    new ChessPosition(endPosition[0], endPosition[1]), null));
+        }
+<span class="nc" id="L90">        return validMoves;</span>
+    }
+
+    private static int positionToInt(ChessPosition position) {
+<span class="nc" id="L94">        return 10 * position.getRow() + position.getColumn();</span>
+    }
+
+    private static int moveToInt(ChessMove move) {
+<span class="nc" id="L98">        return 1000 * positionToInt(move.getStartPosition()) + 10 * positionToInt(move.getEndPosition()) +</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                ((move.getPromotionPiece() != null) ? move.getPromotionPiece().ordinal() + 1 : 0);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

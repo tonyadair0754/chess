@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChessBoard.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">chess</a> &gt; <span class="el_source">ChessBoard.java</span></div><h1>ChessBoard.java</h1><pre class="source lang-java linenums">package chess;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Objects;
+
+/**
+ * A chessboard that can hold and rearrange chess pieces.
+ * &lt;p&gt;
+ * Note: You can add to this class, but you may not alter
+ * signature of the existing methods.
+ */
+public class ChessBoard {
+<span class="fc" id="L14">    private ChessPiece[][] board = new ChessPiece[8][8];</span>
+
+<span class="fc" id="L16">    public ChessBoard() {</span>
+        ChessBoard board;
+<span class="fc" id="L18">    }</span>
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L22" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L23">            return false;</span>
+        }
+<span class="nc" id="L25">        ChessBoard that = (ChessBoard) o;</span>
+<span class="nc" id="L26">        return Objects.deepEquals(board, that.board);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L31">        return Arrays.deepHashCode(board);</span>
+    }
+
+    /**
+     * Adds a chess piece to the chessboard
+     *
+     * @param position where to add the piece to
+     * @param piece    the piece to add
+     */
+    public void addPiece(ChessPosition position, ChessPiece piece) {
+<span class="fc" id="L41">        board[position.getRow()-1][position.getColumn()-1] = piece;</span>
+<span class="fc" id="L42">    }</span>
+
+    /**
+     * Removes a chess piece from the chessboard
+     *
+     * @param position where to remove a piece
+     */
+    public void removePiece(ChessPosition position) {
+<span class="nc" id="L50">        board[position.getRow()-1][position.getColumn()-1] = null;</span>
+<span class="nc" id="L51">    }</span>
+
+    /**
+     * Gets a chess piece on the chessboard
+     *
+     * @param position The position to get the piece from
+     * @return Either the piece at the position, or null if no piece is at that
+     * position
+     */
+    public ChessPiece getPiece(ChessPosition position) {
+<span class="fc" id="L61">        return board[position.getRow()-1][position.getColumn()-1];</span>
+    }
+
+    /**
+     * Sets the board to the default starting board
+     * (How the game of chess normally starts)
+     */
+    public void resetBoard() {
+<span class="fc" id="L69">        board = new ChessPiece[8][8];</span>
+
+<span class="fc" id="L71">        addPawns(2, ChessGame.TeamColor.WHITE);</span>
+<span class="fc" id="L72">        addPawns(7, ChessGame.TeamColor.BLACK);</span>
+<span class="fc" id="L73">        addBackRow(1, ChessGame.TeamColor.WHITE);</span>
+<span class="fc" id="L74">        addBackRow(8, ChessGame.TeamColor.BLACK);</span>
+<span class="fc" id="L75">    }</span>
+
+    public ChessBoard getBoardSnapshot() {
+<span class="fc" id="L78">        ChessBoard snapshot = new ChessBoard();</span>
+
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        for (int row = 1; row &lt;= 8; row++) {</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">            for (int col = 1; col &lt;= 8; col++) {</span>
+<span class="fc" id="L82">                ChessPosition position = new ChessPosition(row, col);</span>
+<span class="fc" id="L83">                ChessPiece piece = getPiece(position);</span>
+
+<span class="fc bfc" id="L85" title="All 2 branches covered.">                if (piece != null) {</span>
+<span class="fc" id="L86">                    snapshot.addPiece(position, piece);</span>
+                }
+            }
+        }
+
+<span class="fc" id="L91">        return snapshot;</span>
+    }
+
+    public void addBackRow(int row, ChessGame.TeamColor color) {
+<span class="fc" id="L95">        ChessPiece.PieceType[] pieces = {</span>
+            ChessPiece.PieceType.ROOK,
+            ChessPiece.PieceType.KNIGHT,
+            ChessPiece.PieceType.BISHOP,
+            ChessPiece.PieceType.QUEEN,
+            ChessPiece.PieceType.KING,
+            ChessPiece.PieceType.BISHOP,
+            ChessPiece.PieceType.KNIGHT,
+            ChessPiece.PieceType.ROOK
+        };
+
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        for (int col = 0; col &lt; pieces.length; col++) {</span>
+<span class="fc" id="L107">            addPiece(</span>
+                    new ChessPosition(row, col + 1),
+                    new ChessPiece(color, pieces[col]));
+        }
+<span class="fc" id="L111">    }</span>
+
+    private void addPawns(int row, ChessGame.TeamColor color) {
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        for (int col = 1; col &lt;= 8; col++) {</span>
+<span class="fc" id="L115">            addPiece(</span>
+                    new ChessPosition(row, col),
+                    new ChessPiece(color, ChessPiece.PieceType.PAWN)
+            );
+        }
+<span class="fc" id="L120">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

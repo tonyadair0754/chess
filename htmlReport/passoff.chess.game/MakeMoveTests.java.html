@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MakeMoveTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess.game</a> &gt; <span class="el_source">MakeMoveTests.java</span></div><h1>MakeMoveTests.java</h1><pre class="source lang-java linenums">package passoff.chess.game;
+
+import chess.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import passoff.chess.TestUtilities;
+
+<span class="nc" id="L12">public class MakeMoveTests {</span>
+    private static final String WRONG_BOARD = &quot;Board not correct after move made&quot;;
+    private ChessGame game;
+
+    @BeforeEach
+    public void setUp() {
+<span class="nc" id="L18">        game = new ChessGame();</span>
+<span class="nc" id="L19">        game.setTeamTurn(ChessGame.TeamColor.WHITE);</span>
+<span class="nc" id="L20">        game.setBoard(TestUtilities.defaultBoard());</span>
+<span class="nc" id="L21">    }</span>
+
+    @Test
+    @DisplayName(&quot;Make Valid King Move&quot;)
+    public void makeValidKingMove() throws InvalidMoveException {
+<span class="nc" id="L26">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | | | | | |
+                |p| | | | | | |k|
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | |K| | | | | | |
+                &quot;&quot;&quot;));
+<span class="nc" id="L36">        game.setTeamTurn(ChessGame.TeamColor.WHITE);</span>
+
+<span class="nc" id="L38">        var kingStartPosition = new ChessPosition(1, 2);</span>
+<span class="nc" id="L39">        var kingEndPosition = new ChessPosition(1, 1);</span>
+<span class="nc" id="L40">        game.makeMove(new ChessMove(kingStartPosition, kingEndPosition, null));</span>
+
+<span class="nc" id="L42">        Assertions.assertEquals(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | | | | | |
+                |p| | | | | | |k|
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |K| | | | | | | |
+<span class="nc" id="L51">                &quot;&quot;&quot;), game.getBoard(), WRONG_BOARD);</span>
+<span class="nc" id="L52">    }</span>
+
+    @Test
+    @DisplayName(&quot;Make Valid Queen Move&quot;)
+    public void makeValidQueenMove() throws InvalidMoveException {
+<span class="nc" id="L57">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | |q| |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |K| |k| | | | | |
+                &quot;&quot;&quot;));
+<span class="nc" id="L67">        game.setTeamTurn(ChessGame.TeamColor.BLACK);</span>
+
+<span class="nc" id="L69">        var queenStartPosition = new ChessPosition(6, 7);</span>
+<span class="nc" id="L70">        var queenEndPosition = new ChessPosition(1, 2);</span>
+<span class="nc" id="L71">        game.makeMove(new ChessMove(queenStartPosition, queenEndPosition, null));</span>
+
+<span class="nc" id="L73">        Assertions.assertEquals(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |K|q|k| | | | | |
+<span class="nc" id="L82">                &quot;&quot;&quot;), game.getBoard(), WRONG_BOARD);</span>
+<span class="nc" id="L83">    }</span>
+
+    @Test
+    @DisplayName(&quot;Make Valid Rook Move&quot;)
+    public void makeValidRookMove() throws InvalidMoveException {
+<span class="nc" id="L88">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | |R|
+                | | | | | | | | |
+                |K| | | | | | | |
+                &quot;&quot;&quot;));
+<span class="nc" id="L98">        game.setTeamTurn(ChessGame.TeamColor.WHITE);</span>
+
+<span class="nc" id="L100">        var rookStartPosition = new ChessPosition(3, 8);</span>
+<span class="nc" id="L101">        var rookEndPosition = new ChessPosition(7, 8);</span>
+<span class="nc" id="L102">        game.makeMove(new ChessMove(rookStartPosition, rookEndPosition, null));</span>
+
+<span class="nc" id="L104">        Assertions.assertEquals(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | |R|
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |K| | | | | | | |
+<span class="nc" id="L113">                &quot;&quot;&quot;), game.getBoard(), WRONG_BOARD);</span>
+<span class="nc" id="L114">    }</span>
+
+    @Test
+    @DisplayName(&quot;Make Valid Knight Move&quot;)
+    public void makeValidKnightMove() throws InvalidMoveException {
+<span class="nc" id="L119">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | | |
+                | | |n| | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | |P|
+                | | | | |K| | | |
+                &quot;&quot;&quot;));
+<span class="nc" id="L129">        game.setTeamTurn(ChessGame.TeamColor.BLACK);</span>
+
+<span class="nc" id="L131">        var knightStartPosition = new ChessPosition(6, 3);</span>
+<span class="nc" id="L132">        var knightEndPosition = new ChessPosition(4, 4);</span>
+<span class="nc" id="L133">        game.makeMove(new ChessMove(knightStartPosition, knightEndPosition, null));</span>
+
+<span class="nc" id="L135">        Assertions.assertEquals(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | |n| | | | |
+                | | | | | | | | |
+                | | | | | | | |P|
+                | | | | |K| | | |
+<span class="nc" id="L144">                &quot;&quot;&quot;), game.getBoard(), WRONG_BOARD);</span>
+<span class="nc" id="L145">    }</span>
+
+    @Test
+    @DisplayName(&quot;Make Valid Bishop Move&quot;)
+    public void makeValidBishopMove() throws InvalidMoveException {
+<span class="nc" id="L150">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                |p| | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | |B| |K| | | |
+                &quot;&quot;&quot;));
+<span class="nc" id="L160">        game.setTeamTurn(ChessGame.TeamColor.WHITE);</span>
+
+<span class="nc" id="L162">        var bishopStartPosition = new ChessPosition(1, 3);</span>
+<span class="nc" id="L163">        var bishopEndPosition = new ChessPosition(6, 8);</span>
+<span class="nc" id="L164">        game.makeMove(new ChessMove(bishopStartPosition, bishopEndPosition, null));</span>
+
+<span class="nc" id="L166">        Assertions.assertEquals(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                |p| | | | | | | |
+                | | | | | | | |B|
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | |K| | | |
+<span class="nc" id="L175">                &quot;&quot;&quot;), game.getBoard(), WRONG_BOARD);</span>
+<span class="nc" id="L176">    }</span>
+
+    @Test
+    @DisplayName(&quot;Make Valid Pawn Move&quot;)
+    public void makeValidPawnMove() throws InvalidMoveException {
+<span class="nc" id="L181">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | |k| | | | | | |
+                | |p| | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | |P| |
+                | | | | | | |K| |
+                &quot;&quot;&quot;));
+<span class="nc" id="L191">        game.setTeamTurn(ChessGame.TeamColor.BLACK);</span>
+
+<span class="nc" id="L193">        var pawnStartPosition = new ChessPosition(7, 2);</span>
+<span class="nc" id="L194">        var pawnEndPosition = new ChessPosition(6, 2);</span>
+<span class="nc" id="L195">        game.makeMove(new ChessMove(pawnStartPosition, pawnEndPosition, null));</span>
+
+<span class="nc" id="L197">        Assertions.assertEquals(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | |k| | | | | | |
+                | | | | | | | | |
+                | |p| | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | |P| |
+                | | | | | | |K| |
+<span class="nc" id="L206">                &quot;&quot;&quot;), game.getBoard(), WRONG_BOARD);</span>
+<span class="nc" id="L207">    }</span>
+
+    @Test
+    @DisplayName(&quot;Make Move Changes Team Turn&quot;)
+    public void makeMoveChangesTurn() throws InvalidMoveException {
+<span class="nc" id="L212">        String failureMessage = &quot;Team color not changed after move made&quot;;</span>
+
+<span class="nc" id="L214">        game.makeMove(new ChessMove(new ChessPosition(2, 5), new ChessPosition(4, 5), null));</span>
+<span class="nc" id="L215">        Assertions.assertEquals(ChessGame.TeamColor.BLACK, game.getTeamTurn(), failureMessage);</span>
+
+<span class="nc" id="L217">        game.makeMove(new ChessMove(new ChessPosition(7, 5), new ChessPosition(5, 5), null));</span>
+<span class="nc" id="L218">        Assertions.assertEquals(ChessGame.TeamColor.WHITE, game.getTeamTurn(), failureMessage);</span>
+<span class="nc" id="L219">    }</span>
+
+    @Test
+    @DisplayName(&quot;Invalid Make Move Too Far&quot;)
+    public void invalidMakeMoveTooFar() {
+<span class="nc" id="L224">        Assertions.assertThrows(InvalidMoveException.class,</span>
+<span class="nc" id="L225">                () -&gt; game.makeMove(new ChessMove(new ChessPosition(2, 1), new ChessPosition(5, 1), null)));</span>
+<span class="nc" id="L226">    }</span>
+
+    @Test
+    @DisplayName(&quot;Invalid Make Move Pawn Diagonal No Capture&quot;)
+    public void invalidMakeMovePawnDiagonalNoCapture() {
+<span class="nc" id="L231">        Assertions.assertThrows(InvalidMoveException.class,</span>
+<span class="nc" id="L232">                () -&gt; game.makeMove(new ChessMove(new ChessPosition(2, 1), new ChessPosition(3, 2), null)));</span>
+<span class="nc" id="L233">    }</span>
+
+    @Test
+    @DisplayName(&quot;Invalid Make Move Out Of Turn&quot;)
+    public void invalidMakeMoveOutOfTurn() {
+<span class="nc" id="L238">        Assertions.assertThrows(InvalidMoveException.class,</span>
+<span class="nc" id="L239">                () -&gt; game.makeMove(new ChessMove(new ChessPosition(7, 5), new ChessPosition(6, 5), null)));</span>
+<span class="nc" id="L240">    }</span>
+
+    @Test
+    @DisplayName(&quot;Invalid Make Move Through Piece&quot;)
+    public void invalidMakeMoveThroughPiece() {
+<span class="nc" id="L245">        Assertions.assertThrows(InvalidMoveException.class,</span>
+<span class="nc" id="L246">                () -&gt; game.makeMove(new ChessMove(new ChessPosition(1, 1), new ChessPosition(4, 1), null)));</span>
+<span class="nc" id="L247">    }</span>
+
+    @Test
+    @DisplayName(&quot;Invalid Make Move No Piece&quot;)
+    public void invalidMakeMoveNoPiece() {
+        //starting position does not have a piece
+<span class="nc" id="L253">        Assertions.assertThrows(InvalidMoveException.class,</span>
+<span class="nc" id="L254">                () -&gt; game.makeMove(new ChessMove(new ChessPosition(4, 4), new ChessPosition(4, 5), null)));</span>
+<span class="nc" id="L255">    }</span>
+
+    @Test
+    @DisplayName(&quot;Invalid Make Move Invalid Move&quot;)
+    public void invalidMakeMoveInvalidMove() {
+        //not a move the piece can ever take
+<span class="nc" id="L261">        Assertions.assertThrows(InvalidMoveException.class,</span>
+<span class="nc" id="L262">                () -&gt; game.makeMove(new ChessMove(new ChessPosition(8, 7), new ChessPosition(5, 5), null)));</span>
+<span class="nc" id="L263">    }</span>
+
+    @Test
+    @DisplayName(&quot;Invalid Make Move Take Own Piece&quot;)
+    public void invalidMakeMoveTakeOwnPiece() {
+<span class="nc" id="L268">        Assertions.assertThrows(InvalidMoveException.class,</span>
+<span class="nc" id="L269">                () -&gt; game.makeMove(new ChessMove(new ChessPosition(1, 3), new ChessPosition(2, 4), null)));</span>
+<span class="nc" id="L270">    }</span>
+
+    @Test
+    @DisplayName(&quot;Invalid Make Move Captured Piece&quot;)
+    public void invalidMakeMoveCapturedPiece() throws InvalidMoveException {
+<span class="nc" id="L275">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                |r|n|b|q|k|b|n|r|
+                |p|p|p|p| |p|p|p|
+                | | | | | | | | |
+                | | | | |p| | | |
+                | | | | | | | | |
+                | | | | | |N| | |
+                |P|P|P|P|P|P|P|P|
+                |R|N|B|Q|K|B| |R|
+                &quot;&quot;&quot;));
+
+<span class="nc" id="L286">        game.makeMove(new ChessMove(new ChessPosition(3, 6), new ChessPosition(5, 5), null));</span>
+<span class="nc" id="L287">        Assertions.assertThrows(InvalidMoveException.class,</span>
+<span class="nc" id="L288">                () -&gt; game.makeMove(new ChessMove(new ChessPosition(5, 5), new ChessPosition(4, 5), null)));</span>
+<span class="nc" id="L289">    }</span>
+
+    @Test
+    @DisplayName(&quot;Invalid Make Move Jump Enemy&quot;)
+    public void invalidMakeMoveJumpEnemy() {
+<span class="nc" id="L294">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |R| |r| | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | |K| | | |
+                &quot;&quot;&quot;));
+<span class="nc" id="L304">        Assertions.assertThrows(InvalidMoveException.class,</span>
+<span class="nc" id="L305">                () -&gt; game.makeMove(new ChessMove(new ChessPosition(5, 1), new ChessPosition(5, 5), null)));</span>
+<span class="nc" id="L306">    }</span>
+
+    @Test
+    @DisplayName(&quot;Invalid Make Move In Check&quot;)
+    public void invalidMakeMoveInCheck() {
+<span class="nc" id="L311">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                |r|n| |q|k|b| |r|
+                |p| |p|p|p|p|p|p|
+                |b|p| | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |P| | |B| |n| | |
+                |R|P|P| | |P|P|P|
+                | |N|B|Q|K| |R| |
+                &quot;&quot;&quot;));
+        //try to make an otherwise valid move that doesn't remove check
+<span class="nc" id="L322">        Assertions.assertThrows(InvalidMoveException.class,</span>
+<span class="nc" id="L323">                () -&gt; game.makeMove(new ChessMove(new ChessPosition(1, 7), new ChessPosition(1, 8), null)));</span>
+<span class="nc" id="L324">    }</span>
+
+    @Test
+    @DisplayName(&quot;Invalid Make Move Double Move Moved Pawn&quot;)
+    public void invalidMakeMoveDoubleMoveMovedPawn() {
+<span class="nc" id="L329">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                |r|n|b|q|k|b|n|r|
+                |p| |p|p|p|p|p|p|
+                | | | | | | | | |
+                | |p| | | | | | |
+                | | | | | | | | |
+                | | | | | | |P| |
+                |P|P|P|P|P|P| |P|
+                |R|N|B|Q|K|B|N|R|
+                &quot;&quot;&quot;));
+<span class="nc" id="L339">        Assertions.assertThrows(InvalidMoveException.class,</span>
+<span class="nc" id="L340">                () -&gt; game.makeMove(new ChessMove(new ChessPosition(3, 7), new ChessPosition(5, 7), null)));</span>
+<span class="nc" id="L341">    }</span>
+
+
+    @ParameterizedTest
+    @EnumSource(value = ChessPiece.PieceType.class, names = {&quot;QUEEN&quot;, &quot;ROOK&quot;, &quot;KNIGHT&quot;, &quot;BISHOP&quot;})
+    @DisplayName(&quot;Pawn Promotion&quot;)
+    public void promotionMoves(ChessPiece.PieceType promotionType) throws InvalidMoveException {
+<span class="nc" id="L348">        String pieceAtStart = &quot;After move, a piece is still present in the start position&quot;;</span>
+<span class="nc" id="L349">        String noPieceAtEnd = &quot;After move, no piece found at the end position&quot;;</span>
+<span class="nc" id="L350">        String incorrectType = &quot;Found piece at end position is not the correct piece type&quot;;</span>
+<span class="nc" id="L351">        String incorrectColor = &quot;Found piece at end position is the wrong team color&quot;;</span>
+
+<span class="nc" id="L353">        game.setBoard(TestUtilities.loadBoard(&quot;&quot;&quot;</span>
+                | | | | | | | | |
+                | | |P| | | | | |
+                | | | | | | |k| |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | |K| | |p| | | |
+                | | | | | |Q| | |
+                &quot;&quot;&quot;));
+
+        //White promotion
+<span class="nc" id="L365">        ChessMove whitePromotion = new ChessMove(new ChessPosition(7, 3), new ChessPosition(8, 3), promotionType);</span>
+<span class="nc" id="L366">        game.makeMove(whitePromotion);</span>
+
+<span class="nc" id="L368">        Assertions.assertNull(game.getBoard().getPiece(whitePromotion.getStartPosition()), pieceAtStart);</span>
+<span class="nc" id="L369">        ChessPiece whiteEndPiece = game.getBoard().getPiece(whitePromotion.getEndPosition());</span>
+<span class="nc" id="L370">        Assertions.assertNotNull(whiteEndPiece, noPieceAtEnd);</span>
+<span class="nc" id="L371">        Assertions.assertEquals(promotionType, whiteEndPiece.getPieceType(), incorrectType);</span>
+<span class="nc" id="L372">        Assertions.assertEquals(ChessGame.TeamColor.WHITE, whiteEndPiece.getTeamColor(), incorrectColor);</span>
+
+
+        //Black take + promotion
+<span class="nc" id="L376">        game.setTeamTurn(ChessGame.TeamColor.BLACK);</span>
+<span class="nc" id="L377">        ChessMove blackPromotion = new ChessMove(new ChessPosition(2, 5), new ChessPosition(1, 6), promotionType);</span>
+<span class="nc" id="L378">        game.makeMove(blackPromotion);</span>
+
+<span class="nc" id="L380">        Assertions.assertNull(game.getBoard().getPiece(blackPromotion.getStartPosition()), pieceAtStart);</span>
+<span class="nc" id="L381">        ChessPiece blackEndPiece = game.getBoard().getPiece(blackPromotion.getEndPosition());</span>
+<span class="nc" id="L382">        Assertions.assertNotNull(blackEndPiece, noPieceAtEnd);</span>
+<span class="nc" id="L383">        Assertions.assertEquals(promotionType, blackEndPiece.getPieceType(), incorrectType);</span>
+<span class="nc" id="L384">        Assertions.assertEquals(ChessGame.TeamColor.BLACK, blackEndPiece.getTeamColor(), incorrectColor);</span>
+<span class="nc" id="L385">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

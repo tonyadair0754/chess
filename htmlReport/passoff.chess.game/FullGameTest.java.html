@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FullGameTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess.game</a> &gt; <span class="el_source">FullGameTest.java</span></div><h1>FullGameTest.java</h1><pre class="source lang-java linenums">package passoff.chess.game;
+
+import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPosition;
+import chess.InvalidMoveException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+<span class="nc" id="L11">public class FullGameTest {</span>
+    @Test
+    @DisplayName(&quot;Full Game Checkmate&quot;)
+    public void scholarsMate() throws InvalidMoveException {
+<span class="nc" id="L15">        var game = new ChessGame();</span>
+<span class="nc" id="L16">        game.makeMove(new ChessMove(new ChessPosition(2, 5), new ChessPosition(4, 5), null));</span>
+        /*
+                |r|n|b|q|k|b|n|r|
+                |p|p|p|p|p|p|p|p|
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | |P| | | |
+                | | | | | | | | |
+                |P|P|P|P| |P|P|P|
+                |R|N|B|Q|K|B|N|R|
+         */
+<span class="nc" id="L27">        game.makeMove(new ChessMove(new ChessPosition(7, 5), new ChessPosition(5, 5), null));</span>
+        /*
+                |r|n|b|q|k|b|n|r|
+                |p|p|p|p| |p|p|p|
+                | | | | | | | | |
+                | | | | |p| | | |
+                | | | | |P| | | |
+                | | | | | | | | |
+                |P|P|P|P| |P|P|P|
+                |R|N|B|Q|K|B|N|R|
+         */
+<span class="nc" id="L38">        game.makeMove(new ChessMove(new ChessPosition(1, 6), new ChessPosition(4, 3), null));</span>
+        /*
+                |r|n|b|q|k|b|n|r|
+                |p|p|p|p| |p|p|p|
+                | | | | | | | | |
+                | | | | |p| | | |
+                | | |B| |P| | | |
+                | | | | | | | | |
+                |P|P|P|P| |P|P|P|
+                |R|N|B|Q|K| |N|R|
+         */
+<span class="nc" id="L49">        game.makeMove(new ChessMove(new ChessPosition(8, 7), new ChessPosition(6, 6), null));</span>
+        /*
+                |r|n|b|q|k|b| |r|
+                |p|p|p|p| |p|p|p|
+                | | | | | |n| | |
+                | | | | |p| | | |
+                | | |B| |P| | | |
+                | | | | | | | | |
+                |P|P|P|P| |P|P|P|
+                |R|N|B|Q|K| |N|R|
+         */
+<span class="nc" id="L60">        game.makeMove(new ChessMove(new ChessPosition(1, 4), new ChessPosition(5, 8), null));</span>
+        /*
+                |r|n|b|q|k|b| |r|
+                |p|p|p|p| |p|p|p|
+                | | | | | |n| | |
+                | | | | |p| | |Q|
+                | | |B| |P| | | |
+                | | | | | | | | |
+                |P|P|P|P| |P|P|P|
+                |R|N|B| |K| |N|R|
+         */
+<span class="nc" id="L71">        game.makeMove(new ChessMove(new ChessPosition(8, 2), new ChessPosition(6, 3), null));</span>
+        /*
+                |r| |b|q|k|b| |r|
+                |p|p|p|p| |p|p|p|
+                | | |n| | |n| | |
+                | | | | |p| | |Q|
+                | | |B| |P| | | |
+                | | | | | | | | |
+                |P|P|P|P| |P|P|P|
+                |R|N|B| |K| |N|R|
+         */
+<span class="nc" id="L82">        game.makeMove(new ChessMove(new ChessPosition(5, 8), new ChessPosition(7, 6), null));</span>
+        /*
+                |r| |b|q|k|b| |r|
+                |p|p|p|p| |Q|p|p|
+                | | |n| | |n| | |
+                | | | | |p| | | |
+                | | |B| |P| | | |
+                | | | | | | | | |
+                |P|P|P|P| |P|P|P|
+                |R|N|B| |K| |N|R|
+         */
+<span class="nc" id="L93">        Assertions.assertTrue(game.isInCheck(ChessGame.TeamColor.BLACK), GameStatusTests.MISSING_BLACK_CHECK);</span>
+<span class="nc" id="L94">        Assertions.assertFalse(game.isInCheck(ChessGame.TeamColor.WHITE), GameStatusTests.INCORRECT_WHITE_CHECK);</span>
+<span class="nc" id="L95">        Assertions.assertTrue(game.isInCheckmate(ChessGame.TeamColor.BLACK), GameStatusTests.MISSING_BLACK_CHECKMATE);</span>
+<span class="nc" id="L96">        Assertions.assertFalse(game.isInCheckmate(ChessGame.TeamColor.WHITE), GameStatusTests.INCORRECT_WHITE_CHECKMATE);</span>
+<span class="nc" id="L97">        Assertions.assertFalse(game.isInStalemate(ChessGame.TeamColor.BLACK), GameStatusTests.INCORRECT_BLACK_STALEMATE);</span>
+<span class="nc" id="L98">        Assertions.assertFalse(game.isInStalemate(ChessGame.TeamColor.WHITE), GameStatusTests.INCORRECT_WHITE_STALEMATE);</span>
+<span class="nc" id="L99">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

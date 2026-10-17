@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Server.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">server</a> &gt; <span class="el_source">Server.java</span></div><h1>Server.java</h1><pre class="source lang-java linenums">package server;
+
+import dataaccess.*;
+import handler.DatabaseHandler;
+import handler.GameHandler;
+import handler.UserHandler;
+import io.javalin.*;
+import service.DatabaseService;
+import service.GameService;
+import service.UserService;
+
+/**
+ * The Server receives network HTTP requests and sends them to the correct handler for processing.
+ * The server should also handle all unhandled exceptions that your application generates
+ * and return the appropriate HTTP status code.
+ */
+public class Server {
+
+    private final Javalin javalin;
+
+<span class="fc" id="L21">    public Server() {</span>
+        // --- Create new instances for all layers ---
+<span class="fc" id="L23">        UserDAO userDao = new UserDAOMemory();</span>
+<span class="fc" id="L24">        AuthDAO authDao = new AuthDAOMemory();</span>
+<span class="fc" id="L25">        GameDAO gameDao = new GameDAOMemory();</span>
+
+<span class="fc" id="L27">        DatabaseService databaseService = new DatabaseService(userDao, authDao, gameDao);</span>
+<span class="fc" id="L28">        UserService userService = new UserService(userDao, authDao);</span>
+<span class="fc" id="L29">        GameService gameService = new GameService(authDao, gameDao);</span>
+
+<span class="fc" id="L31">        DatabaseHandler databaseHandler = new DatabaseHandler(databaseService);</span>
+<span class="fc" id="L32">        UserHandler userHandler = new UserHandler(userService);</span>
+<span class="fc" id="L33">        GameHandler gameHandler = new GameHandler(gameService);</span>
+
+<span class="fc" id="L35">        javalin = Javalin.create(config -&gt; config.staticFiles.add(&quot;web&quot;));</span>
+
+        // --- Endpoints ---
+<span class="fc" id="L38">        javalin.delete(&quot;/db&quot;, databaseHandler::clearDb);</span>
+<span class="fc" id="L39">        javalin.post(&quot;/user&quot;, userHandler::registerUser);</span>
+<span class="fc" id="L40">        javalin.post(&quot;/session&quot;, userHandler::loginUser);</span>
+<span class="fc" id="L41">        javalin.delete(&quot;/session&quot;, userHandler::logoutUser);</span>
+<span class="fc" id="L42">        javalin.get(&quot;/game&quot;, gameHandler::listGames);</span>
+<span class="fc" id="L43">        javalin.post(&quot;/game&quot;, gameHandler::createGame);</span>
+<span class="fc" id="L44">        javalin.put(&quot;/game&quot;, gameHandler::joinGame);</span>
+<span class="fc" id="L45">    }</span>
+
+    public int run(int desiredPort) {
+<span class="fc" id="L48">        javalin.start(desiredPort);</span>
+<span class="fc" id="L49">        return javalin.port();</span>
+    }
+
+    public void stop() {
+<span class="fc" id="L53">        javalin.stop();</span>
+<span class="fc" id="L54">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

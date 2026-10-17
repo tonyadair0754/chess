@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChessMoveTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess</a> &gt; <span class="el_source">ChessMoveTests.java</span></div><h1>ChessMoveTests.java</h1><pre class="source lang-java linenums">package passoff.chess;
+
+import chess.ChessMove;
+import chess.ChessPiece;
+import chess.ChessPosition;
+
+import java.util.Collection;
+import java.util.List;
+
+
+public class ChessMoveTests extends EqualsTestingUtility&lt;ChessMove&gt; {
+    public ChessMoveTests() {
+<span class="nc" id="L13">        super(&quot;ChessMove&quot;, &quot;moves&quot;);</span>
+<span class="nc" id="L14">    }</span>
+
+    @Override
+    protected ChessMove buildOriginal() {
+<span class="nc" id="L18">        return new ChessMove(new ChessPosition(2, 6), new ChessPosition(1, 5), null);</span>
+    }
+
+    @Override
+    protected Collection&lt;ChessMove&gt; buildAllDifferent() {
+<span class="nc" id="L23">        return List.of(</span>
+                new ChessMove(new ChessPosition(1, 5), new ChessPosition(2, 6), null),
+                new ChessMove(new ChessPosition(2, 4), new ChessPosition(1, 5), null),
+                new ChessMove(new ChessPosition(2, 6), new ChessPosition(5, 3), null),
+                new ChessMove(new ChessPosition(2, 6), new ChessPosition(1, 5), ChessPiece.PieceType.QUEEN),
+                new ChessMove(new ChessPosition(2, 6), new ChessPosition(1, 5), ChessPiece.PieceType.ROOK),
+                new ChessMove(new ChessPosition(2, 6), new ChessPosition(1, 5), ChessPiece.PieceType.BISHOP),
+                new ChessMove(new ChessPosition(2, 6), new ChessPosition(1, 5), ChessPiece.PieceType.KNIGHT)
+        );
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

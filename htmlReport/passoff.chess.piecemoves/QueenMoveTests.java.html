@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QueenMoveTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess.piecemoves</a> &gt; <span class="el_source">QueenMoveTests.java</span></div><h1>QueenMoveTests.java</h1><pre class="source lang-java linenums">package passoff.chess.piecemoves;
+
+import chess.ChessPosition;
+import org.junit.jupiter.api.Test;
+import passoff.chess.TestUtilities;
+
+<span class="nc" id="L7">public class QueenMoveTests {</span>
+    @Test
+    public void queenMoveUntilEdge() {
+<span class="nc" id="L10">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | |q| |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(7, 7),
+                new int[][]{
+                        {8, 7},
+                        {8, 8},
+                        {7, 8},
+                        {6, 8},
+                        {6, 7}, {5, 7}, {4, 7}, {3, 7}, {2, 7}, {1, 7},
+                        {6, 6}, {5, 5}, {4, 4}, {3, 3}, {2, 2}, {1, 1},
+                        {7, 6}, {7, 5}, {7, 4}, {7, 3}, {7, 2}, {7, 1},
+                        {8, 6},
+                }
+        );
+<span class="nc" id="L32">    }</span>
+
+
+    @Test
+    public void queenCaptureEnemy() {
+<span class="nc" id="L37">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        |b| | | | | | | |
+                        | | | | | | | | |
+                        | | |R| | | | | |
+                        | | | | | | | | |
+                        |Q| | |p| | | | |
+                        | | | | | | | | |
+                        |P| |n| | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(4, 1),
+                new int[][]{
+                        {5, 1}, {6, 1}, {7, 1}, {8, 1},
+                        {5, 2},
+                        {4, 2}, {4, 3}, {4, 4},
+                        {3, 1}, {3, 2},
+                        {2, 3},
+                }
+        );
+<span class="nc" id="L56">    }</span>
+
+
+    @Test
+    public void queenBlocked() {
+<span class="nc" id="L61">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        |P|R| | | | | | |
+                        |Q|K| | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(1, 1),
+                new int[][]{}
+        );
+<span class="nc" id="L74">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

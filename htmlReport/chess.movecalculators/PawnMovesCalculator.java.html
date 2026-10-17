@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PawnMovesCalculator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">chess.movecalculators</a> &gt; <span class="el_source">PawnMovesCalculator.java</span></div><h1>PawnMovesCalculator.java</h1><pre class="source lang-java linenums">package chess.movecalculators;
+
+import chess.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+<span class="nc" id="L9">public class PawnMovesCalculator implements PieceMovesCalculator{</span>
+
+    /**
+     * Defines where a pawn can move
+     *
+     * @param board
+     * @param myPosition
+     * @return A list of ChessMove objects
+     */
+    public Collection&lt;ChessMove&gt; pieceMoves(ChessBoard board, ChessPosition myPosition) {
+<span class="nc" id="L19">        List&lt;ChessMove&gt; moves = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L21" title="All 2 branches missed.">        if (board.getPiece(myPosition).getTeamColor() == ChessGame.TeamColor.WHITE) {</span>
+<span class="nc" id="L22">            checkMove(1, -1, board, myPosition, moves);</span>
+<span class="nc" id="L23">            checkMove(1, 0, board, myPosition, moves);</span>
+<span class="nc" id="L24">            checkMove(1, 1, board, myPosition, moves);</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">            if (myPosition.getRow() == 2</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">                    &amp;&amp; board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn())) == null) {</span>
+<span class="nc" id="L27">                checkMove(2, 0, board, myPosition, moves);</span>
+            }
+        } else {
+<span class="nc" id="L30">            checkMove(-1, -1, board, myPosition, moves);</span>
+<span class="nc" id="L31">            checkMove(-1, 0, board, myPosition, moves);</span>
+<span class="nc" id="L32">            checkMove(-1, 1, board, myPosition, moves);</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">            if (myPosition.getRow() == 7</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">                    &amp;&amp; board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn())) == null) {</span>
+<span class="nc" id="L35">                checkMove(-2, 0, board, myPosition, moves);</span>
+            }
+        }
+
+<span class="nc" id="L39">        return moves;</span>
+    }
+
+    /**
+     * Helper method that checks whether the piece can move to a specified space
+     *
+     * @param rowChange
+     * @param colChange
+     * @param board
+     * @param myPosition
+     * @param moves
+     */
+    private void checkMove(int rowChange, int colChange, ChessBoard board, ChessPosition myPosition, List&lt;ChessMove&gt; moves) {
+<span class="nc" id="L52">        int newRow = myPosition.getRow();</span>
+<span class="nc" id="L53">        int newCol = myPosition.getColumn();</span>
+<span class="nc" id="L54">        ChessPiece thisPiece = board.getPiece(myPosition);</span>
+
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (!ChessPosition.inOnBoard(newRow + rowChange, newCol + colChange)) {</span>
+<span class="nc" id="L57">            return;</span>
+        }
+
+<span class="nc" id="L60">        ChessPosition newPos = new ChessPosition(newRow + rowChange, newCol + colChange);</span>
+<span class="nc" id="L61">        ChessPiece thatPiece = board.getPiece(newPos);</span>
+
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (colChange == 0) {</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            if (thatPiece == null) {</span>
+<span class="nc" id="L65">                addMove(myPosition, newPos, moves);</span>
+            }
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        } else if (thatPiece != null) {</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">            if (thatPiece.getTeamColor() != thisPiece.getTeamColor()) {</span>
+<span class="nc" id="L69">                addMove(myPosition, newPos, moves);</span>
+            }
+        }
+<span class="nc" id="L72">    }</span>
+
+    /**
+     * Add move helper
+     *
+     * @param myPosition
+     * @param newPos
+     * @param moves
+     */
+    private void addMove(ChessPosition myPosition, ChessPosition newPos, Collection&lt;ChessMove&gt; moves) {
+<span class="nc bnc" id="L82" title="All 4 branches missed.">        if (newPos.getRow() == 1 || newPos.getRow() == 8) {</span>
+<span class="nc" id="L83">            moves.add(new ChessMove(myPosition, newPos, ChessPiece.PieceType.ROOK));</span>
+<span class="nc" id="L84">            moves.add(new ChessMove(myPosition, newPos, ChessPiece.PieceType.KNIGHT));</span>
+<span class="nc" id="L85">            moves.add(new ChessMove(myPosition, newPos, ChessPiece.PieceType.BISHOP));</span>
+<span class="nc" id="L86">            moves.add(new ChessMove(myPosition, newPos, ChessPiece.PieceType.QUEEN));</span>
+        } else {
+<span class="nc" id="L88">            moves.add(new ChessMove(myPosition, newPos, null));</span>
+        }
+<span class="nc" id="L90">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

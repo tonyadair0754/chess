@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CastlingTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess.extracredit</a> &gt; <span class="el_source">CastlingTests.java</span></div><h1>CastlingTests.java</h1><pre class="source lang-java linenums">package passoff.chess.extracredit;
+
+import chess.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import passoff.chess.TestUtilities;
+
+/**
+ * Tests if the ChessGame implementation can handle Castling moves
+ * Castling is a situational move the king can make as it's first move. If one of the rooks has not yet moved
+ * and there are no pieces between the rook and the king, and the path is &quot;safe&quot;, the king can castle. Castling is
+ * performed by moving the king 2 spaces towards the qualifying rook, and the rook &quot;jumping&quot; the king to sit next
+ * to the king on the opposite side it was previously. A path is considered &quot;safe&quot; if 1: the king is not in check
+ * and 2: neither the space the king moves past nor the space the king ends up at can be reached by an opponents piece.
+ */
+<span class="nc" id="L18">public class CastlingTests {</span>
+    private static final String INVALID_CASTLE_PRESENT = &quot;ChessGame validMoves contained an invalid castling move&quot;;
+    private static final String VALID_CASTLE_MISSING = &quot;ChessGame validMoves did not contain valid castle move&quot;;
+    private static final String INCORRECT_BOARD = &quot;Wrong board after castle move made&quot;;
+
+<span class="nc" id="L23">    private static final ChessPosition WHITE_KING_POSITION = new ChessPosition(1, 5);</span>
+<span class="nc" id="L24">    private static final ChessMove WHITE_QUEENSIDE_CASTLE = new ChessMove(WHITE_KING_POSITION, new ChessPosition(1, 3), null);</span>
+<span class="nc" id="L25">    private static final ChessMove WHITE_KINGSIDE_CASTLE = new ChessMove(WHITE_KING_POSITION, new ChessPosition(1, 7), null);</span>
+
+<span class="nc" id="L27">    private static final ChessPosition BLACK_KING_POSITION = new ChessPosition(8, 5);</span>
+<span class="nc" id="L28">    private static final ChessMove BLACK_QUEENSIDE_CASTLE = new ChessMove(BLACK_KING_POSITION, new ChessPosition(8, 3), null);</span>
+<span class="nc" id="L29">    private static final ChessMove BLACK_KINGSIDE_CASTLE = new ChessMove(BLACK_KING_POSITION, new ChessPosition(8, 7), null);</span>
+
+
+    @Test
+    @Order(0)
+    @DisplayName(&quot;White Team Can Castle&quot;)
+    public void castleWhite() {
+<span class="nc" id="L36">        ChessGame game1 = createNewGameWithBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |R| | | |K| | |R|
+                &quot;&quot;&quot;, ChessGame.TeamColor.WHITE);
+
+        //check that with nothing in way, king can castle
+<span class="nc" id="L48">        assertWhiteCanCastle(game1, true, true);</span>
+
+        //queen side castle works correctly
+<span class="nc" id="L51">        makeMoveAndAssertBoard(game1, WHITE_QUEENSIDE_CASTLE, &quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | |K|R| | | |R|
+                &quot;&quot;&quot;);
+
+        //reset board
+<span class="nc" id="L63">        ChessGame game2 = createNewGameWithBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |R| | | |K| | |R|
+                &quot;&quot;&quot;, ChessGame.TeamColor.WHITE);
+
+        //king side castle works correctly
+<span class="nc" id="L75">        makeMoveAndAssertBoard(game2, WHITE_KINGSIDE_CASTLE, &quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |R| | | | |R|K| |
+                &quot;&quot;&quot;);
+<span class="nc" id="L85">    }</span>
+
+    @Test
+    @Order(0)
+    @DisplayName(&quot;Black Team Can Castle&quot;)
+    public void castleBlack() {
+<span class="nc" id="L91">        ChessGame game1 = createNewGameWithBoard(&quot;&quot;&quot;</span>
+                |r| | | |k| | |r|
+                | |p| | | | | |q|
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | |K| | | |
+                |R| | | | | | | |
+                &quot;&quot;&quot;, ChessGame.TeamColor.BLACK);
+
+        //check that with nothing in way, king can castle
+<span class="nc" id="L103">        assertBlackCanCastle(game1, true, true);</span>
+
+        //queen side castle works correctly
+<span class="nc" id="L106">        makeMoveAndAssertBoard(game1, BLACK_QUEENSIDE_CASTLE, &quot;&quot;&quot;</span>
+                | | |k|r| | | |r|
+                | |p| | | | | |q|
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | |K| | | |
+                |R| | | | | | | |
+                &quot;&quot;&quot;);
+
+
+        //reset board
+<span class="nc" id="L119">        ChessGame game2 = createNewGameWithBoard(&quot;&quot;&quot;</span>
+                |r| | | |k| | |r|
+                | |p| | | | | |q|
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | |K| | | |
+                |R| | | | | | | |
+                &quot;&quot;&quot;, ChessGame.TeamColor.BLACK);
+
+        //king side castle works correctly
+<span class="nc" id="L131">        makeMoveAndAssertBoard(game2, BLACK_KINGSIDE_CASTLE, &quot;&quot;&quot;</span>
+                |r| | | | |r|k| |
+                | |p| | | | | |q|
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | |K| | | |
+                |R| | | | | | | |
+                &quot;&quot;&quot;);
+<span class="nc" id="L141">    }</span>
+
+    @Test
+    @Order(1)
+    @DisplayName(&quot;Cannot Castle After Moving&quot;)
+    public void noCastleAfterMove() throws InvalidMoveException {
+<span class="nc" id="L147">        ChessGame game = createNewGameWithBoard(&quot;&quot;&quot;</span>
+                | | |k| | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |R| | | |K| | |R|
+                &quot;&quot;&quot;, ChessGame.TeamColor.WHITE);
+
+        //move left rook
+<span class="nc" id="L159">        game.makeMove(new ChessMove(new ChessPosition(1, 1), new ChessPosition(1, 4), null));</span>
+<span class="nc" id="L160">        game.makeMove(new ChessMove(new ChessPosition(8, 3), new ChessPosition(8, 2), null));</span>
+
+        //move rook back to starting spot
+<span class="nc" id="L163">        game.makeMove(new ChessMove(new ChessPosition(1, 4), new ChessPosition(1, 1), null));</span>
+        /*
+                | |k| | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |R| | | |K| | |R|
+         */
+
+
+        //make sure king can't castle towards moved rook, but still can to unmoved rook
+<span class="nc" id="L177">        assertWhiteCanCastle(game, false, true);</span>
+
+        //move king
+<span class="nc" id="L180">        game.makeMove(new ChessMove(new ChessPosition(8, 2), new ChessPosition(8, 3), null));</span>
+<span class="nc" id="L181">        game.makeMove(new ChessMove(WHITE_KING_POSITION, new ChessPosition(1, 6), null));</span>
+        /*
+                | | |k| | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |R| | | | |K| |R|
+         */
+
+        //move king back to starting position
+<span class="nc" id="L194">        game.makeMove(new ChessMove(new ChessPosition(8, 3), new ChessPosition(8, 4), null));</span>
+<span class="nc" id="L195">        game.makeMove(new ChessMove(new ChessPosition(1, 6), WHITE_KING_POSITION, null));</span>
+        /*
+                | | | |k| | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |R| | | |K| | |R|
+         */
+
+        //make sure king can't castle anymore
+<span class="nc" id="L208">        assertWhiteCanCastle(game, false, false);</span>
+<span class="nc" id="L209">    }</span>
+
+    @Test
+    @Order(2)
+    @DisplayName(&quot;Cannot Castle Through Pieces&quot;)
+    public void noCastleThroughPieces() {
+<span class="nc" id="L215">        ChessGame game = createNewGameWithBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |R| |B| |K| |Q|R|
+                &quot;&quot;&quot;, ChessGame.TeamColor.WHITE);
+
+        //make sure king cannot castle
+<span class="nc" id="L227">        assertWhiteCanCastle(game, false, false);</span>
+<span class="nc" id="L228">    }</span>
+
+    @Test
+    @Order(3)
+    @DisplayName(&quot;Cannot Castle From Check&quot;)
+    public void noCastleFromCheck() {
+<span class="nc" id="L234">        ChessGame game = createNewGameWithBoard(&quot;&quot;&quot;</span>
+                |r| | | |k| | |r|
+                | | | | | | |N| |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | |K| | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                &quot;&quot;&quot;, ChessGame.TeamColor.BLACK);
+
+        //make sure king cannot castle on either side
+<span class="nc" id="L246">        assertBlackCanCastle(game, false, false);</span>
+<span class="nc" id="L247">    }</span>
+
+    @Test
+    @Order(3)
+    @DisplayName(&quot;Cannot Castle Through Check&quot;)
+    public void noCastleThroughCheck() {
+<span class="nc" id="L253">        ChessGame game = createNewGameWithBoard(&quot;&quot;&quot;</span>
+                |r| | | |k| | |r|
+                | | | | | | | | |
+                | |B| | | |R| | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | |K| | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                &quot;&quot;&quot;, ChessGame.TeamColor.BLACK);
+
+        //make sure king cannot castle on either side
+<span class="nc" id="L265">        assertBlackCanCastle(game, false, false);</span>
+<span class="nc" id="L266">    }</span>
+
+    @Test
+    @Order(3)
+    @DisplayName(&quot;Cannot Castle Into Check&quot;)
+    public void noCastleIntoCheck() {
+<span class="nc" id="L272">        ChessGame game1 = createNewGameWithBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | |r| | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |R| | | |K| | |R|
+                &quot;&quot;&quot;, ChessGame.TeamColor.WHITE);
+
+        // King cannot castle into check
+<span class="nc" id="L284">        assertWhiteCanCastle(game1, false, true);</span>
+
+
+        // Try again in the other direction
+<span class="nc" id="L288">        ChessGame game2 = createNewGameWithBoard(&quot;&quot;&quot;</span>
+                | | | | |k| | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | |r| |
+                | | | | | | | | |
+                | | | | | | | | |
+                | | | | | | | | |
+                |R| | | |K| | |R|
+                &quot;&quot;&quot;, ChessGame.TeamColor.WHITE);
+
+        // King cannot castle into check
+<span class="nc" id="L300">        assertWhiteCanCastle(game2, true, false);</span>
+<span class="nc" id="L301">    }</span>
+
+
+    private ChessGame createNewGameWithBoard(String boardText, ChessGame.TeamColor teamTurn) {
+<span class="nc" id="L305">        ChessBoard board = TestUtilities.loadBoard(boardText);</span>
+<span class="nc" id="L306">        ChessGame game = new ChessGame();</span>
+<span class="nc" id="L307">        game.setBoard(board);</span>
+<span class="nc" id="L308">        game.setTeamTurn(teamTurn);</span>
+<span class="nc" id="L309">        return game;</span>
+    }
+
+
+    /**
+     * Asserts that WHITE can or cannot make the queenside &amp; kingside castle moves.
+     * &lt;br&gt;
+     * The parameter order aligns with the board when drawn from WHITE's perspective:
+     * &lt;ul&gt;
+     *     &lt;li&gt;&lt;b&gt;Queenside&lt;/b&gt; is to the &lt;i&gt;left&lt;/i&gt;&lt;/li&gt;
+     *     &lt;li&gt;&lt;b&gt;Kingside&lt;/b&gt; is to the &lt;i&gt;right&lt;/i&gt;&lt;/li&gt;
+     * &lt;/ul&gt;
+     */
+    private void assertWhiteCanCastle(ChessGame game, boolean allowQueensideCastle, boolean allowKingsideCastle) {
+<span class="nc" id="L323">        assertCanCastle(game, allowQueensideCastle, allowKingsideCastle, WHITE_KING_POSITION, WHITE_QUEENSIDE_CASTLE, WHITE_KINGSIDE_CASTLE);</span>
+<span class="nc" id="L324">    }</span>
+    /**
+     * Asserts that BLACK can or cannot make the queenside &amp; kingside castle moves.
+     * &lt;br&gt;
+     * The parameter order aligns with the board when drawn from WHITE's perspective:
+     * &lt;ul&gt;
+     *     &lt;li&gt;&lt;b&gt;Kingside&lt;/b&gt; is to the &lt;i&gt;left&lt;/i&gt;&lt;/li&gt;
+     *     &lt;li&gt;&lt;b&gt;Queenside&lt;/b&gt; is to the &lt;i&gt;right&lt;/i&gt;&lt;/li&gt;
+     * &lt;/ul&gt;
+     */
+    private void assertBlackCanCastle(ChessGame game, boolean allowKingsideCastle, boolean allowQueensideCastle) {
+<span class="nc" id="L335">        assertCanCastle(game, allowQueensideCastle, allowKingsideCastle, BLACK_KING_POSITION, BLACK_QUEENSIDE_CASTLE, BLACK_KINGSIDE_CASTLE);</span>
+<span class="nc" id="L336">    }</span>
+    private void assertCanCastle(ChessGame game, boolean allowQueensideCastle, boolean allowKingsideCastle,
+                                 ChessPosition kingPosition, ChessMove queensideCastleMove, ChessMove kingsideCastleMove) {
+<span class="nc" id="L339">        Assertions.assertEquals(allowQueensideCastle,</span>
+<span class="nc" id="L340">                game.validMoves(kingPosition).contains(queensideCastleMove),</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">                allowQueensideCastle ? VALID_CASTLE_MISSING : INVALID_CASTLE_PRESENT);</span>
+<span class="nc" id="L342">        Assertions.assertEquals(allowKingsideCastle,</span>
+<span class="nc" id="L343">                game.validMoves(kingPosition).contains(kingsideCastleMove),</span>
+<span class="nc bnc" id="L344" title="All 2 branches missed.">                allowKingsideCastle ? VALID_CASTLE_MISSING : INVALID_CASTLE_PRESENT);</span>
+<span class="nc" id="L345">    }</span>
+
+    private void makeMoveAndAssertBoard(ChessGame game, ChessMove move, String boardText) {
+<span class="nc" id="L348">        Assertions.assertDoesNotThrow(() -&gt; game.makeMove(move));</span>
+<span class="nc" id="L349">        Assertions.assertEquals(TestUtilities.loadBoard(boardText), game.getBoard(), INCORRECT_BOARD);</span>
+<span class="nc" id="L350">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PawnMoveTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.chess.piecemoves</a> &gt; <span class="el_source">PawnMoveTests.java</span></div><h1>PawnMoveTests.java</h1><pre class="source lang-java linenums">package passoff.chess.piecemoves;
+
+import chess.ChessMove;
+import chess.ChessPiece;
+import chess.ChessPosition;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import passoff.chess.TestUtilities;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L12">public class PawnMoveTests {</span>
+
+    @Test
+    public void pawnMiddleOfBoardWhite() {
+<span class="nc" id="L16">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | |P| | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(4, 4),
+                new int[][]{{5, 4}}
+        );
+<span class="nc" id="L29">    }</span>
+
+    @Test
+    public void pawnMiddleOfBoardBlack() {
+<span class="nc" id="L33">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | |p| | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(4, 4),
+                new int[][]{{3, 4}}
+        );
+<span class="nc" id="L46">    }</span>
+
+
+    @Test
+    public void pawnInitialMoveWhite() {
+<span class="nc" id="L51">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | |P| | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(2, 5),
+                new int[][]{{3, 5}, {4, 5}}
+        );
+<span class="nc" id="L64">    }</span>
+
+    @Test
+    public void pawnInitialMoveBlack() {
+<span class="nc" id="L68">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | |p| | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(7, 3),
+                new int[][]{{6, 3}, {5, 3}}
+        );
+<span class="nc" id="L81">    }</span>
+
+
+    @Test
+    public void pawnPromotionWhite() {
+<span class="nc" id="L86">        validatePromotion(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | |P| | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(7, 3),
+                new int[][]{{8, 3}}
+        );
+<span class="nc" id="L99">    }</span>
+
+
+    @Test
+    public void edgePromotionBlack() {
+<span class="nc" id="L104">        validatePromotion(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | |p| | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(2, 3),
+                new int[][]{{1, 3}}
+        );
+<span class="nc" id="L117">    }</span>
+
+
+    @Test
+    public void pawnPromotionCapture() {
+<span class="nc" id="L122">        validatePromotion(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | |p| | | | | | |
+                        |N| | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(2, 2),
+                new int[][]{{1, 1}, {1, 2}}
+        );
+<span class="nc" id="L135">    }</span>
+
+
+    @Test
+    public void pawnAdvanceBlockedWhite() {
+<span class="nc" id="L140">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | |n| | | | |
+                        | | | |P| | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(4, 4),
+                new int[][]{}
+        );
+<span class="nc" id="L153">    }</span>
+
+    @Test
+    public void pawnAdvanceBlockedBlack() {
+<span class="nc" id="L157">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | |p| | | | |
+                        | | | |r| | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(5, 4),
+                new int[][]{}
+        );
+<span class="nc" id="L170">    }</span>
+
+
+    @Test
+    public void pawnAdvanceBlockedDoubleMoveWhite() {
+<span class="nc" id="L175">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | |p| |
+                        | | | | | | | | |
+                        | | | | | | |P| |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(2, 7),
+                new int[][]{{3, 7}}
+        );
+<span class="nc" id="L188">    }</span>
+
+    @Test
+    public void pawnAdvanceBlockedDoubleMoveBlack() {
+<span class="nc" id="L192">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | |p| | | | | |
+                        | | |p| | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(7, 3),
+                new int[][]{}
+        );
+<span class="nc" id="L205">    }</span>
+
+
+    @Test
+    public void pawnCaptureWhite() {
+<span class="nc" id="L210">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | |r| |N| | | |
+                        | | | |P| | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(4, 4),
+                new int[][]{{5, 3}, {5, 4}}
+        );
+<span class="nc" id="L223">    }</span>
+
+    @Test
+    public void pawnCaptureBlack() {
+<span class="nc" id="L227">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | |p| | | | |
+                        | | | |n|R| | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(4, 4),
+                new int[][]{{3, 5}}
+        );
+<span class="nc" id="L240">    }</span>
+
+    @Test
+    public void pawnMoveFromEdgeWhite() {
+<span class="nc" id="L244">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | |P|
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(4, 8),
+                new int[][]{{5, 8}}
+        );
+<span class="nc" id="L257">    }</span>
+
+    @Test
+    public void pawnMoveFromEdgeBlack() {
+<span class="nc" id="L261">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | |p|
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(5, 8),
+                new int[][]{{4, 8}}
+        );
+<span class="nc" id="L274">    }</span>
+
+    @Test
+    public void pawnCaptureFromEdgeWhite() {
+<span class="nc" id="L278">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | |r| |
+                        | | | | | | | |P|
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(4, 8),
+                new int[][]{{5, 8}, {5, 7}}
+        );
+<span class="nc" id="L291">    }</span>
+
+    @Test
+    public void pawnCaptureFromEdgeBlack() {
+<span class="nc" id="L295">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | |p|
+                        | | | | | | |R| |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(5, 8),
+                new int[][]{{4, 8}, {4, 7}}
+        );
+<span class="nc" id="L308">    }</span>
+
+    @Test
+    public void pawnCaptureFromStartWhite() {
+<span class="nc" id="L312">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | |r| | | | | |
+                        | | |r| | | | | |
+                        | | | |P| | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(2, 4),
+                new int[][]{{3, 3}, {3, 4}, {4, 4}}
+        );
+<span class="nc" id="L325">    }</span>
+
+    @Test
+    public void pawnCaptureFromStartBlack() {
+<span class="nc" id="L329">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | |p| | | | |
+                        | | |R| | | | | |
+                        | | |R| | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(7, 4),
+                new int[][]{{6, 4}, {5, 4}, {6, 3}}
+        );
+<span class="nc" id="L342">    }</span>
+
+    @Test
+    public void captureAndPromoteWhite() {
+<span class="nc" id="L346">        validatePromotion(&quot;&quot;&quot;</span>
+                        | | |r| | | | | |
+                        | | | |P| | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(7, 4),
+                new int[][]{{8, 3}, {8, 4}}
+        );
+<span class="nc" id="L359">    }</span>
+
+    @Test
+    public void captureAndPromoteBlack() {
+<span class="nc" id="L363">        validatePromotion(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | |p| | | | |
+                        | | |R| | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(2, 4),
+                new int[][]{{1, 3}, {1, 4}}
+        );
+<span class="nc" id="L376">    }</span>
+
+    @Test
+    public void pawnCannotCaptureBackwardWhite() {
+<span class="nc" id="L380">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | |P| | | | | |
+                        | | |r|r| | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(3, 3),
+                new int[][]{{4, 3}}
+        );
+<span class="nc" id="L393">    }</span>
+
+    @Test
+    public void pawnCannotCaptureBackwardBlack() {
+<span class="nc" id="L397">        TestUtilities.validateMoves(&quot;&quot;&quot;</span>
+                        | | | | | | | | |
+                        | | |R|R| | | | |
+                        | | |p| | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        | | | | | | | | |
+                        &quot;&quot;&quot;,
+                new ChessPosition(6, 3),
+                new int[][]{{5, 3}}
+        );
+<span class="nc" id="L410">    }</span>
+
+
+    private static void validatePromotion(String boardText, ChessPosition startingPosition, int[][] endPositions) {
+<span class="nc" id="L414">        var board = TestUtilities.loadBoard(boardText);</span>
+<span class="nc" id="L415">        var testPiece = board.getPiece(startingPosition);</span>
+<span class="nc" id="L416">        Assertions.assertNotNull(testPiece, &quot;Could not find piece on board&quot;);</span>
+<span class="nc" id="L417">        var validMoves = new ArrayList&lt;ChessMove&gt;();</span>
+<span class="nc bnc" id="L418" title="All 2 branches missed.">        for (var endPosition : endPositions) {</span>
+<span class="nc" id="L419">            var end = new ChessPosition(endPosition[0], endPosition[1]);</span>
+<span class="nc" id="L420">            validMoves.add(new ChessMove(startingPosition, end, ChessPiece.PieceType.QUEEN));</span>
+<span class="nc" id="L421">            validMoves.add(new ChessMove(startingPosition, end, ChessPiece.PieceType.BISHOP));</span>
+<span class="nc" id="L422">            validMoves.add(new ChessMove(startingPosition, end, ChessPiece.PieceType.ROOK));</span>
+<span class="nc" id="L423">            validMoves.add(new ChessMove(startingPosition, end, ChessPiece.PieceType.KNIGHT));</span>
+        }
+
+<span class="nc" id="L426">        TestUtilities.validateMoves(board, testPiece, startingPosition, validMoves);</span>
+<span class="nc" id="L427">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
