@@ -1,5 +1,6 @@
 package handler;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
 import dataaccess.AlreadyTakenException;
 import dataaccess.BadRequestException;
@@ -64,6 +65,34 @@ public class GameHandler {
         }
     }
 
+    public void joinGame(Context ctx) {
+        try {
+            // Get auth from header
+            String authToken = ctx.header("authorization");
+
+            JoinGameBody body = gson.fromJson(ctx.body(), JoinGameBody.class);
+
+            ChessGame.TeamColor playerColor = (body != null) ? body.playerColor() : null;
+            Integer gameID = (body != null) ? body.gameID() : null;
+
+            int finalGameID = (gameID != null) ? gameID : 0;
+
+            JoinGameRequest request = new JoinGameRequest(authToken, playerColor, finalGameID);
+            gameService.joinGame(request);
+
+            sendJsonResponse(ctx, 200, Map.of());
+
+        } catch (BadRequestException e) {
+            sendJsonResponse(ctx, 400, Map.of("message", e.getMessage()));
+        } catch (UnauthorizedException e) {
+            sendJsonResponse(ctx, 401, Map.of("message", e.getMessage()));
+        } catch (AlreadyTakenException e) {
+            sendJsonResponse(ctx, 403, Map.of("message", e.getMessage()));
+        } catch (DataAccessException e) {
+            sendJsonResponse(ctx, 500, Map.of("message", e.getMessage()));
+        }
+    }
+
     private void sendJsonResponse(Context ctx, int status, Object body) {
         ctx.status(status);
         ctx.contentType("application/json");
@@ -71,5 +100,8 @@ public class GameHandler {
     }
 
     private record CreateGameBody(String gameName) {
+    }
+
+    private record JoinGameBody(ChessGame.TeamColor playerColor, Integer gameID) {
     }
 }

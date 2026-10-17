@@ -1,5 +1,6 @@
 package service;
 
+import chess.ChessGame;
 import dataaccess.*;
 import model.GameData;
 import org.junit.jupiter.api.BeforeEach;
@@ -111,5 +112,115 @@ public class GameServiceTests {
 
         // Act and assert
         assertThrows(BadRequestException.class, () -> gameService.createGame(request));
+    }
+
+    @Test
+    void joinGameAsWhite() throws Exception {
+        String token = loginTestUser();
+
+        // Create a game
+        CreateGameResult created = gameService.createGame(new CreateGameRequest(token, "Chess Match"));
+
+        // Act: join as white
+        gameService.joinGame(new JoinGameRequest(token, ChessGame.TeamColor.WHITE, created.gameID()));
+
+        // Assert: retrieve the updated game
+        GameData game = gameDao.getGame(created.gameID());
+
+        assertNotNull(game);
+        assertEquals("mrMe", game.whiteUsername());
+        assertNull(game.blackUsername());
+    }
+
+    @Test
+    void joinGameAsBlack() throws Exception {
+        String token = loginTestUser();
+
+        // Create a game
+        CreateGameResult created = gameService.createGame(new CreateGameRequest(token, "Chess Match"));
+
+        // Act: join as black
+        gameService.joinGame(new JoinGameRequest(token, ChessGame.TeamColor.BLACK, created.gameID()));
+
+        // Assert: retrieve the updated game
+        GameData game = gameDao.getGame(created.gameID());
+
+        assertNotNull(game);
+        assertEquals("mrMe", game.blackUsername());
+        assertNull(game.whiteUsername());
+    }
+
+    @Test
+    void joinGameInvalidAuthToken() {
+        JoinGameRequest request = new JoinGameRequest("invalid-token", ChessGame.TeamColor.WHITE, 1234);
+
+        assertThrows(UnauthorizedException.class, () -> {
+            gameService.joinGame(request);
+        });
+    }
+
+    @Test
+    void joinGameGameNotFound() throws Exception {
+        String token = loginTestUser();
+
+        // Attempt to join a game ID that doesn't exist
+        JoinGameRequest request = new JoinGameRequest(token, ChessGame.TeamColor.WHITE, 999999);
+
+        assertThrows(BadRequestException.class, () -> {
+            gameService.joinGame(request);
+        });
+    }
+
+    @Test
+    void joinGameWhiteAlreadyTaken() throws Exception {
+        String token1 = loginTestUser();
+
+        // Register & login a second user
+        userService.register(new RegisterRequest("mrMe_theSequel", "password456", "theSequel@example.com"));
+        LoginResult login2 = userService.login(new LoginRequest("mrMe_theSequel", "password456"));
+        String token2 = login2.authToken();
+
+        // Player 1 creates and joins as white
+        CreateGameResult created = gameService.createGame(new CreateGameRequest(token1, "Match"));
+        gameService.joinGame(new JoinGameRequest(token1, ChessGame.TeamColor.WHITE, created.gameID()));
+
+        // Player 2 attempts to join as white
+        JoinGameRequest request2 = new JoinGameRequest(token2, ChessGame.TeamColor.WHITE, created.gameID());
+
+        assertThrows(AlreadyTakenException.class, () -> {
+            gameService.joinGame(request2);
+        });
+    }
+
+    @Test
+    void joinGameBlackAlreadyTaken() throws Exception {
+        String token1 = loginTestUser();
+
+        userService.register(new RegisterRequest("mrMe_theSequel", "password456", "p2@example.com"));
+        LoginResult login2 = userService.login(new LoginRequest("mrMe_theSequel", "password456"));
+        String token2 = login2.authToken();
+
+        // Player 1 creates and joins as black
+        CreateGameResult created = gameService.createGame(new CreateGameRequest(token1, "Match"));
+        gameService.joinGame(new JoinGameRequest(token1, ChessGame.TeamColor.BLACK, created.gameID()));
+
+        // Player 2 attempts to join as black
+        JoinGameRequest request2 = new JoinGameRequest(token2, ChessGame.TeamColor.BLACK, created.gameID());
+
+        assertThrows(AlreadyTakenException.class, () -> {
+            gameService.joinGame(request2);
+        });
+    }
+
+    @Test
+    void joinGameInvalidColor() throws Exception {
+        String token = loginTestUser();
+        CreateGameResult created = gameService.createGame(new CreateGameRequest(token, "Match"));
+
+        JoinGameRequest request = new JoinGameRequest(token, null, created.gameID());
+
+        assertThrows(BadRequestException.class, () -> {
+            gameService.joinGame(request);
+        });
     }
 }

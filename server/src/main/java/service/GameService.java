@@ -71,7 +71,56 @@ public class GameService {
         return new CreateGameResult(gameID);
     }
 
-    // joinGame();
+    public void joinGame(JoinGameRequest request)
+            throws DataAccessException, AlreadyTakenException, BadRequestException, UnauthorizedException {
+
+        // Validate auth token exists
+        if (request == null ||
+                request.authToken() == null || request.authToken().isBlank()) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        // Verify token exists in database/memory
+        AuthData auth = authDao.getAuth(request.authToken());
+        if (auth == null) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        // Validate input parameters exist
+        if (request.playerColor() == null) {
+            throw new BadRequestException("Error: bad request");
+        }
+
+        GameData game = gameDao.getGame(request.gameID());
+        if (game == null) {
+            throw new BadRequestException("Error: bad request");
+        }
+
+        String newWhiteUser = game.whiteUsername();
+        String newBlackUser = game.blackUsername();
+
+        if (request.playerColor().equals(ChessGame.TeamColor.WHITE)) {
+            if (game.whiteUsername() != null) {
+                throw new AlreadyTakenException("Error: already taken");
+            }
+            newWhiteUser = auth.username();
+        } else {
+            if (game.blackUsername() != null) {
+                throw new AlreadyTakenException("Error: already taken");
+            }
+            newBlackUser = auth.username();
+        }
+
+        // Save in DAO
+        GameData updatedGame = new GameData(
+                game.gameID(),
+                newWhiteUser,
+                newBlackUser,
+                game.gameName(),
+                game.game()
+        );
+        gameDao.updateGame(updatedGame);
+    }
 
     private int generateGameID() {
         return nextGameID++;
