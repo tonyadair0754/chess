@@ -3,6 +3,7 @@ package service;
 import dataaccess.*;
 import model.AuthData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.UUID;
 
@@ -31,10 +32,13 @@ public class UserService {
             throw new AlreadyTakenException("Error: already taken");
         }
 
+        // Hash the plain-text password using BCrypt
+        String hashedPassword = BCrypt.hashpw(request.password(), BCrypt.gensalt());
+
         // Create and save new user
         UserData newUser = new UserData(
                 request.username(),
-                request.password(),
+                hashedPassword,
                 request.email()
         );
         userDao.createUser(newUser);

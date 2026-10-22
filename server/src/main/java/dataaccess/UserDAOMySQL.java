@@ -1,6 +1,5 @@
 package dataaccess;
 
-import com.google.gson.Gson;
 import model.UserData;
 
 import java.sql.Connection;
@@ -18,11 +17,11 @@ public class UserDAOMySQL extends SqlDAO implements UserDAO {
     protected void configureDatabase() throws DataAccessException {
         String[] createStatements = {
                 """
-                CREATE TABLE IF NOT EXISTS user (
+                CREATE TABLE IF NOT EXISTS users (
                 `username` VARCHAR(255) NOT NULL,
                 `password` VARCHAR(255) NOT NULL,
                 `email` VARCHAR(255) NOT NULL,
-                PRIMARY KEY (`username``))
+                PRIMARY KEY (`username`))
                 """
         };
         executeCreateTables(createStatements);
@@ -30,7 +29,7 @@ public class UserDAOMySQL extends SqlDAO implements UserDAO {
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
-        var statement = "INSERT INTO user (username, password, email) VALUES (?, ?, ?)";
+        var statement = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
         executeUpdate(statement, user.username(), user.password(), user.email());
     }
 
@@ -50,14 +49,14 @@ public class UserDAOMySQL extends SqlDAO implements UserDAO {
                 }
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Unable to configure user database", e);
+            throw new DataAccessException("Unable to read data: ", e);
         }
         return null;
     }
 
     @Override
     public void clear() throws DataAccessException {
-        var statement = "TRUNCATE user";
+        var statement = "TRUNCATE users";
         executeUpdate(statement);
     }
 }

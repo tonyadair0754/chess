@@ -34,7 +34,7 @@ public abstract class SqlDAO {
                 return 0;
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Unable to configure user database", e);
+            throw new DataAccessException("Unable to update database: ", e);
         }
     }
 
