@@ -16,9 +16,9 @@ class DatabaseManagerTests {
 
         try (var conn = DatabaseManager.getConnection()) {
             try (var preparedStatement = conn.prepareStatement("SELECT 1+1")) {
-                try (var resultSet = preparedStatement.executeQuery()) {
-                    assertTrue(resultSet.next());
-                    assertEquals(2, resultSet.getInt(1));
+                try (var rs = preparedStatement.executeQuery()) {
+                    assertTrue(rs.next());
+                    assertEquals(2, rs.getInt(1));
                 }
             }
         }
