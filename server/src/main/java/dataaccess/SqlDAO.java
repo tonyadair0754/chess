@@ -10,6 +10,7 @@ import static java.sql.Types.NULL;
 
 public abstract class SqlDAO {
 
+    // Shared method for all child DAOs
     protected int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
@@ -31,6 +32,23 @@ public abstract class SqlDAO {
                 }
 
                 return 0;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Unable to configure user database", e);
+        }
+    }
+
+    // Force all child DAOs to define their own tables
+    protected abstract void configureDatabase() throws DataAccessException;
+
+    // Helper to execute create table statements
+    protected void executeCreateTables(String[] createStatements) throws DataAccessException {
+        DatabaseManager.createDatabase();
+        try (Connection conn = DatabaseManager.getConnection()) {
+            for (String statement : createStatements) {
+                try (var preparedStatement = conn.prepareStatement(statement)) {
+                    preparedStatement.executeUpdate();
+                }
             }
         } catch (SQLException e) {
             throw new DataAccessException("Unable to configure user database", e);

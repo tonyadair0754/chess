@@ -1,10 +1,8 @@
 package service;
-package dataaccess;
 
 import dataaccess.DatabaseManager;
 import org.junit.jupiter.api.Test;
 
-import java.sql.Connection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
