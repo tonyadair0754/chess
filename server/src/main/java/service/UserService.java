@@ -66,7 +66,7 @@ public class UserService {
 
         // Check if username already exists and if passwords match
         if (userDao.getUser(request.username()) == null
-                || !user.password().equals(request.password())) {
+                || !BCrypt.checkpw(request.password(), user.password())) {
             throw new UnauthorizedException("Error: unauthorized");
         }
 

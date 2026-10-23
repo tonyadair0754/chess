@@ -21,4 +21,24 @@ class DatabaseManagerTests {
             }
         }
     }
+
+    @Test
+    void retrieveUser() throws Exception {
+
+    }
+
+    @Test
+    void retrieveNonexistentUser() throws Exception {
+
+    }
+
+    @Test
+    void clearTable() throws Exception {
+
+    }
+
+    @Test
+    void duplicateUsernames() throws Exception {
+
+    }
 }
