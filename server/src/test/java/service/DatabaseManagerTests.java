@@ -2,25 +2,31 @@ package service;
 
 import dataaccess.*;
 import model.AuthData;
+import model.GameData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mindrot.jbcrypt.BCrypt;
 
 
+import java.util.Collection;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class DatabaseManagerTests {
     private static UserDAO userDao;
     private static AuthDAO authDao;
+    private static GameDAO gameDao;
 
     @BeforeEach
     void setUp() throws DataAccessException {
         userDao = new UserDAOMySQL();
         authDao = new AuthDAOMySQL();
+        gameDao = new GameDAOMySQL();
 
         userDao.clear();
         authDao.clear();
+        gameDao.clear();
     }
 
     // --- UserDAO database tests ---
@@ -132,5 +138,69 @@ class DatabaseManagerTests {
 
         assertNull(authDao.getAuth("token-1"));
         assertNull(authDao.getAuth("token-2"));
+    }
+
+    // --- Game DAO tests ---
+
+    @Test
+    void createGameSuccess() throws Exception {
+        GameData newGame = new GameData(0, "", "", "New Game", new chess.ChessGame());
+        gameDao.createGame(newGame);
+
+        Collection<GameData> games = gameDao.listGames();
+        assertEquals(1, games.size());
+        GameData game = games.iterator().next();
+
+        assertNotNull(game);
+        assertEquals("New Game", game.gameName());
+        assertNotNull(game.game()); // Verify ChessGame object deserialized properly
+    }
+
+    @Test
+    void getGameNonexistent() throws Exception {
+        GameData game = gameDao.getGame(999999);
+        assertNull(game);
+    }
+
+    @Test
+    void listGamesSuccess() throws Exception {
+        gameDao.createGame(new GameData(0, "", "", "Game One", new chess.ChessGame()));
+        gameDao.createGame(new GameData(0, "", "", "Game Two", new chess.ChessGame()));
+
+        Collection<GameData> games = gameDao.listGames();
+        assertEquals(2, games.size());
+    }
+
+    @Test
+    void updateGameSuccess() throws Exception {
+        GameData newGame = new GameData(0, "", "", "Original Name", new chess.ChessGame());
+        gameDao.createGame(newGame);
+
+        // Retrieve the GameData object to get the gameID assigned by the database
+        GameData original = gameDao.listGames().iterator().next();
+
+        // Create updated game data (e.g. adding a white player and changing name)
+        GameData updated = new GameData(
+                original.gameID(),
+                "mrMe",
+                null,
+                "Updated Name",
+                original.game()
+        );
+
+        gameDao.updateGame(updated);
+
+        GameData retrieved = gameDao.getGame(original.gameID());
+        assertEquals("mrMe", retrieved.whiteUsername());
+        assertEquals("Updated Name", retrieved.gameName());
+    }
+
+    @Test
+    void clearGames() throws Exception {
+        gameDao.createGame(new GameData(0, "", "", "New Game", new chess.ChessGame()));
+        assertFalse(gameDao.listGames().isEmpty());
+
+        gameDao.clear();
+        assertTrue(gameDao.listGames().isEmpty());
     }
 }

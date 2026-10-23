@@ -19,13 +19,14 @@ public class ServiceEdgeCaseTests {
     public void setUp() throws Exception {
         UserDAOMySQL userDao = new UserDAOMySQL();
         AuthDAOMySQL authDao = new AuthDAOMySQL();
-        GameDAOMemory gameDao = new GameDAOMemory();
+        GameDAOMySQL gameDao = new GameDAOMySQL();
 
         userService = new UserService(userDao, authDao);
         gameService = new GameService(authDao, gameDao);
 
         userDao.clear();
         authDao.clear();
+        gameDao.clear();
 
         validToken = userService
                 .register(new RegisterRequest("mrMe", "password123", "mrMe@example.com"))
