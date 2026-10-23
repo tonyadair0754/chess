@@ -1,13 +1,7 @@
 package service;
 
 import chess.ChessGame;
-import dataaccess.AlreadyTakenException;
-import dataaccess.AuthDAOMemory;
-import dataaccess.BadRequestException;
-import dataaccess.DataAccessException;
-import dataaccess.GameDAOMemory;
-import dataaccess.UnauthorizedException;
-import dataaccess.UserDAOMySQL;
+import dataaccess.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,13 +18,14 @@ public class ServiceEdgeCaseTests {
     @BeforeEach
     public void setUp() throws Exception {
         UserDAOMySQL userDao = new UserDAOMySQL();
-        AuthDAOMemory authDao = new AuthDAOMemory();
+        AuthDAOMySQL authDao = new AuthDAOMySQL();
         GameDAOMemory gameDao = new GameDAOMemory();
-
-        userDao.clear();
 
         userService = new UserService(userDao, authDao);
         gameService = new GameService(authDao, gameDao);
+
+        userDao.clear();
+        authDao.clear();
 
         validToken = userService
                 .register(new RegisterRequest("mrMe", "password123", "mrMe@example.com"))

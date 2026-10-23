@@ -18,10 +18,11 @@ public class UserServiceTests {
     @BeforeEach
     void setUp() throws DataAccessException {
         userDao = new UserDAOMySQL();
-        authDao = new AuthDAOMemory();
+        authDao = new AuthDAOMySQL();
         userService = new UserService(userDao, authDao);
 
         userDao.clear();
+        authDao.clear();
     }
 
     private void registerTestUser() throws Exception {

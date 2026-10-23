@@ -17,8 +17,11 @@ public class DatabaseServiceTests {
 
         // 1. Arrange (Create objects and set up test data)
         UserDAO userDao = new UserDAOMySQL();
-        AuthDAO authDao = new AuthDAOMemory();
+        AuthDAO authDao = new AuthDAOMySQL();
         GameDAO gameDao = new GameDAOMemory();
+
+        userDao.clear();
+        authDao.clear();
 
         DatabaseService databaseService = new DatabaseService(userDao, authDao, gameDao);
 

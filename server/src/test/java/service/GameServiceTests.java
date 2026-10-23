@@ -19,13 +19,14 @@ public class GameServiceTests {
     @BeforeEach
     void setUp() throws DataAccessException {
         userDao = new UserDAOMySQL();
-        authDao = new AuthDAOMemory();
+        authDao = new AuthDAOMySQL();
         gameDao = new GameDAOMemory();
 
         userService = new UserService(userDao, authDao);
         gameService = new GameService(authDao, gameDao);
 
         userDao.clear();
+        authDao.clear();
     }
 
     private void registerTestUser() throws Exception {
