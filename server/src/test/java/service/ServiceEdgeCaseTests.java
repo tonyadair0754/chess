@@ -7,7 +7,7 @@ import dataaccess.BadRequestException;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAOMemory;
 import dataaccess.UnauthorizedException;
-import dataaccess.UserDAOMemory;
+import dataaccess.UserDAOMySQL;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,9 +23,11 @@ public class ServiceEdgeCaseTests {
 
     @BeforeEach
     public void setUp() throws Exception {
-        UserDAOMemory userDao = new UserDAOMemory();
+        UserDAOMySQL userDao = new UserDAOMySQL();
         AuthDAOMemory authDao = new AuthDAOMemory();
         GameDAOMemory gameDao = new GameDAOMemory();
+
+        userDao.clear();
 
         userService = new UserService(userDao, authDao);
         gameService = new GameService(authDao, gameDao);

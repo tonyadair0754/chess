@@ -36,7 +36,7 @@ public class UserDAOMySQL extends SqlDAO implements UserDAO {
     @Override
     public UserData getUser(String username) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT username, password, email FROM user WHERE username=?";
+            var statement = "SELECT username, password, email FROM users WHERE username=?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 ps.setString(1, username);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -49,7 +49,7 @@ public class UserDAOMySQL extends SqlDAO implements UserDAO {
                 }
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Unable to read data: ", e);
+            throw new DataAccessException("Unable to read data: " + e.getMessage(), e);
         }
         return null;
     }

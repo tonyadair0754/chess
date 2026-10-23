@@ -16,7 +16,7 @@ public class DatabaseServiceTests {
     public void clearSuccess() throws DataAccessException {
 
         // 1. Arrange (Create objects and set up test data)
-        UserDAO userDao = new UserDAOMemory();
+        UserDAO userDao = new UserDAOMySQL();
         AuthDAO authDao = new AuthDAOMemory();
         GameDAO gameDao = new GameDAOMemory();
 

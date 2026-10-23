@@ -17,13 +17,15 @@ public class GameServiceTests {
     private GameService gameService;
 
     @BeforeEach
-    void setUp() {
-        userDao = new UserDAOMemory();
+    void setUp() throws DataAccessException {
+        userDao = new UserDAOMySQL();
         authDao = new AuthDAOMemory();
         gameDao = new GameDAOMemory();
 
         userService = new UserService(userDao, authDao);
         gameService = new GameService(authDao, gameDao);
+
+        userDao.clear();
     }
 
     private void registerTestUser() throws Exception {

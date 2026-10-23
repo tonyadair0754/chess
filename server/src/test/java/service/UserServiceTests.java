@@ -6,6 +6,7 @@ import model.UserData;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,10 +16,12 @@ public class UserServiceTests {
     private UserService userService;
 
     @BeforeEach
-    void setUp() {
-        userDao = new UserDAOMemory();
+    void setUp() throws DataAccessException {
+        userDao = new UserDAOMySQL();
         authDao = new AuthDAOMemory();
         userService = new UserService(userDao, authDao);
+
+        userDao.clear();
     }
 
     private void registerTestUser() throws Exception {
@@ -50,7 +53,7 @@ public class UserServiceTests {
         UserData storedUser = userDao.getUser("mrMe");
         assertNotNull(storedUser);
         assertEquals("mrMe", storedUser.username());
-        assertEquals("password123", storedUser.password());
+        assertTrue(BCrypt.checkpw("password123", storedUser.password()));
         assertEquals("mrMe@example.com", storedUser.email());
 
         // Verify the auth token was stored

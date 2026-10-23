@@ -12,12 +12,12 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DatabaseManagerTests {
-    private static UserDAO userDAO;
+    private static UserDAO userDao;
 
     @BeforeEach
     void setUp() throws DataAccessException {
-        userDAO = new UserDAOMySQL();
-        userDAO.clear();
+        userDao = new UserDAOMySQL();
+        userDao.clear();
     }
 
     @Test
@@ -37,9 +37,9 @@ class DatabaseManagerTests {
     @Test
     void retrieveUser() throws Exception {
         UserData user = new UserData("mrMe", "password123", "mrMe@example.com");
-        userDAO.createUser(user);
+        userDao.createUser(user);
 
-        UserData retrieved = userDAO.getUser("mrMe");
+        UserData retrieved = userDao.getUser("mrMe");
 
         assertNotNull(retrieved);
         assertEquals("mrMe", retrieved.username());
@@ -49,20 +49,20 @@ class DatabaseManagerTests {
 
     @Test
     void retrieveNonexistentUser() throws Exception {
-        UserData retrieved = userDAO.getUser("invalidUser");
+        UserData retrieved = userDao.getUser("invalidUser");
         assertNull(retrieved);
     }
 
     @Test
     void clearTable() throws Exception {
         UserData user = new UserData("mrMe", "password123", "mrMe@example.com");
-        userDAO.createUser(user);
+        userDao.createUser(user);
 
-        assertNotNull(userDAO.getUser("mrMe"));
+        assertNotNull(userDao.getUser("mrMe"));
 
-        userDAO.clear();
+        userDao.clear();
 
-        assertNull(userDAO.getUser("mrMe"));
+        assertNull(userDao.getUser("mrMe"));
     }
 
     @Test
@@ -70,10 +70,10 @@ class DatabaseManagerTests {
         UserData user1 = new UserData("mrMe", "password123", "mrMe@example.com");
         UserData user2 = new UserData("mrMe", "password123", "mrMe@example.com");
 
-        assertDoesNotThrow(() -> userDAO.createUser(user1));
+        assertDoesNotThrow(() -> userDao.createUser(user1));
 
         assertThrows(DataAccessException.class, () -> {
-            userDAO.createUser(user2);
+            userDao.createUser(user2);
         });
     }
 }
