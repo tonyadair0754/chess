@@ -16,34 +16,38 @@ import static org.junit.jupiter.api.Assertions.*;
     public void clearSuccess() throws DataAccessException {
 
         // 1. Arrange (Create objects and set up test data)
-<span class="fc" id="L19">        UserDAO userDao = new UserDAOMemory();</span>
-<span class="fc" id="L20">        AuthDAO authDao = new AuthDAOMemory();</span>
-<span class="fc" id="L21">        GameDAO gameDao = new GameDAOMemory();</span>
+<span class="fc" id="L19">        UserDAO userDao = new UserDAOMySQL();</span>
+<span class="fc" id="L20">        AuthDAO authDao = new AuthDAOMySQL();</span>
+<span class="fc" id="L21">        GameDAO gameDao = new GameDAOMySQL();</span>
 
-<span class="fc" id="L23">        DatabaseService databaseService = new DatabaseService(userDao, authDao, gameDao);</span>
+<span class="fc" id="L23">        userDao.clear();</span>
+<span class="fc" id="L24">        authDao.clear();</span>
+<span class="fc" id="L25">        gameDao.clear();</span>
+
+<span class="fc" id="L27">        DatabaseService databaseService = new DatabaseService(userDao, authDao, gameDao);</span>
 
         // Create sample data records
-<span class="fc" id="L26">        UserData testUser = new UserData(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;);</span>
-<span class="fc" id="L27">        AuthData testAuth = new AuthData(&quot;auth-token&quot;, &quot;mrMe&quot;);</span>
-<span class="fc" id="L28">        GameData testGame = new GameData(1, &quot;mrMe&quot;, &quot;opponent&quot;, &quot;My Game&quot;, new ChessGame());</span>
+<span class="fc" id="L30">        UserData testUser = new UserData(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;);</span>
+<span class="fc" id="L31">        AuthData testAuth = new AuthData(&quot;auth-token&quot;, &quot;mrMe&quot;);</span>
+<span class="fc" id="L32">        GameData testGame = new GameData(1, &quot;mrMe&quot;, &quot;opponent&quot;, &quot;My Game&quot;, new ChessGame());</span>
 
         // Insert sample data into the DAOs
-<span class="fc" id="L31">        userDao.createUser(testUser);</span>
-<span class="fc" id="L32">        authDao.createAuth(testAuth);</span>
-<span class="fc" id="L33">        gameDao.createGame(testGame);</span>
+<span class="fc" id="L35">        userDao.createUser(testUser);</span>
+<span class="fc" id="L36">        authDao.createAuth(testAuth);</span>
+<span class="fc" id="L37">        gameDao.createGame(testGame);</span>
 
         // Verify that the data was actually inserted before clearing
-<span class="fc" id="L36">        assertNotNull(userDao.getUser(&quot;mrMe&quot;));</span>
-<span class="fc" id="L37">        assertNotNull(authDao.getAuth(&quot;auth-token&quot;));</span>
-<span class="fc" id="L38">        assertFalse(gameDao.listGames().isEmpty());</span>
+<span class="fc" id="L40">        assertNotNull(userDao.getUser(&quot;mrMe&quot;));</span>
+<span class="fc" id="L41">        assertNotNull(authDao.getAuth(&quot;auth-token&quot;));</span>
+<span class="fc" id="L42">        assertFalse(gameDao.listGames().isEmpty());</span>
 
         // 2. Act (Call the method you want to test)
-<span class="fc" id="L41">        databaseService.clear();</span>
+<span class="fc" id="L45">        databaseService.clear();</span>
 
         // 3. Assert (Verify that the result matches what you expect)
-<span class="fc" id="L44">        assertNull(userDao.getUser(&quot;mrMe&quot;), &quot;User should be null after clearing database&quot;);</span>
-<span class="fc" id="L45">        assertNull(authDao.getAuth(&quot;auth-token&quot;), &quot;Auth token should be null after clearing database&quot;);</span>
-<span class="fc" id="L46">        assertTrue(gameDao.listGames().isEmpty(), &quot;Game list should be empty after clearing database&quot;);</span>
-<span class="fc" id="L47">    }</span>
+<span class="fc" id="L48">        assertNull(userDao.getUser(&quot;mrMe&quot;), &quot;User should be null after clearing database&quot;);</span>
+<span class="fc" id="L49">        assertNull(authDao.getAuth(&quot;auth-token&quot;), &quot;Auth token should be null after clearing database&quot;);</span>
+<span class="fc" id="L50">        assertTrue(gameDao.listGames().isEmpty(), &quot;Game list should be empty after clearing database&quot;);</span>
+<span class="fc" id="L51">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

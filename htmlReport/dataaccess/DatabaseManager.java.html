@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">dataaccess</a> &gt; <span class="el_source">DatabaseManager.java</span></div><h1>DatabaseManager.java</h1><pre class="source lang-java linenums">package dataaccess;
+
+import java.sql.*;
+import java.util.Properties;
+
+<span class="fc" id="L6">public class DatabaseManager {</span>
+    private static String databaseName;
+    private static String dbUsername;
+    private static String dbPassword;
+    private static String connectionUrl;
+
+    /*
+     * Load the database information for the db.properties file.
+     */
+    static {
+<span class="fc" id="L16">        loadPropertiesFromResources();</span>
+<span class="fc" id="L17">    }</span>
+
+    /**
+     * Creates the database if it does not already exist.
+     */
+    static public void createDatabase() throws DataAccessException {
+<span class="fc" id="L23">        var statement = &quot;CREATE DATABASE IF NOT EXISTS &quot; + databaseName;</span>
+<span class="fc" id="L24">        try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);</span>
+<span class="fc" id="L25">             var preparedStatement = conn.prepareStatement(statement)) {</span>
+<span class="fc" id="L26">            preparedStatement.executeUpdate();</span>
+<span class="nc" id="L27">        } catch (SQLException ex) {</span>
+<span class="nc" id="L28">            throw new DataAccessException(&quot;failed to create database&quot;, ex);</span>
+<span class="fc" id="L29">        }</span>
+<span class="fc" id="L30">    }</span>
+
+    /**
+     * Create a connection to the database and sets the catalog based upon the
+     * properties specified in db.properties. Connections to the database should
+     * be short-lived, and you must close the connection when you are done with it.
+     * The easiest way to do that is with a try-with-resource block.
+     * &lt;br/&gt;
+     * &lt;code&gt;
+     * try (var conn = DatabaseManager.getConnection()) {
+     * // execute SQL statements.
+     * }
+     * &lt;/code&gt;
+     */
+    public static Connection getConnection() throws DataAccessException {
+        try {
+            //do not wrap the following line with a try-with-resources
+<span class="fc" id="L47">            var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);</span>
+<span class="fc" id="L48">            conn.setCatalog(databaseName);</span>
+<span class="fc" id="L49">            return conn;</span>
+<span class="fc" id="L50">        } catch (SQLException ex) {</span>
+<span class="fc" id="L51">            throw new DataAccessException(&quot;Database connection error&quot;, ex);</span>
+        }
+    }
+
+    private static void loadPropertiesFromResources() {
+<span class="fc" id="L56">        try (var propStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(&quot;db.properties&quot;)) {</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">            if (propStream == null) {</span>
+<span class="nc" id="L58">                throw new Exception(&quot;Unable to load db.properties&quot;);</span>
+            }
+<span class="fc" id="L60">            Properties props = new Properties();</span>
+<span class="fc" id="L61">            props.load(propStream);</span>
+<span class="fc" id="L62">            loadProperties(props);</span>
+<span class="nc" id="L63">        } catch (Exception ex) {</span>
+<span class="nc" id="L64">            throw new RuntimeException(&quot;unable to process db.properties&quot;, ex);</span>
+<span class="fc" id="L65">        }</span>
+<span class="fc" id="L66">    }</span>
+
+    private static void loadProperties(Properties props) {
+<span class="fc" id="L69">        databaseName = props.getProperty(&quot;db.name&quot;);</span>
+<span class="fc" id="L70">        dbUsername = props.getProperty(&quot;db.user&quot;);</span>
+<span class="fc" id="L71">        dbPassword = props.getProperty(&quot;db.password&quot;);</span>
+
+<span class="fc" id="L73">        var host = props.getProperty(&quot;db.host&quot;);</span>
+<span class="fc" id="L74">        var port = Integer.parseInt(props.getProperty(&quot;db.port&quot;));</span>
+<span class="fc" id="L75">        connectionUrl = String.format(&quot;jdbc:mysql://%s:%d&quot;, host, port);</span>
+<span class="fc" id="L76">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

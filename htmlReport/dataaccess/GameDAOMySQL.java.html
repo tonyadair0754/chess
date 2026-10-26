@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameDAOMySQL.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">dataaccess</a> &gt; <span class="el_source">GameDAOMySQL.java</span></div><h1>GameDAOMySQL.java</h1><pre class="source lang-java linenums">package dataaccess;
+
+import chess.ChessGame;
+import com.google.gson.Gson;
+import model.GameData;
+import model.UserData;
+
+import javax.xml.crypto.Data;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+
+public class GameDAOMySQL extends SqlDAO implements GameDAO {
+
+<span class="fc" id="L18">    public GameDAOMySQL() throws DataAccessException {</span>
+<span class="fc" id="L19">        configureDatabase();</span>
+<span class="fc" id="L20">    }</span>
+
+    @Override
+    protected void configureDatabase() throws DataAccessException {
+<span class="fc" id="L24">        String[] createStatements = {</span>
+                &quot;&quot;&quot;
+                CREATE TABLE IF NOT EXISTS game (
+                `gameID` INT NOT NULL AUTO_INCREMENT,
+                `whiteUsername` VARCHAR(255),
+                `blackUsername` VARCHAR(255),
+                `gameName` VARCHAR(255) NOT NULL,
+                `game` TEXT NOT NULL,
+                PRIMARY KEY (`gameID`))
+                &quot;&quot;&quot;
+        };
+<span class="fc" id="L35">        executeCreateTables(createStatements);</span>
+<span class="fc" id="L36">    }</span>
+
+    @Override
+    public void createGame(GameData gameData) throws DataAccessException {
+<span class="fc" id="L40">        var statement = &quot;INSERT INTO game (gameID, whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?, ?)&quot;;</span>
+<span class="fc" id="L41">        String serializedGame = new Gson().toJson(gameData.game());</span>
+<span class="fc" id="L42">        executeUpdate(statement, gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), serializedGame);</span>
+<span class="fc" id="L43">    }</span>
+
+    @Override
+    public GameData getGame(int gameID) throws DataAccessException {
+<span class="fc" id="L47">        try (Connection conn = DatabaseManager.getConnection()) {</span>
+<span class="fc" id="L48">            var statement = &quot;SELECT gameID, whiteUsername, blackUsername, gameName, game FROM game WHERE gameID=?&quot;;</span>
+<span class="fc" id="L49">            try (PreparedStatement ps = conn.prepareStatement(statement)) {</span>
+<span class="fc" id="L50">                ps.setInt(1, gameID);</span>
+<span class="fc" id="L51">                try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">                    if (rs.next()) {</span>
+<span class="fc" id="L53">                        return readGame(rs);</span>
+                    }
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">                }</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">            }</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        } catch (SQLException e) {</span>
+<span class="nc" id="L58">            throw new DataAccessException(&quot;Unable to read game: &quot; + e.getMessage(), e);</span>
+<span class="fc" id="L59">        }</span>
+<span class="fc" id="L60">        return null;</span>
+    }
+
+    @Override
+    public Collection&lt;GameData&gt; listGames() throws DataAccessException {
+<span class="fc" id="L65">        Collection&lt;GameData&gt; games = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L66">        try (Connection conn = DatabaseManager.getConnection()) {</span>
+<span class="fc" id="L67">            var statement = &quot;SELECT gameID, whiteUsername, blackUsername, gameName, game FROM game&quot;;</span>
+<span class="fc" id="L68">            try (PreparedStatement ps = conn.prepareStatement(statement);</span>
+<span class="fc" id="L69">                 ResultSet rs = ps.executeQuery()) {</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">                while (rs.next()) {</span>
+<span class="fc" id="L71">                    games.add(readGame(rs));</span>
+                }
+            }
+<span class="nc" id="L74">        } catch (SQLException e) {</span>
+<span class="nc" id="L75">            throw new DataAccessException(&quot;Unable to list games: &quot; + e.getMessage(), e);</span>
+<span class="fc" id="L76">        }</span>
+<span class="fc" id="L77">        return games;</span>
+    }
+
+    @Override
+    public void updateGame(GameData gameData) throws DataAccessException {
+<span class="fc" id="L82">        var statement = &quot;UPDATE game SET whiteUsername=?, blackUsername=?, gameName=?, game=? WHERE gameID=?&quot;;</span>
+<span class="fc" id="L83">        String serializedGame = new Gson().toJson(gameData.game());</span>
+<span class="fc" id="L84">        executeUpdate(</span>
+                statement,
+<span class="fc" id="L86">                gameData.whiteUsername(),</span>
+<span class="fc" id="L87">                gameData.blackUsername(),</span>
+<span class="fc" id="L88">                gameData.gameName(),</span>
+                serializedGame,
+<span class="fc" id="L90">                gameData.gameID());</span>
+<span class="fc" id="L91">    }</span>
+
+    @Override
+    public void clear() throws DataAccessException {
+<span class="fc" id="L95">        var statement = &quot;TRUNCATE game&quot;;</span>
+<span class="fc" id="L96">        executeUpdate(statement);</span>
+<span class="fc" id="L97">    }</span>
+
+    // Helper method to map a ResultSet row into a GameData record
+    private GameData readGame(ResultSet rs) throws SQLException {
+<span class="fc" id="L101">        int id = rs.getInt(&quot;gameID&quot;);</span>
+<span class="fc" id="L102">        String white = rs.getString(&quot;whiteUsername&quot;);</span>
+<span class="fc" id="L103">        String black = rs.getString(&quot;blackUsername&quot;);</span>
+<span class="fc" id="L104">        String name = rs.getString(&quot;gameName&quot;);</span>
+<span class="fc" id="L105">        String jsonGame = rs.getString(&quot;game&quot;);</span>
+
+        // Deserialize JSON back into a ChessGame object
+<span class="fc" id="L108">        ChessGame chessGame = new Gson().fromJson(jsonGame, ChessGame.class);</span>
+
+<span class="fc" id="L110">        return new GameData(id, white, black, name, chessGame);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

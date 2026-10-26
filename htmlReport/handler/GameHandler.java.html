@@ -35,8 +35,8 @@ public class GameHandler {
 
 <span class="fc" id="L36">        } catch (UnauthorizedException e) {</span>
 <span class="fc" id="L37">            sendJsonResponse(ctx, 401, Map.of(&quot;message&quot;, e.getMessage()));</span>
-<span class="nc" id="L38">        } catch (DataAccessException e) {</span>
-<span class="nc" id="L39">            sendJsonResponse(ctx, 500, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="fc" id="L38">        } catch (DataAccessException e) {</span>
+<span class="fc" id="L39">            sendJsonResponse(ctx, 500, Map.of(&quot;message&quot;, e.getMessage()));</span>
 <span class="fc" id="L40">        }</span>
 <span class="fc" id="L41">    }</span>
 
@@ -60,8 +60,8 @@ public class GameHandler {
 <span class="fc" id="L60">            sendJsonResponse(ctx, 400, Map.of(&quot;message&quot;, e.getMessage()));</span>
 <span class="fc" id="L61">        } catch (UnauthorizedException e) {</span>
 <span class="fc" id="L62">            sendJsonResponse(ctx, 401, Map.of(&quot;message&quot;, e.getMessage()));</span>
-<span class="nc" id="L63">        } catch (DataAccessException e) {</span>
-<span class="nc" id="L64">            sendJsonResponse(ctx, 500, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="fc" id="L63">        } catch (DataAccessException e) {</span>
+<span class="fc" id="L64">            sendJsonResponse(ctx, 500, Map.of(&quot;message&quot;, e.getMessage()));</span>
 <span class="fc" id="L65">        }</span>
 <span class="fc" id="L66">    }</span>
 
@@ -88,8 +88,8 @@ public class GameHandler {
 <span class="fc" id="L88">            sendJsonResponse(ctx, 401, Map.of(&quot;message&quot;, e.getMessage()));</span>
 <span class="fc" id="L89">        } catch (AlreadyTakenException e) {</span>
 <span class="fc" id="L90">            sendJsonResponse(ctx, 403, Map.of(&quot;message&quot;, e.getMessage()));</span>
-<span class="nc" id="L91">        } catch (DataAccessException e) {</span>
-<span class="nc" id="L92">            sendJsonResponse(ctx, 500, Map.of(&quot;message&quot;, e.getMessage()));</span>
+<span class="fc" id="L91">        } catch (DataAccessException e) {</span>
+<span class="fc" id="L92">            sendJsonResponse(ctx, 500, Map.of(&quot;message&quot;, e.getMessage()));</span>
 <span class="fc" id="L93">        }</span>
 <span class="fc" id="L94">    }</span>
 

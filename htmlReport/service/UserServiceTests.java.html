@@ -6,158 +6,162 @@ import model.UserData;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-<span class="fc" id="L12">public class UserServiceTests {</span>
+<span class="fc" id="L13">public class UserServiceTests {</span>
     private UserDAO userDao;
     private AuthDAO authDao;
     private UserService userService;
 
     @BeforeEach
-    void setUp() {
-<span class="fc" id="L19">        userDao = new UserDAOMemory();</span>
-<span class="fc" id="L20">        authDao = new AuthDAOMemory();</span>
-<span class="fc" id="L21">        userService = new UserService(userDao, authDao);</span>
-<span class="fc" id="L22">    }</span>
+    void setUp() throws DataAccessException {
+<span class="fc" id="L20">        userDao = new UserDAOMySQL();</span>
+<span class="fc" id="L21">        authDao = new AuthDAOMySQL();</span>
+<span class="fc" id="L22">        userService = new UserService(userDao, authDao);</span>
 
-    private void registerTestUser() throws Exception {
-<span class="fc" id="L25">        userService.register(new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;));</span>
+<span class="fc" id="L24">        userDao.clear();</span>
+<span class="fc" id="L25">        authDao.clear();</span>
 <span class="fc" id="L26">    }</span>
 
+    private void registerTestUser() throws Exception {
+<span class="fc" id="L29">        userService.register(new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;));</span>
+<span class="fc" id="L30">    }</span>
+
     private String loginTestUser() throws Exception {
-<span class="fc" id="L29">        registerTestUser();</span>
+<span class="fc" id="L33">        registerTestUser();</span>
 
-<span class="fc" id="L31">        LoginResult result = userService.login(new LoginRequest(&quot;mrMe&quot;, &quot;password123&quot;));</span>
+<span class="fc" id="L35">        LoginResult result = userService.login(new LoginRequest(&quot;mrMe&quot;, &quot;password123&quot;));</span>
 
-<span class="fc" id="L33">        return result.authToken();</span>
+<span class="fc" id="L37">        return result.authToken();</span>
     }
 
     @Test
     public void registerSuccess() throws Exception {
         // Create sample data records
-<span class="fc" id="L39">        RegisterRequest request = new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;);</span>
+<span class="fc" id="L43">        RegisterRequest request = new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;);</span>
 
         // Call the method we want to test
-<span class="fc" id="L42">        RegisterResult result = userService.register(request);</span>
+<span class="fc" id="L46">        RegisterResult result = userService.register(request);</span>
 
         // Verify result
-<span class="fc" id="L45">        assertEquals(&quot;mrMe&quot;, result.username());</span>
-<span class="fc" id="L46">        assertNotNull(result.authToken());</span>
-<span class="fc" id="L47">        assertFalse(result.authToken().isBlank());</span>
+<span class="fc" id="L49">        assertEquals(&quot;mrMe&quot;, result.username());</span>
+<span class="fc" id="L50">        assertNotNull(result.authToken());</span>
+<span class="fc" id="L51">        assertFalse(result.authToken().isBlank());</span>
 
         // Verify the user was stored
-<span class="fc" id="L50">        UserData storedUser = userDao.getUser(&quot;mrMe&quot;);</span>
-<span class="fc" id="L51">        assertNotNull(storedUser);</span>
-<span class="fc" id="L52">        assertEquals(&quot;mrMe&quot;, storedUser.username());</span>
-<span class="fc" id="L53">        assertEquals(&quot;password123&quot;, storedUser.password());</span>
-<span class="fc" id="L54">        assertEquals(&quot;mrMe@example.com&quot;, storedUser.email());</span>
+<span class="fc" id="L54">        UserData storedUser = userDao.getUser(&quot;mrMe&quot;);</span>
+<span class="fc" id="L55">        assertNotNull(storedUser);</span>
+<span class="fc" id="L56">        assertEquals(&quot;mrMe&quot;, storedUser.username());</span>
+<span class="fc" id="L57">        assertTrue(BCrypt.checkpw(&quot;password123&quot;, storedUser.password()));</span>
+<span class="fc" id="L58">        assertEquals(&quot;mrMe@example.com&quot;, storedUser.email());</span>
 
         // Verify the auth token was stored
-<span class="fc" id="L57">        AuthData storedAuth = authDao.getAuth(result.authToken());</span>
-<span class="fc" id="L58">        assertNotNull(storedAuth);</span>
-<span class="fc" id="L59">        assertEquals(&quot;mrMe&quot;, storedAuth.username());</span>
-<span class="fc" id="L60">    }</span>
+<span class="fc" id="L61">        AuthData storedAuth = authDao.getAuth(result.authToken());</span>
+<span class="fc" id="L62">        assertNotNull(storedAuth);</span>
+<span class="fc" id="L63">        assertEquals(&quot;mrMe&quot;, storedAuth.username());</span>
+<span class="fc" id="L64">    }</span>
 
     @Test
     void registerUsernameAlreadyTaken() throws Exception {
-<span class="fc" id="L64">        RegisterRequest first = new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;);</span>
-<span class="fc" id="L65">        userService.register(first);</span>
+<span class="fc" id="L68">        RegisterRequest first = new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;);</span>
+<span class="fc" id="L69">        userService.register(first);</span>
 
-<span class="fc" id="L67">        RegisterRequest duplicate = new RegisterRequest(&quot;mrMe&quot;, &quot;differentPassword&quot;, &quot;differentEmail@example.com&quot;);</span>
+<span class="fc" id="L71">        RegisterRequest duplicate = new RegisterRequest(&quot;mrMe&quot;, &quot;differentPassword&quot;, &quot;differentEmail@example.com&quot;);</span>
 
         // Act and assert
-<span class="pc" id="L70">        assertThrows(dataaccess.AlreadyTakenException.class, () -&gt; userService.register(duplicate));</span>
-<span class="fc" id="L71">    }</span>
+<span class="pc" id="L74">        assertThrows(dataaccess.AlreadyTakenException.class, () -&gt; userService.register(duplicate));</span>
+<span class="fc" id="L75">    }</span>
 
     @Test
     void registerMissingUsername() throws Exception {
-<span class="fc" id="L75">        RegisterRequest request = new RegisterRequest(null, &quot;password123&quot;, &quot;mrMe@example.com&quot;</span>
+<span class="fc" id="L79">        RegisterRequest request = new RegisterRequest(null, &quot;password123&quot;, &quot;mrMe@example.com&quot;</span>
         );
 
         // Act and assert
-<span class="pc" id="L79">        assertThrows(dataaccess.BadRequestException.class, () -&gt; userService.register(request)</span>
+<span class="pc" id="L83">        assertThrows(dataaccess.BadRequestException.class, () -&gt; userService.register(request)</span>
         );
-<span class="fc" id="L81">    }</span>
+<span class="fc" id="L85">    }</span>
 
     @Test
     public void loginSuccess() throws Exception {
         // Register a user and prepare login request
-<span class="fc" id="L86">        registerTestUser();</span>
-<span class="fc" id="L87">        LoginRequest request = new LoginRequest(&quot;mrMe&quot;, &quot;password123&quot;);</span>
+<span class="fc" id="L90">        registerTestUser();</span>
+<span class="fc" id="L91">        LoginRequest request = new LoginRequest(&quot;mrMe&quot;, &quot;password123&quot;);</span>
 
         // Act
-<span class="fc" id="L90">        LoginResult result = userService.login(request);</span>
+<span class="fc" id="L94">        LoginResult result = userService.login(request);</span>
 
         // Assert: verify the result
-<span class="fc" id="L93">        assertEquals(&quot;mrMe&quot;, result.username());</span>
-<span class="fc" id="L94">        assertNotNull(result.authToken());</span>
-<span class="fc" id="L95">        assertFalse(result.authToken().isBlank());</span>
+<span class="fc" id="L97">        assertEquals(&quot;mrMe&quot;, result.username());</span>
+<span class="fc" id="L98">        assertNotNull(result.authToken());</span>
+<span class="fc" id="L99">        assertFalse(result.authToken().isBlank());</span>
 
         // Assert: verify the auth token was stored
-<span class="fc" id="L98">        AuthData storedAuth = authDao.getAuth(result.authToken());</span>
-<span class="fc" id="L99">        assertNotNull(storedAuth);</span>
-<span class="fc" id="L100">        assertEquals(&quot;mrMe&quot;, storedAuth.username());</span>
-<span class="fc" id="L101">    }</span>
+<span class="fc" id="L102">        AuthData storedAuth = authDao.getAuth(result.authToken());</span>
+<span class="fc" id="L103">        assertNotNull(storedAuth);</span>
+<span class="fc" id="L104">        assertEquals(&quot;mrMe&quot;, storedAuth.username());</span>
+<span class="fc" id="L105">    }</span>
 
     @Test
     void loginIncorrectPassword() throws Exception {
-<span class="fc" id="L105">        registerTestUser();</span>
-<span class="fc" id="L106">        LoginRequest request = new LoginRequest(&quot;mrMe&quot;, &quot;incorrectPassword&quot;);</span>
+<span class="fc" id="L109">        registerTestUser();</span>
+<span class="fc" id="L110">        LoginRequest request = new LoginRequest(&quot;mrMe&quot;, &quot;incorrectPassword&quot;);</span>
 
         // Act and assert
-<span class="pc" id="L109">        assertThrows(UnauthorizedException.class, () -&gt; userService.login(request));</span>
-<span class="fc" id="L110">    }</span>
+<span class="pc" id="L113">        assertThrows(UnauthorizedException.class, () -&gt; userService.login(request));</span>
+<span class="fc" id="L114">    }</span>
 
     @Test
     void loginUnknownUsername() throws Exception {
-<span class="fc" id="L114">        LoginRequest request = new LoginRequest(&quot;unknownUser&quot;, &quot;password123&quot;);</span>
+<span class="fc" id="L118">        LoginRequest request = new LoginRequest(&quot;unknownUser&quot;, &quot;password123&quot;);</span>
 
         // Act and assert
-<span class="pc" id="L117">        assertThrows(UnauthorizedException.class, () -&gt; userService.login(request));</span>
-<span class="fc" id="L118">    }</span>
+<span class="pc" id="L121">        assertThrows(UnauthorizedException.class, () -&gt; userService.login(request));</span>
+<span class="fc" id="L122">    }</span>
 
     @Test
     void loginMissingPassword() throws Exception {
-<span class="fc" id="L122">        LoginRequest request = new LoginRequest(&quot;mrMe&quot;, null);</span>
+<span class="fc" id="L126">        LoginRequest request = new LoginRequest(&quot;mrMe&quot;, null);</span>
 
-<span class="pc" id="L124">        assertThrows(BadRequestException.class, () -&gt; userService.login(request));</span>
-<span class="fc" id="L125">    }</span>
+<span class="pc" id="L128">        assertThrows(BadRequestException.class, () -&gt; userService.login(request));</span>
+<span class="fc" id="L129">    }</span>
 
     @Test
     public void logoutSuccess() throws Exception {
-<span class="fc" id="L129">        String token = loginTestUser();</span>
-<span class="fc" id="L130">        LogoutRequest logoutRequest = new LogoutRequest(token);</span>
+<span class="fc" id="L133">        String token = loginTestUser();</span>
+<span class="fc" id="L134">        LogoutRequest logoutRequest = new LogoutRequest(token);</span>
 
         // Verify token exists before trying to logout
-<span class="fc" id="L133">        assertNotNull(authDao.getAuth(token));</span>
+<span class="fc" id="L137">        assertNotNull(authDao.getAuth(token));</span>
 
         // Logout
-<span class="fc" id="L136">        userService.logout(logoutRequest);</span>
+<span class="fc" id="L140">        userService.logout(logoutRequest);</span>
 
         // Verify that the token no longer exists
-<span class="fc" id="L139">        assertNull(authDao.getAuth(token));</span>
-<span class="fc" id="L140">    }</span>
+<span class="fc" id="L143">        assertNull(authDao.getAuth(token));</span>
+<span class="fc" id="L144">    }</span>
 
     @Test
     void logoutInvalidToken() throws Exception {
-<span class="fc" id="L144">        String token = &quot;not-a-real-token&quot;;</span>
-<span class="fc" id="L145">        LogoutRequest logoutRequest = new LogoutRequest(token);</span>
+<span class="fc" id="L148">        String token = &quot;not-a-real-token&quot;;</span>
+<span class="fc" id="L149">        LogoutRequest logoutRequest = new LogoutRequest(token);</span>
 
         // Act and assert
-<span class="pc" id="L148">        assertThrows(UnauthorizedException.class, () -&gt; userService.logout(logoutRequest));</span>
-<span class="fc" id="L149">    }</span>
+<span class="pc" id="L152">        assertThrows(UnauthorizedException.class, () -&gt; userService.logout(logoutRequest));</span>
+<span class="fc" id="L153">    }</span>
 
     @Test
     void logoutTwice() throws Exception {
-<span class="fc" id="L153">        String token = loginTestUser();</span>
-<span class="fc" id="L154">        LogoutRequest logoutRequest = new LogoutRequest(token);</span>
+<span class="fc" id="L157">        String token = loginTestUser();</span>
+<span class="fc" id="L158">        LogoutRequest logoutRequest = new LogoutRequest(token);</span>
 
         // First logout succeeds
-<span class="fc" id="L157">        userService.logout(logoutRequest);</span>
+<span class="fc" id="L161">        userService.logout(logoutRequest);</span>
 
         // Second logout should fail
-<span class="pc" id="L160">        assertThrows(UnauthorizedException.class, () -&gt; userService.logout(logoutRequest));</span>
-<span class="fc" id="L161">    }</span>
+<span class="pc" id="L164">        assertThrows(UnauthorizedException.class, () -&gt; userService.logout(logoutRequest));</span>
+<span class="fc" id="L165">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

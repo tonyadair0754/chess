@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">passoff.server</a> &gt; <span class="el_source">DatabaseTests.java</span></div><h1>DatabaseTests.java</h1><pre class="source lang-java linenums">package passoff.server;
+
+import chess.ChessGame;
+import dataaccess.DataAccessException;
+import org.junit.jupiter.api.*;
+import passoff.model.*;
+import server.Server;
+
+import java.lang.reflect.Method;
+import java.sql.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+<span class="fc" id="L16">public class DatabaseTests {</span>
+
+<span class="fc" id="L18">    private static final TestUser TEST_USER = new TestUser(&quot;ExistingUser&quot;, &quot;existingUserPassword&quot;, &quot;eu@mail.com&quot;);</span>
+
+    private static TestServerFacade serverFacade;
+
+    private static Server server;
+
+    private static Class&lt;?&gt; databaseManagerClass;
+
+
+    @BeforeAll
+    public static void startServer() throws DataAccessException {
+<span class="fc" id="L29">        server = new Server();</span>
+<span class="fc" id="L30">        var port = server.run(0);</span>
+<span class="fc" id="L31">        System.out.println(&quot;Started test HTTP server on &quot; + port);</span>
+
+<span class="fc" id="L33">        serverFacade = new TestServerFacade(&quot;localhost&quot;, Integer.toString(port));</span>
+<span class="fc" id="L34">    }</span>
+
+    @BeforeEach
+    public void setUp() {
+<span class="fc" id="L38">        serverFacade.clear();</span>
+<span class="fc" id="L39">    }</span>
+
+    @AfterAll
+    static void stopServer() {
+<span class="fc" id="L43">        server.stop();</span>
+<span class="fc" id="L44">    }</span>
+
+
+    @Test
+    @DisplayName(&quot;Persistence Test&quot;)
+    @Order(1)
+    public void persistenceTest() throws DataAccessException {
+<span class="fc" id="L51">        int initialRowCount = getDatabaseRows();</span>
+
+<span class="fc" id="L53">        TestAuthResult regResult = serverFacade.register(TEST_USER);</span>
+<span class="fc" id="L54">        String auth = regResult.getAuthToken();</span>
+
+        //create a game
+<span class="fc" id="L57">        String gameName = &quot;Test Game&quot;;</span>
+<span class="fc" id="L58">        TestCreateResult createResult = serverFacade.createGame(new TestCreateRequest(gameName), auth);</span>
+
+        //join the game
+<span class="fc" id="L61">        serverFacade.joinPlayer(new TestJoinRequest(ChessGame.TeamColor.WHITE, createResult.getGameID()), auth);</span>
+
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        Assertions.assertTrue(initialRowCount &lt; getDatabaseRows(), &quot;No new data added to database&quot;);</span>
+
+        // Test that we can read the data after a restart
+<span class="fc" id="L66">        stopServer();</span>
+<span class="fc" id="L67">        startServer();</span>
+
+        //list games using the auth
+<span class="fc" id="L70">        TestListResult listResult = serverFacade.listGames(auth);</span>
+<span class="fc" id="L71">        Assertions.assertEquals(200, serverFacade.getStatusCode(), &quot;Server response code was not 200 OK&quot;);</span>
+<span class="fc" id="L72">        Assertions.assertEquals(1, listResult.getGames().length, &quot;Missing game(s) in database after restart&quot;);</span>
+
+<span class="fc" id="L74">        TestListEntry game1 = listResult.getGames()[0];</span>
+<span class="fc" id="L75">        Assertions.assertEquals(game1.getGameID(), createResult.getGameID());</span>
+<span class="fc" id="L76">        Assertions.assertEquals(gameName, game1.getGameName(), &quot;Game name changed after restart&quot;);</span>
+<span class="fc" id="L77">        Assertions.assertEquals(TEST_USER.getUsername(), game1.getWhiteUsername(),</span>
+                &quot;White player username changed after restart&quot;);
+
+        //test that we can still log in
+<span class="fc" id="L81">        serverFacade.login(TEST_USER);</span>
+<span class="fc" id="L82">        Assertions.assertEquals(200, serverFacade.getStatusCode(), &quot;Unable to login&quot;);</span>
+<span class="fc" id="L83">    }</span>
+
+    @Test
+    @DisplayName(&quot;Bcrypt&quot;)
+    @Order(2)
+    public void bcrypt() {
+<span class="fc" id="L89">        serverFacade.register(TEST_USER);</span>
+<span class="fc" id="L90">        Assertions.assertEquals(200, serverFacade.getStatusCode(), &quot;Unable to register&quot;);</span>
+<span class="fc" id="L91">        executeForAllTables(this::checkTableForPassword);</span>
+<span class="fc" id="L92">    }</span>
+
+    @Test
+    @DisplayName(&quot;Database Error Handling&quot;)
+    @Order(3)
+    public void databaseErrorHandling() throws ReflectiveOperationException {
+        /*
+        This test simulates an interruption in connecting to MySQL after the server is already running (it started with 
+        MySQL working normally). If this happens, this should be considered an &quot;Internal Server Error&quot; and the response 
+        code for any endpoint which no longer can do what it needs to do (which for this project should be all of them) 
+        should be 500. The body of each of these responses should include a reasonable, relevant error message.
+         */
+<span class="fc" id="L104">        Properties fakeDbProperties = new Properties();</span>
+<span class="fc" id="L105">        fakeDbProperties.setProperty(&quot;db.name&quot;, UUID.randomUUID().toString());</span>
+<span class="fc" id="L106">        fakeDbProperties.setProperty(&quot;db.user&quot;, UUID.randomUUID().toString());</span>
+<span class="fc" id="L107">        fakeDbProperties.setProperty(&quot;db.password&quot;, UUID.randomUUID().toString());</span>
+<span class="fc" id="L108">        fakeDbProperties.setProperty(&quot;db.host&quot;, &quot;localhost&quot;);</span>
+<span class="fc" id="L109">        fakeDbProperties.setProperty(&quot;db.port&quot;, &quot;100000&quot;);</span>
+
+<span class="fc" id="L111">        Class&lt;?&gt; databaseManagerClass = findDatabaseManager();</span>
+<span class="fc" id="L112">        Method loadPropertiesMethod = databaseManagerClass.getDeclaredMethod(&quot;loadProperties&quot;, Properties.class);</span>
+<span class="fc" id="L113">        loadPropertiesMethod.setAccessible(true);</span>
+<span class="fc" id="L114">        Object obj = databaseManagerClass.getDeclaredConstructor().newInstance();</span>
+<span class="fc" id="L115">        loadPropertiesMethod.invoke(obj, fakeDbProperties);</span>
+
+<span class="fc" id="L117">        Map&lt;String, Supplier&lt;TestResult&gt;&gt; operations = Map.of(</span>
+<span class="fc" id="L118">                &quot;Clear&quot;, () -&gt; serverFacade.clear(),</span>
+<span class="fc" id="L119">                &quot;Register&quot;, () -&gt; serverFacade.register(TEST_USER),</span>
+<span class="fc" id="L120">                &quot;Login&quot;, () -&gt; serverFacade.login(TEST_USER),</span>
+<span class="fc" id="L121">                &quot;Logout&quot;, () -&gt; serverFacade.logout(UUID.randomUUID().toString()),</span>
+<span class="fc" id="L122">                &quot;Create Game&quot;, () -&gt; serverFacade.createGame(new TestCreateRequest(&quot;inaccessible&quot;), UUID.randomUUID().toString()),</span>
+<span class="fc" id="L123">                &quot;List Games&quot;, () -&gt; serverFacade.listGames(UUID.randomUUID().toString()),</span>
+<span class="fc" id="L124">                &quot;Join Game&quot;, () -&gt; serverFacade.joinPlayer(new TestJoinRequest(ChessGame.TeamColor.WHITE, 1), UUID.randomUUID().toString())</span>
+        );
+
+        try {
+<span class="fc bfc" id="L128" title="All 2 branches covered.">            for (Map.Entry&lt;String, Supplier&lt;TestResult&gt;&gt; operationEntry : operations.entrySet()) {</span>
+<span class="fc" id="L129">                String operationName = operationEntry.getKey();</span>
+<span class="fc" id="L130">                Supplier&lt;TestResult&gt; operation = operationEntry.getValue();</span>
+<span class="fc" id="L131">                TestResult result = operation.get();</span>
+<span class="fc" id="L132">                Assertions.assertEquals(500, serverFacade.getStatusCode(),</span>
+                        &quot;Server response code was not 500 Internal Error for &quot; + operationName);
+<span class="fc" id="L134">                String errorMessage = result.getMessage();</span>
+<span class="fc" id="L135">                Assertions.assertNotNull(errorMessage, &quot;Invalid Request didn't return an error message for &quot; + operationName);</span>
+<span class="fc" id="L136">                Assertions.assertTrue(errorMessage.toLowerCase(Locale.ROOT).contains(&quot;error&quot;),</span>
+<span class="fc" id="L137">                        String.format(&quot;Error message didn't contain the word \&quot;Error\&quot; for %s. Error message: \&quot;%s\&quot;&quot;, operationName, errorMessage));</span>
+<span class="fc" id="L138">            }</span>
+        } finally {
+<span class="fc" id="L140">            Method loadFromResources = databaseManagerClass.getDeclaredMethod(&quot;loadPropertiesFromResources&quot;);</span>
+<span class="fc" id="L141">            loadFromResources.setAccessible(true);</span>
+<span class="fc" id="L142">            loadFromResources.invoke(obj);</span>
+        }
+<span class="fc" id="L144">    }</span>
+
+    private int getDatabaseRows() {
+<span class="fc" id="L147">        AtomicInteger rows = new AtomicInteger();</span>
+<span class="fc" id="L148">        executeForAllTables((tableName, connection) -&gt; {</span>
+<span class="fc" id="L149">            try (var statement = connection.createStatement()) {</span>
+<span class="fc" id="L150">                var sql = &quot;SELECT count(*) FROM &quot; + tableName;</span>
+<span class="fc" id="L151">                try (var resultSet = statement.executeQuery(sql)) {</span>
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">                    if (resultSet.next()) {</span>
+<span class="fc" id="L153">                        rows.addAndGet(resultSet.getInt(1));</span>
+                    }
+                }
+            }
+<span class="fc" id="L157">        });</span>
+
+<span class="fc" id="L159">        return rows.get();</span>
+    }
+
+    private void checkTableForPassword(String table, Connection connection) throws SQLException {
+<span class="fc" id="L163">        String sql = &quot;SELECT * FROM &quot; + table;</span>
+<span class="fc" id="L164">        try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(sql)) {</span>
+<span class="fc" id="L165">            ResultSetMetaData rsmd = rs.getMetaData();</span>
+<span class="fc" id="L166">            int columns = rsmd.getColumnCount();</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">            while (rs.next()) {</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">                for (int i = 1; i &lt;= columns; i++) {</span>
+<span class="fc" id="L169">                    String value = rs.getString(i);</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">                    if (value != null) {</span>
+<span class="fc" id="L171">                        Assertions.assertFalse(value.contains(TEST_USER.getPassword()),</span>
+                                &quot;Found clear text password in database&quot;);
+                    }
+                }
+            }
+        }
+<span class="fc" id="L177">    }</span>
+
+    private void executeForAllTables(TableAction tableAction) {
+<span class="fc" id="L180">        String sql = &quot;&quot;&quot;</span>
+                    SELECT table_name
+                    FROM information_schema.tables
+                    WHERE table_schema = DATABASE();
+                &quot;&quot;&quot;;
+
+<span class="fc" id="L186">        try (Connection conn = getConnection(); PreparedStatement preparedStatement = conn.prepareStatement(sql)) {</span>
+<span class="fc" id="L187">            try (var resultSet = preparedStatement.executeQuery()) {</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">                while (resultSet.next()) {</span>
+<span class="fc" id="L189">                    tableAction.execute(resultSet.getString(1), conn);</span>
+                }
+            }
+<span class="nc" id="L192">        } catch (ReflectiveOperationException | SQLException e) {</span>
+<span class="nc" id="L193">            Assertions.fail(e.getMessage(), e);</span>
+<span class="fc" id="L194">        }</span>
+<span class="fc" id="L195">    }</span>
+
+    private Connection getConnection() throws ReflectiveOperationException {
+<span class="fc" id="L198">        Class&lt;?&gt; clazz = findDatabaseManager();</span>
+<span class="fc" id="L199">        Method getConnectionMethod = clazz.getDeclaredMethod(&quot;getConnection&quot;);</span>
+<span class="fc" id="L200">        getConnectionMethod.setAccessible(true);</span>
+
+<span class="fc" id="L202">        Object obj = clazz.getDeclaredConstructor().newInstance();</span>
+<span class="fc" id="L203">        return (Connection) getConnectionMethod.invoke(obj);</span>
+    }
+
+    private Class&lt;?&gt; findDatabaseManager() throws ClassNotFoundException {
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        if (databaseManagerClass != null) {</span>
+<span class="fc" id="L208">            return databaseManagerClass;</span>
+        }
+
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">        for (Package p : getClass().getClassLoader().getDefinedPackages()) {</span>
+            try {
+<span class="fc" id="L213">                Class&lt;?&gt; clazz = Class.forName(p.getName() + &quot;.DatabaseManager&quot;);</span>
+<span class="fc" id="L214">                clazz.getDeclaredMethod(&quot;getConnection&quot;);</span>
+<span class="fc" id="L215">                databaseManagerClass = clazz;</span>
+<span class="fc" id="L216">                return clazz;</span>
+<span class="fc" id="L217">            } catch (ReflectiveOperationException ignored) {</span>
+            }
+        }
+<span class="nc" id="L220">        throw new ClassNotFoundException(&quot;Unable to load database in order to verify persistence. &quot; +</span>
+                &quot;Are you using DatabaseManager to set your credentials? &quot; +
+                &quot;Did you edit the signature of the getConnection method?&quot;);
+    }
+
+    @FunctionalInterface
+    private interface TableAction {
+        void execute(String tableName, Connection connection) throws SQLException;
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

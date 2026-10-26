@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ServiceEdgeCaseTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">service</a> &gt; <span class="el_source">ServiceEdgeCaseTests.java</span></div><h1>ServiceEdgeCaseTests.java</h1><pre class="source lang-java linenums">package service;
 
 import chess.ChessGame;
-import dataaccess.AlreadyTakenException;
-import dataaccess.AuthDAOMemory;
-import dataaccess.BadRequestException;
-import dataaccess.DataAccessException;
-import dataaccess.GameDAOMemory;
-import dataaccess.UnauthorizedException;
-import dataaccess.UserDAOMemory;
+import dataaccess.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-<span class="fc" id="L18">public class ServiceEdgeCaseTests {</span>
+<span class="fc" id="L12">public class ServiceEdgeCaseTests {</span>
 
     private UserService userService;
     private GameService gameService;
@@ -23,203 +17,207 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
     @BeforeEach
     public void setUp() throws Exception {
-<span class="fc" id="L26">        UserDAOMemory userDao = new UserDAOMemory();</span>
-<span class="fc" id="L27">        AuthDAOMemory authDao = new AuthDAOMemory();</span>
-<span class="fc" id="L28">        GameDAOMemory gameDao = new GameDAOMemory();</span>
+<span class="fc" id="L20">        UserDAOMySQL userDao = new UserDAOMySQL();</span>
+<span class="fc" id="L21">        AuthDAOMySQL authDao = new AuthDAOMySQL();</span>
+<span class="fc" id="L22">        GameDAOMySQL gameDao = new GameDAOMySQL();</span>
 
-<span class="fc" id="L30">        userService = new UserService(userDao, authDao);</span>
-<span class="fc" id="L31">        gameService = new GameService(authDao, gameDao);</span>
+<span class="fc" id="L24">        userService = new UserService(userDao, authDao);</span>
+<span class="fc" id="L25">        gameService = new GameService(authDao, gameDao);</span>
 
-<span class="fc" id="L33">        validToken = userService</span>
-<span class="fc" id="L34">                .register(new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;))</span>
-<span class="fc" id="L35">                .authToken();</span>
-<span class="fc" id="L36">    }</span>
+<span class="fc" id="L27">        userDao.clear();</span>
+<span class="fc" id="L28">        authDao.clear();</span>
+<span class="fc" id="L29">        gameDao.clear();</span>
+
+<span class="fc" id="L31">        validToken = userService</span>
+<span class="fc" id="L32">                .register(new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;))</span>
+<span class="fc" id="L33">                .authToken();</span>
+<span class="fc" id="L34">    }</span>
 
     // --- UserService.register ---
 
     @Test
     public void registerNullRequest() {
-<span class="pc" id="L42">        assertThrows(BadRequestException.class, () -&gt; userService.register(null));</span>
-<span class="fc" id="L43">    }</span>
+<span class="pc" id="L40">        assertThrows(BadRequestException.class, () -&gt; userService.register(null));</span>
+<span class="fc" id="L41">    }</span>
 
     @Test
     public void registerBlankUsername() {
-<span class="fc" id="L47">        assertThrows(BadRequestException.class,</span>
-<span class="nc" id="L48">                () -&gt; userService.register(new RegisterRequest(&quot;&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;)));</span>
-<span class="fc" id="L49">    }</span>
+<span class="fc" id="L45">        assertThrows(BadRequestException.class,</span>
+<span class="nc" id="L46">                () -&gt; userService.register(new RegisterRequest(&quot;&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;)));</span>
+<span class="fc" id="L47">    }</span>
 
     @Test
     public void registerNullPassword() {
-<span class="fc" id="L53">        assertThrows(BadRequestException.class,</span>
-<span class="nc" id="L54">                () -&gt; userService.register(new RegisterRequest(&quot;mrMe&quot;, null, &quot;mrMe@example.com&quot;)));</span>
-<span class="fc" id="L55">    }</span>
+<span class="fc" id="L51">        assertThrows(BadRequestException.class,</span>
+<span class="nc" id="L52">                () -&gt; userService.register(new RegisterRequest(&quot;mrMe&quot;, null, &quot;mrMe@example.com&quot;)));</span>
+<span class="fc" id="L53">    }</span>
 
     @Test
     public void registerBlankPassword() {
-<span class="fc" id="L59">        assertThrows(BadRequestException.class,</span>
-<span class="nc" id="L60">                () -&gt; userService.register(new RegisterRequest(&quot;mrMe&quot;, &quot;&quot;, &quot;mrMe@example.com&quot;)));</span>
-<span class="fc" id="L61">    }</span>
+<span class="fc" id="L57">        assertThrows(BadRequestException.class,</span>
+<span class="nc" id="L58">                () -&gt; userService.register(new RegisterRequest(&quot;mrMe&quot;, &quot;&quot;, &quot;mrMe@example.com&quot;)));</span>
+<span class="fc" id="L59">    }</span>
 
     @Test
     public void registerNullEmail() {
-<span class="fc" id="L65">        assertThrows(BadRequestException.class,</span>
-<span class="nc" id="L66">                () -&gt; userService.register(new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, null)));</span>
-<span class="fc" id="L67">    }</span>
+<span class="fc" id="L63">        assertThrows(BadRequestException.class,</span>
+<span class="nc" id="L64">                () -&gt; userService.register(new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, null)));</span>
+<span class="fc" id="L65">    }</span>
 
     @Test
     public void registerBlankEmail() {
-<span class="fc" id="L71">        assertThrows(BadRequestException.class,</span>
-<span class="nc" id="L72">                () -&gt; userService.register(new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, &quot;&quot;)));</span>
-<span class="fc" id="L73">    }</span>
+<span class="fc" id="L69">        assertThrows(BadRequestException.class,</span>
+<span class="nc" id="L70">                () -&gt; userService.register(new RegisterRequest(&quot;mrMe&quot;, &quot;password123&quot;, &quot;&quot;)));</span>
+<span class="fc" id="L71">    }</span>
 
     // --- UserService.login ---
 
     @Test
     public void loginNullRequest() {
-<span class="pc" id="L79">        assertThrows(BadRequestException.class, () -&gt; userService.login(null));</span>
-<span class="fc" id="L80">    }</span>
+<span class="pc" id="L77">        assertThrows(BadRequestException.class, () -&gt; userService.login(null));</span>
+<span class="fc" id="L78">    }</span>
 
     @Test
     public void loginNullUsername() {
-<span class="fc" id="L84">        assertThrows(BadRequestException.class,</span>
-<span class="nc" id="L85">                () -&gt; userService.login(new LoginRequest(null, &quot;password123&quot;)));</span>
-<span class="fc" id="L86">    }</span>
+<span class="fc" id="L82">        assertThrows(BadRequestException.class,</span>
+<span class="nc" id="L83">                () -&gt; userService.login(new LoginRequest(null, &quot;password123&quot;)));</span>
+<span class="fc" id="L84">    }</span>
 
     @Test
     public void loginBlankUsername() {
-<span class="fc" id="L90">        assertThrows(BadRequestException.class,</span>
-<span class="nc" id="L91">                () -&gt; userService.login(new LoginRequest(&quot;&quot;, &quot;password123&quot;)));</span>
-<span class="fc" id="L92">    }</span>
+<span class="fc" id="L88">        assertThrows(BadRequestException.class,</span>
+<span class="nc" id="L89">                () -&gt; userService.login(new LoginRequest(&quot;&quot;, &quot;password123&quot;)));</span>
+<span class="fc" id="L90">    }</span>
 
     @Test
     public void loginBlankPassword() {
-<span class="fc" id="L96">        assertThrows(BadRequestException.class,</span>
-<span class="nc" id="L97">                () -&gt; userService.login(new LoginRequest(&quot;mrMe&quot;, &quot;&quot;)));</span>
-<span class="fc" id="L98">    }</span>
+<span class="fc" id="L94">        assertThrows(BadRequestException.class,</span>
+<span class="nc" id="L95">                () -&gt; userService.login(new LoginRequest(&quot;mrMe&quot;, &quot;&quot;)));</span>
+<span class="fc" id="L96">    }</span>
 
     // --- UserService.logout ---
 
     @Test
     public void logoutNullRequest() {
-<span class="pc" id="L104">        assertThrows(UnauthorizedException.class, () -&gt; userService.logout(null));</span>
-<span class="fc" id="L105">    }</span>
+<span class="pc" id="L102">        assertThrows(UnauthorizedException.class, () -&gt; userService.logout(null));</span>
+<span class="fc" id="L103">    }</span>
 
     @Test
     public void logoutNullToken() {
-<span class="fc" id="L109">        assertThrows(UnauthorizedException.class,</span>
-<span class="nc" id="L110">                () -&gt; userService.logout(new LogoutRequest(null)));</span>
-<span class="fc" id="L111">    }</span>
+<span class="fc" id="L107">        assertThrows(UnauthorizedException.class,</span>
+<span class="nc" id="L108">                () -&gt; userService.logout(new LogoutRequest(null)));</span>
+<span class="fc" id="L109">    }</span>
 
     @Test
     public void logoutBlankToken() {
-<span class="fc" id="L115">        assertThrows(UnauthorizedException.class,</span>
-<span class="nc" id="L116">                () -&gt; userService.logout(new LogoutRequest(&quot;&quot;)));</span>
-<span class="fc" id="L117">    }</span>
+<span class="fc" id="L113">        assertThrows(UnauthorizedException.class,</span>
+<span class="nc" id="L114">                () -&gt; userService.logout(new LogoutRequest(&quot;&quot;)));</span>
+<span class="fc" id="L115">    }</span>
 
     // ---------------------------------------------------------------- GameService.listGames
 
     @Test
     public void listGamesNullRequest() {
-<span class="pc" id="L123">        assertThrows(UnauthorizedException.class, () -&gt; gameService.listGames(null));</span>
-<span class="fc" id="L124">    }</span>
+<span class="pc" id="L121">        assertThrows(UnauthorizedException.class, () -&gt; gameService.listGames(null));</span>
+<span class="fc" id="L122">    }</span>
 
     @Test
     public void listGamesNullToken() {
-<span class="fc" id="L128">        assertThrows(UnauthorizedException.class,</span>
-<span class="nc" id="L129">                () -&gt; gameService.listGames(new ListGamesRequest(null)));</span>
-<span class="fc" id="L130">    }</span>
+<span class="fc" id="L126">        assertThrows(UnauthorizedException.class,</span>
+<span class="nc" id="L127">                () -&gt; gameService.listGames(new ListGamesRequest(null)));</span>
+<span class="fc" id="L128">    }</span>
 
     @Test
     public void listGamesBlankToken() {
-<span class="fc" id="L134">        assertThrows(UnauthorizedException.class,</span>
-<span class="nc" id="L135">                () -&gt; gameService.listGames(new ListGamesRequest(&quot;&quot;)));</span>
-<span class="fc" id="L136">    }</span>
+<span class="fc" id="L132">        assertThrows(UnauthorizedException.class,</span>
+<span class="nc" id="L133">                () -&gt; gameService.listGames(new ListGamesRequest(&quot;&quot;)));</span>
+<span class="fc" id="L134">    }</span>
 
     // --- GameService.createGame ---
 
     @Test
     public void createGameNullRequest() {
-<span class="pc" id="L142">        assertThrows(UnauthorizedException.class, () -&gt; gameService.createGame(null));</span>
-<span class="fc" id="L143">    }</span>
+<span class="pc" id="L140">        assertThrows(UnauthorizedException.class, () -&gt; gameService.createGame(null));</span>
+<span class="fc" id="L141">    }</span>
 
     @Test
     public void createGameBlankToken() {
-<span class="fc" id="L147">        assertThrows(UnauthorizedException.class,</span>
-<span class="nc" id="L148">                () -&gt; gameService.createGame(new CreateGameRequest(&quot;&quot;, &quot;My Game&quot;)));</span>
-<span class="fc" id="L149">    }</span>
+<span class="fc" id="L145">        assertThrows(UnauthorizedException.class,</span>
+<span class="nc" id="L146">                () -&gt; gameService.createGame(new CreateGameRequest(&quot;&quot;, &quot;My Game&quot;)));</span>
+<span class="fc" id="L147">    }</span>
 
     @Test
     public void createGameBlankName() {
-<span class="fc" id="L153">        assertThrows(BadRequestException.class,</span>
-<span class="nc" id="L154">                () -&gt; gameService.createGame(new CreateGameRequest(validToken, &quot;&quot;)));</span>
-<span class="fc" id="L155">    }</span>
+<span class="fc" id="L151">        assertThrows(BadRequestException.class,</span>
+<span class="nc" id="L152">                () -&gt; gameService.createGame(new CreateGameRequest(validToken, &quot;&quot;)));</span>
+<span class="fc" id="L153">    }</span>
 
     @Test
     public void createGameInvalidToken() {
-<span class="fc" id="L159">        assertThrows(UnauthorizedException.class,</span>
-<span class="nc" id="L160">                () -&gt; gameService.createGame(new CreateGameRequest(&quot;invalid-token&quot;, &quot;My Game&quot;)));</span>
-<span class="fc" id="L161">    }</span>
+<span class="fc" id="L157">        assertThrows(UnauthorizedException.class,</span>
+<span class="nc" id="L158">                () -&gt; gameService.createGame(new CreateGameRequest(&quot;invalid-token&quot;, &quot;My Game&quot;)));</span>
+<span class="fc" id="L159">    }</span>
 
     // --- GameService.joinGame ---
 
     @Test
     public void joinGameNullRequest() {
-<span class="pc" id="L167">        assertThrows(UnauthorizedException.class, () -&gt; gameService.joinGame(null));</span>
-<span class="fc" id="L168">    }</span>
+<span class="pc" id="L165">        assertThrows(UnauthorizedException.class, () -&gt; gameService.joinGame(null));</span>
+<span class="fc" id="L166">    }</span>
 
     @Test
     public void joinGameNullToken() {
-<span class="fc" id="L172">        assertThrows(UnauthorizedException.class,</span>
-<span class="nc" id="L173">                () -&gt; gameService.joinGame(new JoinGameRequest(null, ChessGame.TeamColor.WHITE, 1)));</span>
-<span class="fc" id="L174">    }</span>
+<span class="fc" id="L170">        assertThrows(UnauthorizedException.class,</span>
+<span class="nc" id="L171">                () -&gt; gameService.joinGame(new JoinGameRequest(null, ChessGame.TeamColor.WHITE, 1)));</span>
+<span class="fc" id="L172">    }</span>
 
     @Test
     public void joinGameBlankToken() {
-<span class="fc" id="L178">        assertThrows(UnauthorizedException.class,</span>
-<span class="nc" id="L179">                () -&gt; gameService.joinGame(new JoinGameRequest(&quot;&quot;, ChessGame.TeamColor.WHITE, 1)));</span>
-<span class="fc" id="L180">    }</span>
+<span class="fc" id="L176">        assertThrows(UnauthorizedException.class,</span>
+<span class="nc" id="L177">                () -&gt; gameService.joinGame(new JoinGameRequest(&quot;&quot;, ChessGame.TeamColor.WHITE, 1)));</span>
+<span class="fc" id="L178">    }</span>
 
     // --- exception constructors
 
     @Test
     public void dataAccessExceptionKeepsMessageAndCause() {
-<span class="fc" id="L186">        RuntimeException cause = new RuntimeException(&quot;root cause&quot;);</span>
-<span class="fc" id="L187">        DataAccessException ex = new DataAccessException(&quot;db failed&quot;, cause);</span>
+<span class="fc" id="L184">        RuntimeException cause = new RuntimeException(&quot;root cause&quot;);</span>
+<span class="fc" id="L185">        DataAccessException ex = new DataAccessException(&quot;db failed&quot;, cause);</span>
 
-<span class="fc" id="L189">        assertEquals(&quot;db failed&quot;, ex.getMessage());</span>
-<span class="fc" id="L190">        assertSame(cause, ex.getCause());</span>
-<span class="fc" id="L191">    }</span>
+<span class="fc" id="L187">        assertEquals(&quot;db failed&quot;, ex.getMessage());</span>
+<span class="fc" id="L188">        assertSame(cause, ex.getCause());</span>
+<span class="fc" id="L189">    }</span>
 
     @Test
     public void dataAccessExceptionKeepsMessage() {
-<span class="fc" id="L195">        assertEquals(&quot;db failed&quot;, new DataAccessException(&quot;db failed&quot;).getMessage());</span>
-<span class="fc" id="L196">    }</span>
+<span class="fc" id="L193">        assertEquals(&quot;db failed&quot;, new DataAccessException(&quot;db failed&quot;).getMessage());</span>
+<span class="fc" id="L194">    }</span>
 
     @Test
     public void badRequestExceptionKeepsMessageAndCause() {
-<span class="fc" id="L200">        RuntimeException cause = new RuntimeException(&quot;root cause&quot;);</span>
-<span class="fc" id="L201">        BadRequestException ex = new BadRequestException(&quot;bad&quot;, cause);</span>
+<span class="fc" id="L198">        RuntimeException cause = new RuntimeException(&quot;root cause&quot;);</span>
+<span class="fc" id="L199">        BadRequestException ex = new BadRequestException(&quot;bad&quot;, cause);</span>
 
-<span class="fc" id="L203">        assertEquals(&quot;bad&quot;, ex.getMessage());</span>
-<span class="fc" id="L204">        assertSame(cause, ex.getCause());</span>
-<span class="fc" id="L205">    }</span>
+<span class="fc" id="L201">        assertEquals(&quot;bad&quot;, ex.getMessage());</span>
+<span class="fc" id="L202">        assertSame(cause, ex.getCause());</span>
+<span class="fc" id="L203">    }</span>
 
     @Test
     public void alreadyTakenExceptionKeepsMessageAndCause() {
-<span class="fc" id="L209">        RuntimeException cause = new RuntimeException(&quot;root cause&quot;);</span>
-<span class="fc" id="L210">        AlreadyTakenException ex = new AlreadyTakenException(&quot;taken&quot;, cause);</span>
+<span class="fc" id="L207">        RuntimeException cause = new RuntimeException(&quot;root cause&quot;);</span>
+<span class="fc" id="L208">        AlreadyTakenException ex = new AlreadyTakenException(&quot;taken&quot;, cause);</span>
 
-<span class="fc" id="L212">        assertEquals(&quot;taken&quot;, ex.getMessage());</span>
-<span class="fc" id="L213">        assertSame(cause, ex.getCause());</span>
-<span class="fc" id="L214">    }</span>
+<span class="fc" id="L210">        assertEquals(&quot;taken&quot;, ex.getMessage());</span>
+<span class="fc" id="L211">        assertSame(cause, ex.getCause());</span>
+<span class="fc" id="L212">    }</span>
 
     @Test
     public void unauthorizedExceptionKeepsMessageAndCause() {
-<span class="fc" id="L218">        RuntimeException cause = new RuntimeException(&quot;root cause&quot;);</span>
-<span class="fc" id="L219">        UnauthorizedException ex = new UnauthorizedException(&quot;nope&quot;, cause);</span>
+<span class="fc" id="L216">        RuntimeException cause = new RuntimeException(&quot;root cause&quot;);</span>
+<span class="fc" id="L217">        UnauthorizedException ex = new UnauthorizedException(&quot;nope&quot;, cause);</span>
 
-<span class="fc" id="L221">        assertEquals(&quot;nope&quot;, ex.getMessage());</span>
-<span class="fc" id="L222">        assertSame(cause, ex.getCause());</span>
-<span class="fc" id="L223">    }</span>
+<span class="fc" id="L219">        assertEquals(&quot;nope&quot;, ex.getMessage());</span>
+<span class="fc" id="L220">        assertSame(cause, ex.getCause());</span>
+<span class="fc" id="L221">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

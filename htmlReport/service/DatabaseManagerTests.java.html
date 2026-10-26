@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseManagerTests.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">service</a> &gt; <span class="el_source">DatabaseManagerTests.java</span></div><h1>DatabaseManagerTests.java</h1><pre class="source lang-java linenums">package service;
+
+import dataaccess.*;
+import model.AuthData;
+import model.GameData;
+import model.UserData;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
+
+
+import java.util.Collection;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+<span class="fc" id="L16">class DatabaseManagerTests {</span>
+    private static UserDAO userDao;
+    private static AuthDAO authDao;
+    private static GameDAO gameDao;
+
+    @BeforeEach
+    void setUp() throws DataAccessException {
+<span class="fc" id="L23">        userDao = new UserDAOMySQL();</span>
+<span class="fc" id="L24">        authDao = new AuthDAOMySQL();</span>
+<span class="fc" id="L25">        gameDao = new GameDAOMySQL();</span>
+
+<span class="fc" id="L27">        userDao.clear();</span>
+<span class="fc" id="L28">        authDao.clear();</span>
+<span class="fc" id="L29">        gameDao.clear();</span>
+<span class="fc" id="L30">    }</span>
+
+    // --- UserDAO database tests ---
+
+    @Test
+    void connectionWorks() throws Exception {
+<span class="fc" id="L36">        DatabaseManager.createDatabase();</span>
+
+<span class="fc" id="L38">        try (var conn = DatabaseManager.getConnection()) {</span>
+<span class="fc" id="L39">            try (var preparedStatement = conn.prepareStatement(&quot;SELECT 1+1&quot;)) {</span>
+<span class="fc" id="L40">                try (var rs = preparedStatement.executeQuery()) {</span>
+<span class="fc" id="L41">                    assertTrue(rs.next());</span>
+<span class="fc" id="L42">                    assertEquals(2, rs.getInt(1));</span>
+                }
+            }
+        }
+<span class="fc" id="L46">    }</span>
+
+    @Test
+    void retrieveUser() throws Exception {
+<span class="fc" id="L50">        UserData user = new UserData(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;);</span>
+<span class="fc" id="L51">        userDao.createUser(user);</span>
+
+<span class="fc" id="L53">        UserData retrieved = userDao.getUser(&quot;mrMe&quot;);</span>
+
+<span class="fc" id="L55">        assertNotNull(retrieved);</span>
+<span class="fc" id="L56">        assertEquals(&quot;mrMe&quot;, retrieved.username());</span>
+<span class="fc" id="L57">        assertEquals(&quot;password123&quot;, retrieved.password());</span>
+<span class="fc" id="L58">        assertEquals(&quot;mrMe@example.com&quot;, retrieved.email());</span>
+<span class="fc" id="L59">    }</span>
+
+    @Test
+    void retrieveNonexistentUser() throws Exception {
+<span class="fc" id="L63">        UserData retrieved = userDao.getUser(&quot;invalidUser&quot;);</span>
+<span class="fc" id="L64">        assertNull(retrieved);</span>
+<span class="fc" id="L65">    }</span>
+
+    @Test
+    void clearUserTable() throws Exception {
+<span class="fc" id="L69">        UserData user = new UserData(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;);</span>
+<span class="fc" id="L70">        userDao.createUser(user);</span>
+
+<span class="fc" id="L72">        assertNotNull(userDao.getUser(&quot;mrMe&quot;));</span>
+
+<span class="fc" id="L74">        userDao.clear();</span>
+
+<span class="fc" id="L76">        assertNull(userDao.getUser(&quot;mrMe&quot;));</span>
+<span class="fc" id="L77">    }</span>
+
+    @Test
+    void duplicateUsernames() throws Exception {
+<span class="fc" id="L81">        UserData user1 = new UserData(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;);</span>
+<span class="fc" id="L82">        UserData user2 = new UserData(&quot;mrMe&quot;, &quot;password123&quot;, &quot;mrMe@example.com&quot;);</span>
+
+<span class="fc" id="L84">        assertDoesNotThrow(() -&gt; userDao.createUser(user1));</span>
+
+<span class="fc" id="L86">        assertThrows(DataAccessException.class, () -&gt; {</span>
+<span class="nc" id="L87">            userDao.createUser(user2);</span>
+<span class="nc" id="L88">        });</span>
+<span class="fc" id="L89">    }</span>
+
+    // --- AuthDAO database tests ---
+
+    @Test
+    void createAuthSuccess() throws Exception {
+<span class="fc" id="L95">        AuthData auth = new AuthData(&quot;token-1&quot;, &quot;mrMe&quot;);</span>
+
+<span class="fc" id="L97">        assertDoesNotThrow(() -&gt; authDao.createAuth(auth));</span>
+
+        // Verify it was actually saved
+<span class="fc" id="L100">        AuthData retrieved = authDao.getAuth(&quot;token-1&quot;);</span>
+<span class="fc" id="L101">        assertNotNull(retrieved);</span>
+<span class="fc" id="L102">        assertEquals(&quot;token-1&quot;, retrieved.authToken());</span>
+<span class="fc" id="L103">        assertEquals(&quot;mrMe&quot;, retrieved.username());</span>
+<span class="fc" id="L104">    }</span>
+
+    @Test
+    void getAuthSuccess() throws Exception {
+<span class="fc" id="L108">        AuthData auth = new AuthData(&quot;token-1&quot;, &quot;mrMe&quot;);</span>
+<span class="fc" id="L109">        authDao.createAuth(auth);</span>
+
+<span class="fc" id="L111">        AuthData retrieved = authDao.getAuth(&quot;token-1&quot;);</span>
+<span class="fc" id="L112">        assertNotNull(retrieved);</span>
+<span class="fc" id="L113">        assertEquals(&quot;mrMe&quot;, retrieved.username());</span>
+<span class="fc" id="L114">    }</span>
+
+    @Test
+    void getAuthNonexistent() throws Exception {
+<span class="fc" id="L118">        AuthData retrieved = authDao.getAuth(&quot;invalid-token&quot;);</span>
+<span class="fc" id="L119">        assertNull(retrieved);</span>
+<span class="fc" id="L120">    }</span>
+
+    @Test
+    void deleteAuthSuccess() throws Exception {
+<span class="fc" id="L124">        AuthData auth = new AuthData(&quot;token-1&quot;, &quot;mrMe&quot;);</span>
+<span class="fc" id="L125">        authDao.createAuth(auth);</span>
+
+<span class="fc" id="L127">        assertNotNull(authDao.getAuth(&quot;token-1&quot;));</span>
+
+<span class="fc" id="L129">        authDao.deleteAuth(&quot;token-1&quot;);</span>
+
+<span class="fc" id="L131">        assertNull(authDao.getAuth(&quot;token-1&quot;));</span>
+<span class="fc" id="L132">    }</span>
+
+    @Test
+    void clearAuthTable() throws Exception {
+<span class="fc" id="L136">        authDao.createAuth(new AuthData(&quot;token-1&quot;, &quot;user1&quot;));</span>
+<span class="fc" id="L137">        authDao.createAuth(new AuthData(&quot;token-2&quot;, &quot;user2&quot;));</span>
+
+<span class="fc" id="L139">        assertNotNull(authDao.getAuth(&quot;token-1&quot;));</span>
+<span class="fc" id="L140">        assertNotNull(authDao.getAuth(&quot;token-2&quot;));</span>
+
+<span class="fc" id="L142">        authDao.clear();</span>
+
+<span class="fc" id="L144">        assertNull(authDao.getAuth(&quot;token-1&quot;));</span>
+<span class="fc" id="L145">        assertNull(authDao.getAuth(&quot;token-2&quot;));</span>
+<span class="fc" id="L146">    }</span>
+
+    // --- Game DAO tests ---
+
+    @Test
+    void createGameSuccess() throws Exception {
+<span class="fc" id="L152">        GameData newGame = new GameData(0, &quot;&quot;, &quot;&quot;, &quot;New Game&quot;, new chess.ChessGame());</span>
+<span class="fc" id="L153">        gameDao.createGame(newGame);</span>
+
+<span class="fc" id="L155">        Collection&lt;GameData&gt; games = gameDao.listGames();</span>
+<span class="fc" id="L156">        assertEquals(1, games.size());</span>
+<span class="fc" id="L157">        GameData game = games.iterator().next();</span>
+
+<span class="fc" id="L159">        assertNotNull(game);</span>
+<span class="fc" id="L160">        assertEquals(&quot;New Game&quot;, game.gameName());</span>
+<span class="fc" id="L161">        assertNotNull(game.game()); // Verify ChessGame object deserialized properly</span>
+<span class="fc" id="L162">    }</span>
+
+    @Test
+    void getGameNonexistent() throws Exception {
+<span class="fc" id="L166">        GameData game = gameDao.getGame(999999);</span>
+<span class="fc" id="L167">        assertNull(game);</span>
+<span class="fc" id="L168">    }</span>
+
+    @Test
+    void listGamesSuccess() throws Exception {
+<span class="fc" id="L172">        gameDao.createGame(new GameData(0, &quot;&quot;, &quot;&quot;, &quot;Game One&quot;, new chess.ChessGame()));</span>
+<span class="fc" id="L173">        gameDao.createGame(new GameData(0, &quot;&quot;, &quot;&quot;, &quot;Game Two&quot;, new chess.ChessGame()));</span>
+
+<span class="fc" id="L175">        Collection&lt;GameData&gt; games = gameDao.listGames();</span>
+<span class="fc" id="L176">        assertEquals(2, games.size());</span>
+<span class="fc" id="L177">    }</span>
+
+    @Test
+    void updateGameSuccess() throws Exception {
+<span class="fc" id="L181">        GameData newGame = new GameData(0, &quot;&quot;, &quot;&quot;, &quot;Original Name&quot;, new chess.ChessGame());</span>
+<span class="fc" id="L182">        gameDao.createGame(newGame);</span>
+
+        // Retrieve the GameData object to get the gameID assigned by the database
+<span class="fc" id="L185">        GameData original = gameDao.listGames().iterator().next();</span>
+
+        // Create updated game data (e.g. adding a white player and changing name)
+<span class="fc" id="L188">        GameData updated = new GameData(</span>
+<span class="fc" id="L189">                original.gameID(),</span>
+                &quot;mrMe&quot;,
+                null,
+                &quot;Updated Name&quot;,
+<span class="fc" id="L193">                original.game()</span>
+        );
+
+<span class="fc" id="L196">        gameDao.updateGame(updated);</span>
+
+<span class="fc" id="L198">        GameData retrieved = gameDao.getGame(original.gameID());</span>
+<span class="fc" id="L199">        assertEquals(&quot;mrMe&quot;, retrieved.whiteUsername());</span>
+<span class="fc" id="L200">        assertEquals(&quot;Updated Name&quot;, retrieved.gameName());</span>
+<span class="fc" id="L201">    }</span>
+
+    @Test
+    void clearGames() throws Exception {
+<span class="fc" id="L205">        gameDao.createGame(new GameData(0, &quot;&quot;, &quot;&quot;, &quot;New Game&quot;, new chess.ChessGame()));</span>
+<span class="fc" id="L206">        assertFalse(gameDao.listGames().isEmpty());</span>
+
+<span class="fc" id="L208">        gameDao.clear();</span>
+<span class="fc" id="L209">        assertTrue(gameDao.listGames().isEmpty());</span>
+<span class="fc" id="L210">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

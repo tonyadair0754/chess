@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDAOMySQL.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">All in server Coverage Results</a> &gt; <a href="index.source.html" class="el_package">dataaccess</a> &gt; <span class="el_source">UserDAOMySQL.java</span></div><h1>UserDAOMySQL.java</h1><pre class="source lang-java linenums">package dataaccess;
+
+import model.UserData;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class UserDAOMySQL extends SqlDAO implements UserDAO {
+
+<span class="fc" id="L12">    public UserDAOMySQL() throws DataAccessException {</span>
+<span class="fc" id="L13">        configureDatabase();</span>
+<span class="fc" id="L14">    }</span>
+
+    @Override
+    protected void configureDatabase() throws DataAccessException {
+<span class="fc" id="L18">        String[] createStatements = {</span>
+                &quot;&quot;&quot;
+                CREATE TABLE IF NOT EXISTS users (
+                `username` VARCHAR(255) NOT NULL,
+                `password` VARCHAR(255) NOT NULL,
+                `email` VARCHAR(255) NOT NULL,
+                PRIMARY KEY (`username`))
+                &quot;&quot;&quot;
+        };
+<span class="fc" id="L27">        executeCreateTables(createStatements);</span>
+<span class="fc" id="L28">    }</span>
+
+    @Override
+    public void createUser(UserData user) throws DataAccessException {
+<span class="fc" id="L32">        var statement = &quot;INSERT INTO users (username, password, email) VALUES (?, ?, ?)&quot;;</span>
+<span class="fc" id="L33">        executeUpdate(statement, user.username(), user.password(), user.email());</span>
+<span class="fc" id="L34">    }</span>
+
+    @Override
+    public UserData getUser(String username) throws DataAccessException {
+<span class="fc" id="L38">        try (Connection conn = DatabaseManager.getConnection()) {</span>
+<span class="fc" id="L39">            var statement = &quot;SELECT username, password, email FROM users WHERE username=?&quot;;</span>
+<span class="fc" id="L40">            try (PreparedStatement ps = conn.prepareStatement(statement)) {</span>
+<span class="fc" id="L41">                ps.setString(1, username);</span>
+<span class="fc" id="L42">                try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">                    if (rs.next()) {</span>
+<span class="fc" id="L44">                        return new UserData(</span>
+<span class="fc" id="L45">                                rs.getString(&quot;username&quot;),</span>
+<span class="fc" id="L46">                                rs.getString(&quot;password&quot;),</span>
+<span class="fc" id="L47">                                rs.getString(&quot;email&quot;));</span>
+                    }
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">                }</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">            }</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">        } catch (SQLException e) {</span>
+<span class="nc" id="L52">            throw new DataAccessException(&quot;Unable to read data: &quot; + e.getMessage(), e);</span>
+<span class="fc" id="L53">        }</span>
+<span class="fc" id="L54">        return null;</span>
+    }
+
+    @Override
+    public void clear() throws DataAccessException {
+<span class="fc" id="L59">        var statement = &quot;TRUNCATE users&quot;;</span>
+<span class="fc" id="L60">        executeUpdate(statement);</span>
+<span class="fc" id="L61">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

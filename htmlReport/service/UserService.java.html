@@ -3,6 +3,7 @@
 import dataaccess.*;
 import model.AuthData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.UUID;
 
@@ -10,87 +11,90 @@ public class UserService {
     private final UserDAO userDao;
     private final AuthDAO authDao;
 
-<span class="fc" id="L13">    public UserService(UserDAO userDao, AuthDAO authDao) {</span>
-<span class="fc" id="L14">        this.userDao = userDao;</span>
-<span class="fc" id="L15">        this.authDao = authDao;</span>
-<span class="fc" id="L16">    }</span>
+<span class="fc" id="L14">    public UserService(UserDAO userDao, AuthDAO authDao) {</span>
+<span class="fc" id="L15">        this.userDao = userDao;</span>
+<span class="fc" id="L16">        this.authDao = authDao;</span>
+<span class="fc" id="L17">    }</span>
 
     public RegisterResult register(RegisterRequest request)
             throws DataAccessException, AlreadyTakenException, BadRequestException {
 
         // Validate inputs
-<span class="fc bfc" id="L22" title="All 2 branches covered.">        if (request == null ||</span>
-<span class="fc bfc" id="L23" title="All 4 branches covered.">                request.username() == null || request.username().isBlank() ||</span>
-<span class="fc bfc" id="L24" title="All 4 branches covered.">                request.password() == null || request.password().isBlank() ||</span>
-<span class="fc bfc" id="L25" title="All 4 branches covered.">                request.email() == null || request.email().isBlank()) {</span>
-<span class="fc" id="L26">            throw new BadRequestException(&quot;Error: bad request&quot;);</span>
+<span class="fc bfc" id="L23" title="All 2 branches covered.">        if (request == null ||</span>
+<span class="fc bfc" id="L24" title="All 4 branches covered.">                request.username() == null || request.username().isBlank() ||</span>
+<span class="fc bfc" id="L25" title="All 4 branches covered.">                request.password() == null || request.password().isBlank() ||</span>
+<span class="fc bfc" id="L26" title="All 4 branches covered.">                request.email() == null || request.email().isBlank()) {</span>
+<span class="fc" id="L27">            throw new BadRequestException(&quot;Error: bad request&quot;);</span>
         }
 
         // Check if username is already taken
-<span class="fc bfc" id="L30" title="All 2 branches covered.">        if (userDao.getUser(request.username()) != null) {</span>
-<span class="fc" id="L31">            throw new AlreadyTakenException(&quot;Error: already taken&quot;);</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (userDao.getUser(request.username()) != null) {</span>
+<span class="fc" id="L32">            throw new AlreadyTakenException(&quot;Error: already taken&quot;);</span>
         }
 
+        // Hash the plain-text password using BCrypt
+<span class="fc" id="L36">        String hashedPassword = BCrypt.hashpw(request.password(), BCrypt.gensalt());</span>
+
         // Create and save new user
-<span class="fc" id="L35">        UserData newUser = new UserData(</span>
-<span class="fc" id="L36">                request.username(),</span>
-<span class="fc" id="L37">                request.password(),</span>
-<span class="fc" id="L38">                request.email()</span>
+<span class="fc" id="L39">        UserData newUser = new UserData(</span>
+<span class="fc" id="L40">                request.username(),</span>
+                hashedPassword,
+<span class="fc" id="L42">                request.email()</span>
         );
-<span class="fc" id="L40">        userDao.createUser(newUser);</span>
+<span class="fc" id="L44">        userDao.createUser(newUser);</span>
 
         // Create and save new auth token
-<span class="fc" id="L43">        String token = UUID.randomUUID().toString();</span>
-<span class="fc" id="L44">        AuthData newAuth = new AuthData(token, request.username());</span>
-<span class="fc" id="L45">        authDao.createAuth(newAuth);</span>
+<span class="fc" id="L47">        String token = UUID.randomUUID().toString();</span>
+<span class="fc" id="L48">        AuthData newAuth = new AuthData(token, request.username());</span>
+<span class="fc" id="L49">        authDao.createAuth(newAuth);</span>
 
-<span class="fc" id="L47">        return new RegisterResult(request.username(), token);</span>
+<span class="fc" id="L51">        return new RegisterResult(request.username(), token);</span>
     }
 
     public LoginResult login(LoginRequest request)
             throws DataAccessException, UnauthorizedException, BadRequestException {
 
         // Validate inputs
-<span class="fc bfc" id="L54" title="All 2 branches covered.">        if (request == null ||</span>
-<span class="fc bfc" id="L55" title="All 4 branches covered.">                request.username() == null || request.username().isBlank() ||</span>
-<span class="fc bfc" id="L56" title="All 4 branches covered.">                request.password() == null || request.password().isBlank()) {</span>
-<span class="fc" id="L57">            throw new BadRequestException(&quot;Error: bad request&quot;);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (request == null ||</span>
+<span class="fc bfc" id="L59" title="All 4 branches covered.">                request.username() == null || request.username().isBlank() ||</span>
+<span class="fc bfc" id="L60" title="All 4 branches covered.">                request.password() == null || request.password().isBlank()) {</span>
+<span class="fc" id="L61">            throw new BadRequestException(&quot;Error: bad request&quot;);</span>
         }
 
         // Fetch stored user record from DAO
-<span class="fc" id="L61">        UserData user = userDao.getUser(request.username());</span>
+<span class="fc" id="L65">        UserData user = userDao.getUser(request.username());</span>
 
         // Check if username already exists and if passwords match
-<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (userDao.getUser(request.username()) == null</span>
-<span class="fc bfc" id="L65" title="All 2 branches covered.">                || !user.password().equals(request.password())) {</span>
-<span class="fc" id="L66">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (userDao.getUser(request.username()) == null</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                || !BCrypt.checkpw(request.password(), user.password())) {</span>
+<span class="fc" id="L70">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
         }
 
         // Create and save new auth token
-<span class="fc" id="L70">        String token = UUID.randomUUID().toString();</span>
-<span class="fc" id="L71">        AuthData newAuth = new AuthData(token, request.username());</span>
-<span class="fc" id="L72">        authDao.createAuth(newAuth);</span>
+<span class="fc" id="L74">        String token = UUID.randomUUID().toString();</span>
+<span class="fc" id="L75">        AuthData newAuth = new AuthData(token, request.username());</span>
+<span class="fc" id="L76">        authDao.createAuth(newAuth);</span>
 
-<span class="fc" id="L74">        return new LoginResult(request.username(), token);</span>
+<span class="fc" id="L78">        return new LoginResult(request.username(), token);</span>
     }
 
     public void logout(LogoutRequest request)
             throws DataAccessException, UnauthorizedException {
 
         // Validate inputs
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (request == null ||</span>
-<span class="fc bfc" id="L82" title="All 4 branches covered.">                request.authToken() == null || request.authToken().isBlank()) {</span>
-<span class="fc" id="L83">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (request == null ||</span>
+<span class="fc bfc" id="L86" title="All 4 branches covered.">                request.authToken() == null || request.authToken().isBlank()) {</span>
+<span class="fc" id="L87">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
         }
 
         // Check if token exists in database/memory
-<span class="fc" id="L87">        AuthData auth = authDao.getAuth(request.authToken());</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (auth == null) {</span>
-<span class="fc" id="L89">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
+<span class="fc" id="L91">        AuthData auth = authDao.getAuth(request.authToken());</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L93">            throw new UnauthorizedException(&quot;Error: unauthorized&quot;);</span>
         }
 
         // Delete session token
-<span class="fc" id="L93">        authDao.deleteAuth(request.authToken());</span>
-<span class="fc" id="L94">    }</span>
+<span class="fc" id="L97">        authDao.deleteAuth(request.authToken());</span>
+<span class="fc" id="L98">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

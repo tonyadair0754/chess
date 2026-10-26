@@ -19,38 +19,46 @@ public class Server {
     private final Javalin javalin;
 
 <span class="fc" id="L21">    public Server() {</span>
-        // --- Create new instances for all layers ---
-<span class="fc" id="L23">        UserDAO userDao = new UserDAOMemory();</span>
-<span class="fc" id="L24">        AuthDAO authDao = new AuthDAOMemory();</span>
-<span class="fc" id="L25">        GameDAO gameDao = new GameDAOMemory();</span>
+        UserDAO userDao;
+        AuthDAO authDao;
+        GameDAO gameDao;
 
-<span class="fc" id="L27">        DatabaseService databaseService = new DatabaseService(userDao, authDao, gameDao);</span>
-<span class="fc" id="L28">        UserService userService = new UserService(userDao, authDao);</span>
-<span class="fc" id="L29">        GameService gameService = new GameService(authDao, gameDao);</span>
+        try {
+            // --- Create new instances for all layers ---
+<span class="fc" id="L28">            userDao = new UserDAOMySQL();</span>
+<span class="fc" id="L29">            authDao = new AuthDAOMySQL();</span>
+<span class="fc" id="L30">            gameDao = new GameDAOMySQL();</span>
+<span class="nc" id="L31">        } catch (DataAccessException e) {</span>
+<span class="nc" id="L32">            throw new RuntimeException(&quot;Failed to initialize database DAOs&quot;, e);</span>
+<span class="fc" id="L33">        }</span>
 
-<span class="fc" id="L31">        DatabaseHandler databaseHandler = new DatabaseHandler(databaseService);</span>
-<span class="fc" id="L32">        UserHandler userHandler = new UserHandler(userService);</span>
-<span class="fc" id="L33">        GameHandler gameHandler = new GameHandler(gameService);</span>
+<span class="fc" id="L35">        DatabaseService databaseService = new DatabaseService(userDao, authDao, gameDao);</span>
+<span class="fc" id="L36">        UserService userService = new UserService(userDao, authDao);</span>
+<span class="fc" id="L37">        GameService gameService = new GameService(authDao, gameDao);</span>
 
-<span class="fc" id="L35">        javalin = Javalin.create(config -&gt; config.staticFiles.add(&quot;web&quot;));</span>
+<span class="fc" id="L39">        DatabaseHandler databaseHandler = new DatabaseHandler(databaseService);</span>
+<span class="fc" id="L40">        UserHandler userHandler = new UserHandler(userService);</span>
+<span class="fc" id="L41">        GameHandler gameHandler = new GameHandler(gameService);</span>
+
+<span class="fc" id="L43">        javalin = Javalin.create(config -&gt; config.staticFiles.add(&quot;web&quot;));</span>
 
         // --- Endpoints ---
-<span class="fc" id="L38">        javalin.delete(&quot;/db&quot;, databaseHandler::clearDb);</span>
-<span class="fc" id="L39">        javalin.post(&quot;/user&quot;, userHandler::registerUser);</span>
-<span class="fc" id="L40">        javalin.post(&quot;/session&quot;, userHandler::loginUser);</span>
-<span class="fc" id="L41">        javalin.delete(&quot;/session&quot;, userHandler::logoutUser);</span>
-<span class="fc" id="L42">        javalin.get(&quot;/game&quot;, gameHandler::listGames);</span>
-<span class="fc" id="L43">        javalin.post(&quot;/game&quot;, gameHandler::createGame);</span>
-<span class="fc" id="L44">        javalin.put(&quot;/game&quot;, gameHandler::joinGame);</span>
-<span class="fc" id="L45">    }</span>
+<span class="fc" id="L46">        javalin.delete(&quot;/db&quot;, databaseHandler::clearDb);</span>
+<span class="fc" id="L47">        javalin.post(&quot;/user&quot;, userHandler::registerUser);</span>
+<span class="fc" id="L48">        javalin.post(&quot;/session&quot;, userHandler::loginUser);</span>
+<span class="fc" id="L49">        javalin.delete(&quot;/session&quot;, userHandler::logoutUser);</span>
+<span class="fc" id="L50">        javalin.get(&quot;/game&quot;, gameHandler::listGames);</span>
+<span class="fc" id="L51">        javalin.post(&quot;/game&quot;, gameHandler::createGame);</span>
+<span class="fc" id="L52">        javalin.put(&quot;/game&quot;, gameHandler::joinGame);</span>
+<span class="fc" id="L53">    }</span>
 
     public int run(int desiredPort) {
-<span class="fc" id="L48">        javalin.start(desiredPort);</span>
-<span class="fc" id="L49">        return javalin.port();</span>
+<span class="fc" id="L56">        javalin.start(desiredPort);</span>
+<span class="fc" id="L57">        return javalin.port();</span>
     }
 
     public void stop() {
-<span class="fc" id="L53">        javalin.stop();</span>
-<span class="fc" id="L54">    }</span>
+<span class="fc" id="L61">        javalin.stop();</span>
+<span class="fc" id="L62">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
