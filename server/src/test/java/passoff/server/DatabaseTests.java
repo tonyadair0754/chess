@@ -1,6 +1,7 @@
 package passoff.server;
 
 import chess.ChessGame;
+import dataaccess.DataAccessException;
 import org.junit.jupiter.api.*;
 import passoff.model.*;
 import server.Server;
@@ -24,7 +25,7 @@ public class DatabaseTests {
 
 
     @BeforeAll
-    public static void startServer() {
+    public static void startServer() throws DataAccessException {
         server = new Server();
         var port = server.run(0);
         System.out.println("Started test HTTP server on " + port);
@@ -46,7 +47,7 @@ public class DatabaseTests {
     @Test
     @DisplayName("Persistence Test")
     @Order(1)
-    public void persistenceTest() {
+    public void persistenceTest() throws DataAccessException {
         int initialRowCount = getDatabaseRows();
 
         TestAuthResult regResult = serverFacade.register(TEST_USER);
@@ -166,9 +167,9 @@ public class DatabaseTests {
             while (rs.next()) {
                 for (int i = 1; i <= columns; i++) {
                     String value = rs.getString(i);
-                    if (value != null){
+                    if (value != null) {
                         Assertions.assertFalse(value.contains(TEST_USER.getPassword()),
-                            "Found clear text password in database");
+                                "Found clear text password in database");
                     }
                 }
             }
@@ -203,7 +204,7 @@ public class DatabaseTests {
     }
 
     private Class<?> findDatabaseManager() throws ClassNotFoundException {
-        if(databaseManagerClass != null) {
+        if (databaseManagerClass != null) {
             return databaseManagerClass;
         }
 
@@ -213,7 +214,8 @@ public class DatabaseTests {
                 clazz.getDeclaredMethod("getConnection");
                 databaseManagerClass = clazz;
                 return clazz;
-            } catch (ReflectiveOperationException ignored) {}
+            } catch (ReflectiveOperationException ignored) {
+            }
         }
         throw new ClassNotFoundException("Unable to load database in order to verify persistence. " +
                 "Are you using DatabaseManager to set your credentials? " +

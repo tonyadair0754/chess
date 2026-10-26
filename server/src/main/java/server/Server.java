@@ -18,11 +18,11 @@ public class Server {
 
     private final Javalin javalin;
 
-    public Server() {
+    public Server() throws DataAccessException {
         // --- Create new instances for all layers ---
-        UserDAO userDao = new UserDAOMemory();
-        AuthDAO authDao = new AuthDAOMemory();
-        GameDAO gameDao = new GameDAOMemory();
+        UserDAO userDao = new UserDAOMySQL();
+        AuthDAO authDao = new AuthDAOMySQL();
+        GameDAO gameDao = new GameDAOMySQL();
 
         DatabaseService databaseService = new DatabaseService(userDao, authDao, gameDao);
         UserService userService = new UserService(userDao, authDao);
