@@ -1,9 +1,9 @@
 package service;
 
-import dataaccess.AuthDAO;
+import dataaccess.sql.AuthDAO;
 import dataaccess.DataAccessException;
-import dataaccess.GameDAO;
-import dataaccess.UserDAO;
+import dataaccess.sql.GameDAO;
+import dataaccess.sql.UserDAO;
 
 public class DatabaseService {
     private final UserDAO userDao;

@@ -1,7 +1,8 @@
-package dataaccess;
+package dataaccess.sql;
 
+import dataaccess.DataAccessException;
+import dataaccess.DatabaseManager;
 import model.AuthData;
-import model.UserData;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
