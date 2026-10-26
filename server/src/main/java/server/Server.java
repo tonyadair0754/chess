@@ -18,11 +18,19 @@ public class Server {
 
     private final Javalin javalin;
 
-    public Server() throws DataAccessException {
-        // --- Create new instances for all layers ---
-        UserDAO userDao = new UserDAOMySQL();
-        AuthDAO authDao = new AuthDAOMySQL();
-        GameDAO gameDao = new GameDAOMySQL();
+    public Server() {
+        UserDAO userDao;
+        AuthDAO authDao;
+        GameDAO gameDao;
+
+        try {
+            // --- Create new instances for all layers ---
+            userDao = new UserDAOMySQL();
+            authDao = new AuthDAOMySQL();
+            gameDao = new GameDAOMySQL();
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Failed to initialize database DAOs", e);
+        }
 
         DatabaseService databaseService = new DatabaseService(userDao, authDao, gameDao);
         UserService userService = new UserService(userDao, authDao);
