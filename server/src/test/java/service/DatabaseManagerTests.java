@@ -90,6 +90,7 @@ class DatabaseManagerTests {
 
     // --- AuthDAO database tests ---
 
+    @Test
     void createAuthSuccess() throws Exception {
         AuthData auth = new AuthData("token-1", "mrMe");
 
@@ -102,6 +103,7 @@ class DatabaseManagerTests {
         assertEquals("mrMe", retrieved.username());
     }
 
+    @Test
     void getAuthSuccess() throws Exception {
         AuthData auth = new AuthData("token-1", "mrMe");
         authDao.createAuth(auth);
@@ -111,11 +113,13 @@ class DatabaseManagerTests {
         assertEquals("mrMe", retrieved.username());
     }
 
+    @Test
     void getAuthNonexistent() throws Exception {
         AuthData retrieved = authDao.getAuth("invalid-token");
         assertNull(retrieved);
     }
 
+    @Test
     void deleteAuthSuccess() throws Exception {
         AuthData auth = new AuthData("token-1", "mrMe");
         authDao.createAuth(auth);
@@ -127,6 +131,7 @@ class DatabaseManagerTests {
         assertNull(authDao.getAuth("token-1"));
     }
 
+    @Test
     void clearAuthTable() throws Exception {
         authDao.createAuth(new AuthData("token-1", "user1"));
         authDao.createAuth(new AuthData("token-2", "user2"));
