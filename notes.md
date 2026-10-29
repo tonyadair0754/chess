@@ -54,24 +54,10 @@ joinGame ()
    assertNull (value) : Passes if value is null
    assertTrue (condition) : Passes if condition is true
 
-# Phase 4 outline
+# Phase 5 outline
 
-1. Design and initialize the schema
-
-- Write CREATE DATABASE and CREATE TABLE IF NOT EXISTS statements
-- Ensure startup initializes the database and tables automatically
-
-2. Implement one DAO at a time
-
-- Create SQL implementations of the existing DAO interfaces
-- Start with user persistence, then authentication, then games—or follow the dependency order your interfaces require
-- For each method, implement the SQL, handle failures, and write tests before moving on
-
-3. Integrate the SQL layer
-
-- Wire the SQL implementations into the services and server startup
-- Verify that data survives a server restart
-
-4. Test, measure, and submit
-
-- Reach at least 80% line coverage in dataaccess.sql
+1. Implement ServerFacade with tests
+2. Build the Prelogin UI
+3. Build the Postlogin UI
+4. Implement the chess board renderer
+5. Harden error handling, reach 80% test coverage
