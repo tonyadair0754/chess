@@ -3,6 +3,7 @@ package client;
 import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
+import service.LoginRequest;
 import service.RegisterRequest;
 
 import java.io.*;
@@ -19,15 +20,21 @@ public class ServerFacade {
 
     // --- User & Auth Endpoints ---
 
+    public void clearDatabase() throws Exception {
+        var path = "/db";
+        makeRequest("DELETE", path, null, null, null);
+    }
+
     public AuthData register(String username, String password, String email) throws Exception {
         var path = "/user";
         var requestBody = new RegisterRequest(username, password, email);
         return makeRequest("POST", path, requestBody, null, AuthData.class);
     }
 
-    public void clearDatabase() throws Exception {
-        var path = "/db";
-        makeRequest("DELETE", path, null, null, null);
+    public AuthData login(String username, String password) throws Exception {
+        var path = "/session";
+        var requestBody = new LoginRequest(username, password);
+        return makeRequest("POST", path, requestBody, null, AuthData.class);
     }
 
     // --- Game Management Endpoints ---

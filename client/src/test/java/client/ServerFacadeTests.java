@@ -32,6 +32,14 @@ public class ServerFacadeTests {
 
     // --- User & Auth Facade Tests ---
 
+//    @Test
+//    void clearSuccess() throws Exception {
+//        // Add some data to the server (create a game)
+//        // Verify data exists (list games)
+//        // Clear the database
+//        // Verify data is gone
+//    }
+
     @Test
     void registerSuccess() throws Exception {
         AuthData authData = facade.register("mrMe", "password123", "mrMe@example.com");
@@ -50,23 +58,23 @@ public class ServerFacadeTests {
         });
     }
 
-//    @Test
-//    void loginSuccess() throws Exception {
-//        facade.register("mrMe", "password123", "mrMe@example.com");
-//
-//        AuthData authData = facade.login("mrMe", "password123");
-//        assertNotNull(authData);
-//        assertEquals("mrMe", authData.username());
-//    }
-//
-//    @Test
-//    void loginFailureWrongPassword() throws Exception {
-//        facade.register("mrMe", "password123", "mrMe@example.com");
-//
-//        assertThrows(Exception.class, () -> {
-//            facade.login("mrMe", "wrongpassword");
-//        });
-//    }
+    @Test
+    void loginSuccess() throws Exception {
+        facade.register("mrMe", "password123", "mrMe@example.com");
+
+        AuthData authData = facade.login("mrMe", "password123");
+        assertNotNull(authData);
+        assertEquals("mrMe", authData.username());
+    }
+
+    @Test
+    void loginFailureWrongPassword() throws Exception {
+        facade.register("mrMe", "password123", "mrMe@example.com");
+
+        assertThrows(Exception.class, () -> {
+            facade.login("mrMe", "wrongpassword");
+        });
+    }
 //
 //    @Test
 //    void logoutSuccess() throws Exception {
