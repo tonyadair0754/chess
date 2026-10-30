@@ -5,6 +5,8 @@ import model.GameData;
 import org.junit.jupiter.api.*;
 import server.Server;
 
+import java.util.Collection;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerFacadeTests {
@@ -32,13 +34,24 @@ public class ServerFacadeTests {
 
     // --- User & Auth Facade Tests ---
 
-//    @Test
-//    void clearSuccess() throws Exception {
-//        // Add some data to the server (create a game)
-//        // Verify data exists (list games)
-//        // Clear the database
-//        // Verify data is gone
-//    }
+    @Test
+    void clearSuccess() throws Exception {
+        // Add some data to the server (create a game)
+        var authData = facade.register("mrMe", "password123", "mrMe@example.com");
+        facade.createGame(authData.authToken(), "Test Game");
+
+        // Verify data exists (list games)
+        var gamesBefore = facade.listGames(authData.authToken());
+        assertEquals(1, gamesBefore.size());
+
+        // Clear the database
+        facade.clearDatabase();
+
+        // Verify data is gone
+        assertThrows(Exception.class, () -> {
+            facade.login("mrMe", "password123");
+        });
+    }
 
     @Test
     void registerSuccess() throws Exception {
@@ -87,21 +100,21 @@ public class ServerFacadeTests {
 
     // --- Game Management Facade Tests ---
 
-//    @Test
-//    void listGamesSuccess() throws Exception {
-//        var auth = facade.register("mrMe", "password123", "mrMe@example.com");
-//        facade.createGame("Game One", auth.authToken());
-//        facade.createGame("Game Two", auth.authToken());
-//
-//        GameData[] games = facade.listGames(auth.authToken());
-//        assertNotNull(games);
-//        assertEquals(2, games.length);
-//    }
+    @Test
+    void listGamesSuccess() throws Exception {
+        var auth = facade.register("mrMe", "password123", "mrMe@example.com");
+        facade.createGame(auth.authToken(), "Game One");
+        facade.createGame(auth.authToken(), "Game Two");
+
+        Collection<GameData> games = facade.listGames(auth.authToken());
+        assertNotNull(games);
+        assertEquals(2, games.size());
+    }
 
     @Test
     void createGameSuccess() throws Exception {
         var auth = facade.register("mrMe", "password123", "mrMe@example.com");
-        var game = facade.createGame("Championship Match", auth.authToken());
+        var game = facade.createGame(auth.authToken(), "Championship Match");
 
         assertNotNull(game);
         assertTrue(game.gameID() > 0);
@@ -111,7 +124,7 @@ public class ServerFacadeTests {
     @Test
     void createGameUnauthorized() {
         assertThrows(Exception.class, () -> {
-            facade.createGame("Unauthorized Game", "invalid-auth-token");
+            facade.createGame("invalid-auth-token", "Unauthorized Game");
         });
     }
 

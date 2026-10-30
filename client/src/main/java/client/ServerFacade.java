@@ -3,10 +3,7 @@ package client;
 import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
-import service.ListGamesRequest;
-import service.ListGamesResult;
-import service.LoginRequest;
-import service.RegisterRequest;
+import service.*;
 
 import java.io.*;
 import java.net.*;
@@ -49,8 +46,16 @@ public class ServerFacade {
 
     public Collection<GameData> listGames(String authToken) throws Exception {
         var path = "/game";
-        var response = makeRequest("GET", path, null, authToken, ListGamesResult.class);
-        return response != null ? response.games() : java.util.Collections.emptyList();
+        var result = makeRequest("GET", path, null, authToken, ListGamesResult.class);
+        return result != null ? result.games() : java.util.Collections.emptyList();
+    }
+
+    public GameData createGame(String authToken, String gameName) throws Exception {
+        var path = "/game";
+        var requestBody = new CreateGameRequest(authToken, gameName);
+        var result = makeRequest("POST", path, requestBody, authToken, CreateGameResult.class);
+        // White username and black username both start out null
+        return new GameData(result.gameID(), null, null, gameName, new chess.ChessGame());
     }
 
     // --- Helper methods ---
