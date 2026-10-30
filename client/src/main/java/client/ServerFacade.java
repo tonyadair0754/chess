@@ -58,6 +58,12 @@ public class ServerFacade {
         return new GameData(result.gameID(), null, null, gameName, new chess.ChessGame());
     }
 
+    public void joinGame(chess.ChessGame.TeamColor playerColor, int gameID, String authToken) throws Exception {
+        var path = "/game";
+        var requestBody = new JoinGameRequest(authToken, playerColor, gameID);
+        makeRequest("PUT", path, requestBody, authToken, null);
+    }
+
     // --- Helper methods ---
 
     private final Gson gson = new Gson();

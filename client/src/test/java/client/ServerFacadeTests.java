@@ -128,28 +128,28 @@ public class ServerFacadeTests {
         });
     }
 
-//    @Test
-//    void joinGameSuccess() throws Exception {
-//        var auth = facade.register("mrMe", "password123", "mrMe@example.com");
-//        var game = facade.createGame("Joinable Game", auth.authToken());
-//
-//        assertDoesNotThrow(() -> {
-//            facade.joinGame(chess.ChessGame.TeamColor.WHITE, game.gameID(), auth.authToken());
-//        });
-//    }
-//
-//    @Test
-//    void joinGameAlreadyTaken() throws Exception {
-//        var auth1 = facade.register("player1", "pass1", "p1@example.com");
-//        var auth2 = facade.register("player2", "pass2", "p2@example.com");
-//        var game = facade.createGame("Contested Game", auth1.authToken());
-//
-//        // Player 1 joins white
-//        facade.joinGame(chess.ChessGame.TeamColor.WHITE, game.gameID(), auth1.authToken());
-//
-//        // Player 2 attempts to join white (should fail with an AlreadyTakenException exception)
-//        assertThrows(Exception.class, () -> {
-//            facade.joinGame(chess.ChessGame.TeamColor.WHITE, game.gameID(), auth2.authToken());
-//        });
-//    }
+    @Test
+    void joinGameSuccess() throws Exception {
+        var auth = facade.register("mrMe", "password123", "mrMe@example.com");
+        var game = facade.createGame(auth.authToken(), "Joinable Game");
+
+        assertDoesNotThrow(() -> {
+            facade.joinGame(chess.ChessGame.TeamColor.WHITE, game.gameID(), auth.authToken());
+        });
+    }
+
+    @Test
+    void joinGameAlreadyTaken() throws Exception {
+        var auth1 = facade.register("player1", "pass1", "p1@example.com");
+        var auth2 = facade.register("player2", "pass2", "p2@example.com");
+        var game = facade.createGame(auth1.authToken(), "Contested Game");
+
+        // Player 1 joins white
+        facade.joinGame(chess.ChessGame.TeamColor.WHITE, game.gameID(), auth1.authToken());
+
+        // Player 2 attempts to join white (should fail with an AlreadyTakenException exception)
+        assertThrows(Exception.class, () -> {
+            facade.joinGame(chess.ChessGame.TeamColor.WHITE, game.gameID(), auth2.authToken());
+        });
+    }
 }
