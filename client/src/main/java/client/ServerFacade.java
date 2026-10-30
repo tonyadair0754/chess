@@ -3,11 +3,14 @@ package client;
 import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
+import service.ListGamesRequest;
+import service.ListGamesResult;
 import service.LoginRequest;
 import service.RegisterRequest;
 
 import java.io.*;
 import java.net.*;
+import java.util.Collection;
 import java.util.Map;
 
 public class ServerFacade {
@@ -43,6 +46,12 @@ public class ServerFacade {
     }
 
     // --- Game Management Endpoints ---
+
+    public Collection<GameData> listGames(String authToken) throws Exception {
+        var path = "/game";
+        var response = makeRequest("GET", path, null, authToken, ListGamesResult.class);
+        return response != null ? response.games() : java.util.Collections.emptyList();
+    }
 
     // --- Helper methods ---
 

@@ -86,4 +86,57 @@ public class ServerFacadeTests {
     }
 
     // --- Game Management Facade Tests ---
+
+//    @Test
+//    void listGamesSuccess() throws Exception {
+//        var auth = facade.register("mrMe", "password123", "mrMe@example.com");
+//        facade.createGame("Game One", auth.authToken());
+//        facade.createGame("Game Two", auth.authToken());
+//
+//        GameData[] games = facade.listGames(auth.authToken());
+//        assertNotNull(games);
+//        assertEquals(2, games.length);
+//    }
+
+    @Test
+    void createGameSuccess() throws Exception {
+        var auth = facade.register("mrMe", "password123", "mrMe@example.com");
+        var game = facade.createGame("Championship Match", auth.authToken());
+
+        assertNotNull(game);
+        assertTrue(game.gameID() > 0);
+        assertEquals("Championship Match", game.gameName());
+    }
+
+    @Test
+    void createGameUnauthorized() {
+        assertThrows(Exception.class, () -> {
+            facade.createGame("Unauthorized Game", "invalid-auth-token");
+        });
+    }
+
+//    @Test
+//    void joinGameSuccess() throws Exception {
+//        var auth = facade.register("mrMe", "password123", "mrMe@example.com");
+//        var game = facade.createGame("Joinable Game", auth.authToken());
+//
+//        assertDoesNotThrow(() -> {
+//            facade.joinGame(chess.ChessGame.TeamColor.WHITE, game.gameID(), auth.authToken());
+//        });
+//    }
+//
+//    @Test
+//    void joinGameAlreadyTaken() throws Exception {
+//        var auth1 = facade.register("player1", "pass1", "p1@example.com");
+//        var auth2 = facade.register("player2", "pass2", "p2@example.com");
+//        var game = facade.createGame("Contested Game", auth1.authToken());
+//
+//        // Player 1 joins white
+//        facade.joinGame(chess.ChessGame.TeamColor.WHITE, game.gameID(), auth1.authToken());
+//
+//        // Player 2 attempts to join white (should fail with an AlreadyTakenException exception)
+//        assertThrows(Exception.class, () -> {
+//            facade.joinGame(chess.ChessGame.TeamColor.WHITE, game.gameID(), auth2.authToken());
+//        });
+//    }
 }
