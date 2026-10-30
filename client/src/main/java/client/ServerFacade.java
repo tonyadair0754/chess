@@ -19,20 +19,83 @@ public class ServerFacade {
 
     // --- User & Auth Endpoints ---
 
-    public AuthData register(String username, String password, String email) {
+    public AuthData register(String username, String password, String email) throws Exception {
         var path = "/user";
         var requestBody = new RegisterRequest(username, password, email);
         return makeRequest("POST", path, requestBody, null, AuthData.class);
+    }
+
+    public void clearDatabase() throws Exception {
+        var path = "/db";
+        makeRequest("DELETE", path, null, null, null);
     }
 
     // --- Game Management Endpoints ---
 
     // --- Helper methods ---
 
-    private <T> T makeRequest(String method, String path, Object request, String authToken, Class<T> responseClass) {
-        // Build an HTTP request to serverUrl + path.
-        // Serialize the request body into JSON.
-        // Send the request and receive the response.
-        // Check the HTTP status and deserialize the response into the requested type.
+    private final Gson gson = new Gson();
+
+    private <T> T makeRequest(String method, String path, Object request, String authToken, Class<T> responseClass) throws Exception {
+        try {
+            // Open the connection
+            URL url = new URI(serverUrl + path).toURL();
+            HttpURLConnection http = (HttpURLConnection) url.openConnection();
+            http.setRequestMethod(method);
+
+            // Add Authorization header if provided
+            if (authToken != null && !authToken.isEmpty()) {
+                http.addRequestProperty("authorization", authToken);
+            }
+
+            // Add request body if present (POST, PUT)
+            if (request != null) {
+                http.setDoOutput(true);
+                http.addRequestProperty("Content-Type", "application/json");
+                String json = gson.toJson(request);
+                try (OutputStream reqBody = http.getOutputStream()) {
+                    reqBody.write(json.getBytes());
+                }
+            }
+
+            http.connect();
+
+            // Check for errors
+            throwIfFailed(http);
+
+            // Read and deserialize response body
+            return readBody(http, responseClass);
+
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    private void throwIfFailed(HttpURLConnection http) throws IOException {
+        var status = http.getResponseCode();
+        if (status / 100 != 2) {
+            try (InputStream responseBody = http.getErrorStream()) {
+                if (responseBody != null) {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(responseBody))) {
+                        throw new IOException(reader.readLine());
+                    }
+                } else {
+                    throw new IOException("Server failed with status code: " + status);
+                }
+            }
+        }
+    }
+
+    private <T> T readBody(HttpURLConnection http, Class<T> responseClass) throws IOException {
+        T response = null;
+        if (responseClass != null) {
+            try (InputStream respBody = http.getInputStream()) {
+                if (respBody != null) {
+                    InputStreamReader reader = new InputStreamReader(respBody);
+                    response = gson.fromJson(reader, responseClass);
+                }
+            }
+        }
+        return response;
     }
 }
