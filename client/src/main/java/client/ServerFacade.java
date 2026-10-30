@@ -37,6 +37,11 @@ public class ServerFacade {
         return makeRequest("POST", path, requestBody, null, AuthData.class);
     }
 
+    public void logout(String authToken) throws Exception {
+        var path = "/session";
+        makeRequest("DELETE", path, null, authToken, null);
+    }
+
     // --- Game Management Endpoints ---
 
     // --- Helper methods ---

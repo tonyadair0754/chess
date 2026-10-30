@@ -75,15 +75,15 @@ public class ServerFacadeTests {
             facade.login("mrMe", "wrongpassword");
         });
     }
-//
-//    @Test
-//    void logoutSuccess() throws Exception {
-//        AuthData authData = facade.register("mrMe", "password123", "mrMe@example.com");
-//
-//        assertDoesNotThrow(() -> {
-//            facade.logout(authData.authToken());
-//        });
-//    }
+
+    @Test
+    void logoutSuccess() throws Exception {
+        AuthData authData = facade.register("mrMe", "password123", "mrMe@example.com");
+
+        assertDoesNotThrow(() -> {
+            facade.logout(authData.authToken());
+        });
+    }
 
     // --- Game Management Facade Tests ---
 }
