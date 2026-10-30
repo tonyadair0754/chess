@@ -8,7 +8,6 @@ import service.*;
 import java.io.*;
 import java.net.*;
 import java.util.Collection;
-import java.util.Map;
 
 public class ServerFacade {
 
@@ -69,38 +68,33 @@ public class ServerFacade {
     private final Gson gson = new Gson();
 
     private <T> T makeRequest(String method, String path, Object request, String authToken, Class<T> responseClass) throws Exception {
-        try {
-            // Open the connection
-            URL url = new URI(serverUrl + path).toURL();
-            HttpURLConnection http = (HttpURLConnection) url.openConnection();
-            http.setRequestMethod(method);
+        // Open the connection
+        URL url = new URI(serverUrl + path).toURL();
+        HttpURLConnection http = (HttpURLConnection) url.openConnection();
+        http.setRequestMethod(method);
 
-            // Add Authorization header if provided
-            if (authToken != null && !authToken.isEmpty()) {
-                http.addRequestProperty("authorization", authToken);
-            }
-
-            // Add request body if present (POST, PUT)
-            if (request != null) {
-                http.setDoOutput(true);
-                http.addRequestProperty("Content-Type", "application/json");
-                String json = gson.toJson(request);
-                try (OutputStream reqBody = http.getOutputStream()) {
-                    reqBody.write(json.getBytes());
-                }
-            }
-
-            http.connect();
-
-            // Check for errors
-            throwIfFailed(http);
-
-            // Read and deserialize response body
-            return readBody(http, responseClass);
-
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
+        // Add Authorization header if provided
+        if (authToken != null && !authToken.isEmpty()) {
+            http.addRequestProperty("authorization", authToken);
         }
+
+        // Add request body if present (POST, PUT)
+        if (request != null) {
+            http.setDoOutput(true);
+            http.addRequestProperty("Content-Type", "application/json");
+            String json = gson.toJson(request);
+            try (OutputStream reqBody = http.getOutputStream()) {
+                reqBody.write(json.getBytes());
+            }
+        }
+
+        http.connect();
+
+        // Check for errors
+        throwIfFailed(http);
+
+        // Read and deserialize response body
+        return readBody(http, responseClass);
     }
 
     private void throwIfFailed(HttpURLConnection http) throws IOException {
