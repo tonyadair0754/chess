@@ -1,6 +1,7 @@
 package client;
 
 import model.AuthData;
+import model.GameData;
 
 import java.util.Arrays;
 import java.util.Scanner;
@@ -44,11 +45,14 @@ public class ChessClient {
                         default -> System.out.println("Unknown command. Type 'help' for help.");
                     }
                 } else {
-                    // Postlogin commands will eventually go here
-                    if (cmd.equals("logout")) {
-                        logout();
-                    } else {
-                        System.out.println("Unknown command. Type 'help' for help.");
+                    switch (cmd) {
+                        case "help" -> help();
+                        case "logout" -> logout();
+                        case "create" -> createGame(tokens, scanner);
+                        case "list" -> listGames();
+                        case "play" -> playGame(tokens, scanner);
+                        case "observe" -> observeGame(tokens, scanner);
+                        default -> System.out.println("Unknown command. Type 'help' for help.");
                     }
                 }
             } catch (Exception e) {
@@ -105,6 +109,26 @@ public class ChessClient {
         authToken = null;
         state = State.SIGNEDOUT;
         System.out.println("Logged out successfully.");
+    }
+
+    private void createGame(String[] tokens, Scanner scanner) throws Exception) {
+
+    }
+
+    private void listGames() throws Exception {
+
+    }
+
+    private GameData selectGame(String[] tokens, Scanner scanner) throws Exception {
+
+    }
+
+    private void playGame(String[] tokens, Scanner scanner) throws Exception {
+
+    }
+
+    private void observeGame(String[] tokens, Scanner scanner) throws Exception) {
+
     }
 
     // Handle help by showing the available commands.
