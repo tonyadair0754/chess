@@ -57,16 +57,54 @@ public class ChessClient {
         }
     }
 
-    private String register(String[] args) {
-        
+    private void register(String[] tokens, Scanner scanner) throws Exception {
+        // If the user provides arguments all at once
+        if (tokens.length >= 4) {
+            var authData = facade.register(tokens[1], tokens[2], tokens[3]);
+            authToken = authData.authToken();
+            state = State.SIGNEDIN;
+            System.out.println("Successfully registered and logged in as " + authData.username());
+        } else {  // If the user enters in the arguments one at a time
+            System.out.print("Username: ");
+            String username = scanner.next();
+            System.out.print("Password: ");
+            String password = scanner.next();
+            System.out.print("Email: ");
+            String email = scanner.next();
+            scanner.nextLine();
+
+            var authData = facade.register(username, password, email);
+            authToken = authData.authToken();
+            state = State.SIGNEDIN;
+            System.out.println("Successfully registered and logged in as " + authData.username());
+        }
     }
 
-    private String login(String[] args) {
+    private void login(String[] tokens, Scanner scanner) throws Exception {
+        if (tokens.length >= 3) {
+            var authData = facade.login(tokens[1], tokens[2]);
+            authToken = authData.authToken();
+            state = State.SIGNEDIN;
+            System.out.println("Logged in as " + authData.username());
+        } else {
+            System.out.print("Username: ");
+            String username = scanner.next();
+            System.out.print("Password: ");
+            String password = scanner.next();
+            scanner.nextLine();
 
+            var authData = facade.login(username, password);
+            authToken = authData.authToken();
+            state = State.SIGNEDIN;
+            System.out.println("Logged in as " + authData.username());
+        }
     }
 
-    private String logout() {
-
+    private void logout() throws Exception {
+        facade.logout(authToken);
+        authToken = null;
+        state = State.SIGNEDOUT;
+        System.out.println("Logged out successfully.");
     }
 
     // Handle help by showing the available commands.
