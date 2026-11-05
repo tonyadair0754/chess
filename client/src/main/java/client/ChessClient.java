@@ -47,6 +47,9 @@ public class ChessClient {
                 } else {
                     switch (cmd) {
                         case "help" -> help();
+                        case "quit" -> {
+                            return;
+                        }
                         case "logout" -> logout();
                         case "create" -> createGame(tokens, scanner);
                         case "list" -> listGames();
@@ -111,23 +114,31 @@ public class ChessClient {
         System.out.println("Logged out successfully.");
     }
 
-    private void createGame(String[] tokens, Scanner scanner) throws Exception) {
-
+    private void createGame(String[] tokens, Scanner scanner) throws Exception {
+        String gameName;
+        if (tokens.length > 1) {
+            gameName = tokens[1];
+        } else {
+            System.out.print("Enter game name: ");
+            gameName = scanner.next();
+            scanner.nextLine();
+        }
+        facade.createGame(authToken, gameName);
+        System.out.println("Game '" + gameName + "' created successfully.");
     }
 
     private void listGames() throws Exception {
 
     }
 
-    private GameData selectGame(String[] tokens, Scanner scanner) throws Exception {
-
-    }
+//    private GameData selectGame(String[] tokens, Scanner scanner) throws Exception {
+//    }
 
     private void playGame(String[] tokens, Scanner scanner) throws Exception {
 
     }
 
-    private void observeGame(String[] tokens, Scanner scanner) throws Exception) {
+    private void observeGame(String[] tokens, Scanner scanner) throws Exception {
 
     }
 

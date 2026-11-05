@@ -37,9 +37,9 @@ public class GameDAOMySQL extends SqlDAO implements GameDAO {
 
     @Override
     public void createGame(GameData gameData) throws DataAccessException {
-        var statement = "INSERT INTO game (gameID, whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?, ?)";
+        var statement = "INSERT INTO game (whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)";
         String serializedGame = new Gson().toJson(gameData.game());
-        executeUpdate(statement, gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), serializedGame);
+        executeUpdate(statement, gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), serializedGame);
     }
 
     @Override
