@@ -3,10 +3,7 @@ package client;
 import model.AuthData;
 import model.GameData;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Our Chess Client's REPL
@@ -15,11 +12,12 @@ public class ChessClient {
     private final ServerFacade facade;
     private State state;
     private String authToken = null;
-    private Collection<GameData> cachedGames = new ArrayList<>();
+    private List<GameData> cachedGames;
 
     public ChessClient(int port) {
         facade = new ServerFacade(port);
         this.state = State.SIGNEDOUT;
+        this.cachedGames = new ArrayList<>();
     }
 
     public void run() {
@@ -150,11 +148,68 @@ public class ChessClient {
         }
     }
 
-//    private GameData selectGame(String[] tokens, Scanner scanner) throws Exception {
-//    }
+    private GameData selectGame(String[] tokens, Scanner scanner) throws Exception {
+        // Ensure we have cached games. Get cached games if the cache is empty.
+        if (cachedGames.isEmpty()) {
+            Collection<model.GameData> games = facade.listGames(authToken);
+            cachedGames.clear();
+            cachedGames.addAll(games);
+        }
+
+        if (cachedGames.isEmpty()) {
+            return null;
+        }
+
+        int listNumber;
+        if (tokens.length >= 2) {
+            try {
+                listNumber = Integer.parseInt(tokens[1]);
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Game number must be an integer.");
+                return null;
+            }
+        } else {
+            System.out.print("Enter game number: ");
+            while (!scanner.hasNextInt()) {
+                System.out.print("Invalid input. Enter game number: ");
+                scanner.next();
+            }
+            listNumber = scanner.nextInt();
+            scanner.nextLine();
+        }
+
+        // Validate list number bounds
+        if (listNumber < 1 || listNumber > cachedGames.size()) {
+            System.out.println("Error: Invalid game number.");
+            return null;
+        }
+
+        // UI index is 1-based, but gameID is 0-based
+        return cachedGames.get(listNumber - 1);
+    }
 
     private void playGame(String[] tokens, Scanner scanner) throws Exception {
+        GameData selectedGame = selectGame(tokens, scanner);
+        if (selectedGame == null) {
+            return;
+        }
 
+        System.out.print("Choose team color (WHITE/BLACK): ");
+        String colorStr = scanner.next().toUpperCase();
+        scanner.nextLine();
+
+        chess.ChessGame.TeamColor color;
+        if (colorStr.equals("WHITE") || colorStr.equals("W")) {
+            color = chess.ChessGame.TeamColor.WHITE;
+        } else if (colorStr.equals("BLACK") || colorStr.equals("B")) {
+            color = chess.ChessGame.TeamColor.BLACK;
+        } else {
+            System.out.println("Error: Invalid color. Must be WHITE or BLACK.");
+            return;
+        }
+
+        facade.joinGame(color, selectedGame.gameID(), authToken);
+        System.out.println("Successfully joined game '" + selectedGame.gameName() + "' as " + color + ".");
     }
 
     private void observeGame(String[] tokens, Scanner scanner) throws Exception {
