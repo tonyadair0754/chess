@@ -213,7 +213,12 @@ public class ChessClient {
     }
 
     private void observeGame(String[] tokens, Scanner scanner) throws Exception {
+        GameData selectedGame = selectGame(tokens, scanner);
+        if (selectedGame == null) {
+            return;
+        }
 
+        System.out.println("Now observing game '" + selectedGame.gameName() + "'.");
     }
 
     // Handle help by showing the available commands.
