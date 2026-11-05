@@ -3,7 +3,9 @@ package client;
 import model.AuthData;
 import model.GameData;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Scanner;
 
 /**
@@ -13,6 +15,7 @@ public class ChessClient {
     private final ServerFacade facade;
     private State state;
     private String authToken = null;
+    private Collection<GameData> cachedGames = new ArrayList<>();
 
     public ChessClient(int port) {
         facade = new ServerFacade(port);
@@ -128,7 +131,23 @@ public class ChessClient {
     }
 
     private void listGames() throws Exception {
+        Collection<GameData> games = facade.listGames(authToken);
+        cachedGames.clear();
+        cachedGames.addAll(games);
 
+        if (cachedGames.isEmpty()) {
+            System.out.println("No games available.");
+            return;
+        }
+
+        System.out.println("\n--- Available Games ---");
+        int i = 1;
+        for (var game : cachedGames) {
+            String white = (game.whiteUsername() != null) ? game.whiteUsername() : "[Empty]";
+            String black = (game.blackUsername() != null) ? game.blackUsername() : "[Empty]";
+            System.out.println(i + ". " + game.gameName() + " | White: " + white + " | Black: " + black);
+            i++;
+        }
     }
 
 //    private GameData selectGame(String[] tokens, Scanner scanner) throws Exception {
