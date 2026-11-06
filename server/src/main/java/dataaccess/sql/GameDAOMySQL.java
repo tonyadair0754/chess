@@ -6,10 +6,7 @@ import dataaccess.DataAccessException;
 import dataaccess.DatabaseManager;
 import model.GameData;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -36,10 +33,34 @@ public class GameDAOMySQL extends SqlDAO implements GameDAO {
     }
 
     @Override
-    public void createGame(GameData gameData) throws DataAccessException {
-        var statement = "INSERT INTO game (whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)";
+    public int createGame(GameData gameData) throws DataAccessException {
+        var statement = """
+                INSERT INTO game (whiteUsername, blackUsername, gameName, game)
+                VALUES (?, ?, ?, ?)
+                """;
+
         String serializedGame = new Gson().toJson(gameData.game());
-        executeUpdate(statement, gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), serializedGame);
+
+        try (var conn = DatabaseManager.getConnection();
+             var preparedStatement = conn.prepareStatement(statement, Statement.RETURN_GENERATED_KEYS)) {
+
+            preparedStatement.setString(1, gameData.whiteUsername());
+            preparedStatement.setString(2, gameData.blackUsername());
+            preparedStatement.setString(3, gameData.gameName());
+            preparedStatement.setString(4, serializedGame);
+
+            preparedStatement.executeUpdate();
+
+            // Get the auth-generated key from MySQL
+            try (var keys = preparedStatement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+                throw new DataAccessException("Error: failed to retrieve generated game ID");
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error: failed to create game", e);
+        }
     }
 
     @Override

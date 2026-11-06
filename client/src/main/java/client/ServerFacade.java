@@ -20,37 +20,37 @@ public class ServerFacade {
     // --- User & Auth Endpoints ---
 
     public void clearDatabase() throws Exception {
-        var path = "/db";
+        String path = "/db";
         makeRequest("DELETE", path, null, null, null);
     }
 
     public AuthData register(String username, String password, String email) throws Exception {
-        var path = "/user";
+        String path = "/user";
         var requestBody = new RegisterRequest(username, password, email);
         return makeRequest("POST", path, requestBody, null, AuthData.class);
     }
 
     public AuthData login(String username, String password) throws Exception {
-        var path = "/session";
+        String path = "/session";
         var requestBody = new LoginRequest(username, password);
         return makeRequest("POST", path, requestBody, null, AuthData.class);
     }
 
     public void logout(String authToken) throws Exception {
-        var path = "/session";
+        String path = "/session";
         makeRequest("DELETE", path, null, authToken, null);
     }
 
     // --- Game Management Endpoints ---
 
     public Collection<GameData> listGames(String authToken) throws Exception {
-        var path = "/game";
+        String path = "/game";
         var result = makeRequest("GET", path, null, authToken, ListGamesResult.class);
         return result != null ? result.games() : java.util.Collections.emptyList();
     }
 
     public GameData createGame(String authToken, String gameName) throws Exception {
-        var path = "/game";
+        String path = "/game";
         var requestBody = new CreateGameRequest(authToken, gameName);
         var result = makeRequest("POST", path, requestBody, authToken, CreateGameResult.class);
         // White username and black username both start out null
@@ -58,7 +58,7 @@ public class ServerFacade {
     }
 
     public void joinGame(chess.ChessGame.TeamColor playerColor, int gameID, String authToken) throws Exception {
-        var path = "/game";
+        String path = "/game";
         var requestBody = new JoinGameRequest(authToken, playerColor, gameID);
         makeRequest("PUT", path, requestBody, authToken, null);
     }

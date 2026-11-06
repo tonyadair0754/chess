@@ -12,7 +12,6 @@ import java.util.Collection;
 public class GameService {
     private final AuthDAO authDao;
     private final GameDAO gameDao;
-    private static int nextGameID = 1;
 
     public GameService(AuthDAO authDao, GameDAO gameDao) {
         this.authDao = authDao;
@@ -60,15 +59,10 @@ public class GameService {
             throw new BadRequestException("Error: bad request");
         }
 
-        // Generate new gameID
-        int gameID = generateGameID();
+        GameData newGame = new GameData(
+                0, null, null, request.gameName(), new ChessGame());
 
-        // Create a new GameData object
-        // Parameters: (gameID, whiteUsername, blackUsername, gameName, chessGame)
-        GameData newGame = new GameData(gameID, null, null, request.gameName(), new ChessGame());
-
-        // Save in DAO
-        gameDao.createGame(newGame);
+        int gameID = gameDao.createGame(newGame);
 
         return new CreateGameResult(gameID);
     }
@@ -122,9 +116,5 @@ public class GameService {
                 game.game()
         );
         gameDao.updateGame(updatedGame);
-    }
-
-    private int generateGameID() {
-        return nextGameID++;
     }
 }
