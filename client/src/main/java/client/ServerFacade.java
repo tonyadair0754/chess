@@ -1,9 +1,8 @@
 package client;
 
 import com.google.gson.Gson;
-import model.AuthData;
-import model.GameData;
 import service.*;
+import model.*;
 
 import java.io.*;
 import java.net.*;
