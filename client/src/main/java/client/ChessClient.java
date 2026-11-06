@@ -28,7 +28,6 @@ public class ChessClient {
         help();
 
         Scanner scanner = new Scanner(System.in);
-        var result = "";
         while (true) {
             printPrompt();
             String line = scanner.nextLine();
@@ -37,34 +36,50 @@ public class ChessClient {
                 var tokens = line.toLowerCase().split("\\s+");
                 var cmd = tokens.length > 0 ? tokens[0] : "";
 
-                if (state == State.SIGNEDOUT) {
-                    switch (cmd) {
-                        case "help" -> help();
-                        case "quit" -> {
-                            return;
-                        }
-                        case "register" -> register(tokens, scanner);
-                        case "login" -> login(tokens, scanner);
-                        default -> System.out.println("Unknown command. Type 'help' for help.");
-                    }
-                } else {
-                    switch (cmd) {
-                        case "help" -> help();
-                        case "quit" -> {
-                            return;
-                        }
-                        case "logout" -> logout();
-                        case "create" -> createGame(tokens, scanner);
-                        case "list" -> listGames();
-                        case "play" -> playGame(tokens, scanner);
-                        case "observe" -> observeGame(tokens, scanner);
-                        default -> System.out.println("Unknown command. Type 'help' for help.");
-                    }
+                if (processCommand(cmd, tokens, scanner)) {
+                    return; // Exit loop if quit was entered
                 }
             } catch (Exception e) {
                 System.out.println("Error: " + e.getMessage());
             }
         }
+    }
+
+    private boolean processCommand(String cmd, String[] tokens, Scanner scanner) throws Exception {
+        if (state == State.SIGNEDOUT) {
+            return processSignedOutCommand(cmd, tokens, scanner);
+        } else {
+            return processSignedInCommand(cmd, tokens, scanner);
+        }
+    }
+
+    private boolean processSignedOutCommand(String cmd, String[] tokens, Scanner scanner) throws Exception {
+        switch (cmd) {
+            case "help" -> help();
+            case "quit" -> {
+                return true;
+            }
+            case "register" -> register(tokens, scanner);
+            case "login" -> login(tokens, scanner);
+            default -> System.out.println("Unknown command. Type 'help' for help.");
+        }
+        return false;
+    }
+
+    private boolean processSignedInCommand(String cmd, String[] tokens, Scanner scanner) throws Exception {
+        switch (cmd) {
+            case "help" -> help();
+            case "quit" -> {
+                return true;
+            }
+            case "logout" -> logout();
+            case "create" -> createGame(tokens, scanner);
+            case "list" -> listGames();
+            case "play" -> playGame(tokens, scanner);
+            case "observe" -> observeGame(tokens, scanner);
+            default -> System.out.println("Unknown command. Type 'help' for help.");
+        }
+        return false;
     }
 
     private void register(String[] tokens, Scanner scanner) throws Exception {
