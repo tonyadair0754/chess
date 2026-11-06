@@ -40,7 +40,13 @@ public class ChessClient {
                     return; // Exit loop if quit was entered
                 }
             } catch (Exception e) {
-                System.out.println("Error: " + e.getMessage());
+                String message = e.getMessage();
+                // If the error message is a JSON string containing a message field, extract it
+                if (message != null && message.contains("\"message\":")) {
+                    // Parse JSON so users see a clean message {"message":"Error: unauthorized"} -> Error: unauthorized
+                    message = message.replaceAll(".*\"message\"\\s*:\\s*\"([^\"]+)\".*", "$1");
+                }
+                System.out.println(message);
             }
         }
     }
@@ -211,9 +217,15 @@ public class ChessClient {
             return;
         }
 
-        System.out.print("Choose team color (WHITE/BLACK): ");
-        String colorStr = scanner.next().toUpperCase();
-        scanner.nextLine();
+        String colorStr;
+        // Check if color was passed as a token (e.g. "play 1 black")
+        if (tokens.length >= 3) {
+            colorStr = tokens[2].toUpperCase();
+        } else {
+            System.out.print("Choose team color (WHITE/BLACK): ");
+            colorStr = scanner.next().toUpperCase();
+            scanner.nextLine();
+        }
 
         chess.ChessGame.TeamColor color;
         if (colorStr.equals("WHITE") || colorStr.equals("W")) {
