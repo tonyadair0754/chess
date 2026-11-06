@@ -5,8 +5,6 @@ import dataaccess.*;
 import dataaccess.sql.AuthDAOMySQL;
 import dataaccess.sql.GameDAOMySQL;
 import dataaccess.sql.UserDAOMySQL;
-import model.CreateGameRequest;
-import model.RegisterRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,7 +1,6 @@
 package client;
 
 import com.google.gson.Gson;
-import service.*;
 import model.*;
 
 import java.io.*;
@@ -25,13 +24,13 @@ public class ServerFacade {
 
     public AuthData register(String username, String password, String email) throws Exception {
         String path = "/user";
-        var requestBody = new RegisterRequest(username, password, email);
+        var requestBody = new service.RegisterRequest(username, password, email);
         return makeRequest("POST", path, requestBody, null, AuthData.class);
     }
 
     public AuthData login(String username, String password) throws Exception {
         String path = "/session";
-        var requestBody = new LoginRequest(username, password);
+        var requestBody = new service.LoginRequest(username, password);
         return makeRequest("POST", path, requestBody, null, AuthData.class);
     }
 
@@ -44,21 +43,21 @@ public class ServerFacade {
 
     public Collection<GameData> listGames(String authToken) throws Exception {
         String path = "/game";
-        var result = makeRequest("GET", path, null, authToken, ListGamesResult.class);
+        var result = makeRequest("GET", path, null, authToken, service.ListGamesResult.class);
         return result != null ? result.games() : java.util.Collections.emptyList();
     }
 
     public GameData createGame(String authToken, String gameName) throws Exception {
         String path = "/game";
-        var requestBody = new CreateGameRequest(authToken, gameName);
-        var result = makeRequest("POST", path, requestBody, authToken, CreateGameResult.class);
+        var requestBody = new service.CreateGameRequest(authToken, gameName);
+        var result = makeRequest("POST", path, requestBody, authToken, service.CreateGameResult.class);
         // White username and black username both start out null
         return new GameData(result.gameID(), null, null, gameName, new chess.ChessGame());
     }
 
     public void joinGame(chess.ChessGame.TeamColor playerColor, int gameID, String authToken) throws Exception {
         String path = "/game";
-        var requestBody = new JoinGameRequest(authToken, playerColor, gameID);
+        var requestBody = new service.JoinGameRequest(authToken, playerColor, gameID);
         makeRequest("PUT", path, requestBody, authToken, null);
     }
 

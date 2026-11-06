@@ -6,7 +6,7 @@ import dataaccess.BadRequestException;
 import dataaccess.DataAccessException;
 import dataaccess.UnauthorizedException;
 import io.javalin.http.Context;
-import model.RegisterRequest;
+import service.RegisterRequest;
 import service.*;
 
 import java.util.Map;

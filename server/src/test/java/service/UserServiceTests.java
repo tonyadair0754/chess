@@ -6,7 +6,6 @@ import dataaccess.sql.AuthDAOMySQL;
 import dataaccess.sql.UserDAO;
 import dataaccess.sql.UserDAOMySQL;
 import model.AuthData;
-import model.RegisterRequest;
 import model.UserData;
 
 import org.junit.jupiter.api.BeforeEach;
