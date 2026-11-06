@@ -3,7 +3,9 @@ package service;
 import chess.ChessGame;
 import dataaccess.*;
 import dataaccess.sql.*;
+import model.CreateGameRequest;
 import model.GameData;
+import model.RegisterRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
