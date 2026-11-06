@@ -4,6 +4,11 @@ import chess.ChessGame;
 import dataaccess.*;
 import dataaccess.sql.*;
 import model.GameData;
+import model.request.JoinGameRequest;
+import model.request.ListGamesRequest;
+import model.request.LoginRequest;
+import model.request.RegisterRequest;
+import model.result.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

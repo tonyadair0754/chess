@@ -8,6 +8,10 @@ import dataaccess.sql.UserDAOMySQL;
 import model.AuthData;
 import model.UserData;
 
+import model.request.LoginRequest;
+import model.request.LogoutRequest;
+import model.request.RegisterRequest;
+import model.result.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mindrot.jbcrypt.BCrypt;

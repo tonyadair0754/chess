@@ -1,6 +1,6 @@
-package service;
+package model.result;
 
-public record LoginResult(
+public record RegisterResult(
         String username,
         String authToken
 ) {

@@ -5,6 +5,10 @@ import dataaccess.sql.AuthDAO;
 import dataaccess.sql.UserDAO;
 import model.AuthData;
 import model.UserData;
+import model.request.LoginRequest;
+import model.request.LogoutRequest;
+import model.request.RegisterRequest;
+import model.result.*;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.UUID;

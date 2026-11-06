@@ -6,6 +6,9 @@ import dataaccess.sql.AuthDAO;
 import dataaccess.sql.GameDAO;
 import model.AuthData;
 import model.GameData;
+import model.request.JoinGameRequest;
+import model.request.ListGamesRequest;
+import model.result.*;
 
 import java.util.Collection;
 
