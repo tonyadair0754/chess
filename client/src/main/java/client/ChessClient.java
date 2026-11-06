@@ -43,7 +43,7 @@ public class ChessClient {
                 String message = e.getMessage();
                 // If the error message is a JSON string containing a message field, extract it
                 if (message != null && message.contains("\"message\":")) {
-                    // Parse JSON so users see a clean message {"message":"Error: unauthorized"} -> Error: unauthorized
+                    // Parse JSON so users see a clean message (e.g. {"message":"Error: unauthorized"} -> Error: unauthorized)
                     message = message.replaceAll(".*\"message\"\\s*:\\s*\"([^\"]+)\".*", "$1");
                 }
                 System.out.println(message);
