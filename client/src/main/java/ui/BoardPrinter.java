@@ -1,10 +1,9 @@
-package client;
+package ui;
 
 import chess.ChessBoard;
 import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
-import ui.EscapeSequences;
 
 public class BoardPrinter {
     public static void printBoard(ChessBoard board, ChessGame.TeamColor perspective) {
@@ -83,7 +82,7 @@ public class BoardPrinter {
     }
 
     /**
-     * Test the board
+     * Method for testing the board
      **/
     public static void main(String[] args) {
         ChessBoard board = new ChessBoard();

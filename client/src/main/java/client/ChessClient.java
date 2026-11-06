@@ -1,7 +1,9 @@
 package client;
 
+import chess.ChessGame;
 import model.AuthData;
 import model.GameData;
+import ui.BoardPrinter;
 
 import java.util.*;
 
@@ -208,8 +210,17 @@ public class ChessClient {
             return;
         }
 
+        // Call the server facade to join the game
         facade.joinGame(color, selectedGame.gameID(), authToken);
         System.out.println("Successfully joined game '" + selectedGame.gameName() + "' as " + color + ".");
+
+        // Render the board from the chosen player's perspective
+        if (selectedGame.game() != null) {
+            chess.ChessBoard board = selectedGame.game().getBoard();
+            BoardPrinter.printBoard(board, color);
+        } else {
+            System.out.println("Error: Game board state is missing.");
+        }
     }
 
     private void observeGame(String[] tokens, Scanner scanner) throws Exception {
@@ -219,6 +230,14 @@ public class ChessClient {
         }
 
         System.out.println("Now observing game '" + selectedGame.gameName() + "'.");
+
+        // Render the board from white's perspective by default
+        if (selectedGame.game() != null) {
+            chess.ChessBoard board = selectedGame.game().getBoard();
+            BoardPrinter.printBoard(board, ChessGame.TeamColor.WHITE);
+        } else {
+            System.out.println("Error: Game board state is missing.");
+        }
     }
 
     // Handle help by showing the available commands.
