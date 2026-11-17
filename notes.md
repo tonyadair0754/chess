@@ -54,10 +54,21 @@ joinGame ()
    assertNull (value) : Passes if value is null
    assertTrue (condition) : Passes if condition is true
 
-# Phase 5 outline
+# Phase 6 outline
 
-1. Implement ServerFacade with tests
-2. Build the Prelogin UI
-3. Build the Postlogin UI
-4. Implement the chess board renderer
-5. Harden error handling, reach 80% test coverage
+1. WebSocket infrastructure
+    - Create WebsocketCommunicator, ServerMessageObserver, and the server's /ws endpoint
+    - Establish a connection and verify JSON message can travel in both directions
+2. Connect and load a game
+    - Implement CONNECT
+3. Make moves
+    - Implement MAKE_MOVE, validate turns and legal moves on the server, and persist the updated game
+    - Broadcast the new board and move notification
+4. Leave and resign
+    - Implement LEAVE and RESIGN.
+5. Legal move highlighting and redraw
+6. Game endings and notifications
+    - Handle check, checkmate, stalemate, game-over enforcement, connection notifications, and errors
+    - Verify that no moves can occur after the game ends
+7. Integration and quality
+    - Run WebSocketTests, test multiple clients manually, review error handling
