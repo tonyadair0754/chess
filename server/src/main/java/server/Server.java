@@ -9,6 +9,7 @@ import io.javalin.*;
 import service.DatabaseService;
 import service.GameService;
 import service.UserService;
+import websocket.WebSocketHandler;
 
 /**
  * The Server receives network HTTP requests and sends them to the correct handler for processing.
@@ -41,6 +42,8 @@ public class Server {
         UserHandler userHandler = new UserHandler(userService);
         GameHandler gameHandler = new GameHandler(gameService);
 
+        WebSocketHandler webSocketHandler = new WebSocketHandler(authDao, gameDao);
+
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
         // --- Endpoints ---
@@ -51,6 +54,10 @@ public class Server {
         javalin.get("/game", gameHandler::listGames);
         javalin.post("/game", gameHandler::createGame);
         javalin.put("/game", gameHandler::joinGame);
+
+        javalin.ws("/ws", ws -> {
+            ws.onMessage(webSocketHandler::onMessage);
+        });
     }
 
     public int run(int desiredPort) {
