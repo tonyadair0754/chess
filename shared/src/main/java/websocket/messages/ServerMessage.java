@@ -1,5 +1,7 @@
 package websocket.messages;
 
+import chess.ChessGame;
+
 import java.util.Objects;
 
 /**
@@ -9,7 +11,10 @@ import java.util.Objects;
  * methods.
  */
 public class ServerMessage {
-    ServerMessageType serverMessageType;
+    private final ServerMessageType serverMessageType;
+    private final ChessGame game;
+    private final String errorMessage;
+    private final String message;
 
     public enum ServerMessageType {
         LOAD_GAME,
@@ -17,12 +22,52 @@ public class ServerMessage {
         NOTIFICATION
     }
 
+    // Constructor for messages that only need the type
     public ServerMessage(ServerMessageType type) {
         this.serverMessageType = type;
+        this.game = null;
+        this.errorMessage = null;
+        this.message = null;
+    }
+
+    // Constructor for LOAD_GAME messages
+    public ServerMessage(ServerMessageType type, ChessGame game) {
+        this.serverMessageType = type;
+        this.game = game;
+        this.errorMessage = null;
+        this.message = null;
+    }
+
+    // Constructor for ERROR messages
+    public ServerMessage(ServerMessageType type, String errorMessage) {
+        this.serverMessageType = type;
+        this.game = null;
+        this.errorMessage = errorMessage;
+        this.message = null;
+    }
+
+    // Full constructor
+    public ServerMessage(ServerMessageType type, ChessGame game, String errorMessage, String message) {
+        this.serverMessageType = type;
+        this.game = game;
+        this.errorMessage = errorMessage;
+        this.message = message;
     }
 
     public ServerMessageType getServerMessageType() {
         return this.serverMessageType;
+    }
+
+    public ChessGame getGame() {
+        return this.game;
+    }
+
+    public String getErrorMessage() {
+        return this.errorMessage;
+    }
+
+    public String getMessage() {
+        return this.message;
     }
 
     @Override
@@ -33,11 +78,14 @@ public class ServerMessage {
         if (!(o instanceof ServerMessage that)) {
             return false;
         }
-        return getServerMessageType() == that.getServerMessageType();
+        return getServerMessageType() == that.getServerMessageType() &&
+                Objects.equals(getGame(), that.getGame()) &&
+                Objects.equals(getErrorMessage(), that.getErrorMessage()) &&
+                Objects.equals(getMessage(), that.getMessage());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getServerMessageType());
+        return Objects.hash(getServerMessageType(), getGame(), getErrorMessage(), getMessage());
     }
 }
