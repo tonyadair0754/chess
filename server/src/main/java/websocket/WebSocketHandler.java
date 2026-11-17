@@ -6,6 +6,7 @@ import dataaccess.sql.GameDAO;
 import io.javalin.websocket.WsContext;
 import io.javalin.websocket.WsMessageContext;
 import websocket.commands.UserGameCommand;
+import websocket.messages.ServerMessage;
 
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +42,7 @@ public class WebSocketHandler {
                     || command.getCommandType() == null
                     || command.getAuthToken() == null
                     || command.getGameID() == null) {
-                sendError(ctx, "Error: invalid command");
+                sendErrorMsg(ctx, "Error: invalid command");
                 return;
             }
 
@@ -53,11 +54,13 @@ public class WebSocketHandler {
             }
 
         } catch (Exception e) {
-            sendError(ctx, "Error: invalid command");
+            sendErrorMsg(ctx, "Error: invalid command");
         }
     }
 
-    private void sendError(WsContext ctx, String str) {
+    private void sendErrorMsg(WsContext ctx, String errorMessage) {
+        ServerMessage errorMsg = new ServerMessage(ServerMessage.ServerMessageType.ERROR, errorMessage);
+        ctx.send(gson.toJson(errorMsg));
     }
 
     private void handleConnect(WsContext ctx, UserGameCommand command) {
