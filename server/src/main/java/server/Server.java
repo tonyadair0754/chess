@@ -57,6 +57,7 @@ public class Server {
 
         javalin.ws("/ws", ws -> {
             ws.onMessage(webSocketHandler::onMessage);
+            ws.onClose(webSocketHandler::onClose);
         });
     }
 

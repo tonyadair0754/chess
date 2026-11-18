@@ -3,6 +3,7 @@ package websocket;
 import com.google.gson.Gson;
 import dataaccess.sql.AuthDAO;
 import dataaccess.sql.GameDAO;
+import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsContext;
 import io.javalin.websocket.WsMessageContext;
 import websocket.commands.UserGameCommand;
@@ -15,19 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebSocketHandler {
     private final AuthDAO authDao;
     private final GameDAO gameDao;
-
     private final Gson gson = new Gson();
-
-    private final Map<Integer, Set<WsContext>> gameConnections = new ConcurrentHashMap<>();
-
-    private final Map<WsContext, ConnectionInfo> connections = new ConcurrentHashMap<>();
-
-    private record ConnectionInfo(
-            String username,
-            String authToken,
-            int gameID
-    ) {
-    }
+    private final ConnectionManager connectionManager = new ConnectionManager();
 
     public WebSocketHandler(AuthDAO authDao, GameDAO gameDao) {
         this.authDao = authDao;
@@ -58,13 +48,17 @@ public class WebSocketHandler {
         }
     }
 
+    public void onClose(WsCloseContext ctx) {
+        connectionManager.remove(ctx);
+    }
+
     private void sendErrorMsg(WsContext ctx, String errorMessage) {
         ServerMessage errorMsg = new ServerMessage(ServerMessage.ServerMessageType.ERROR, errorMessage);
         ctx.send(gson.toJson(errorMsg));
     }
 
     private void handleConnect(WsContext ctx, UserGameCommand command) {
-
+        /* TODO */
     }
 
     private void handleMakeMove(WsContext ctx, UserGameCommand command) {
