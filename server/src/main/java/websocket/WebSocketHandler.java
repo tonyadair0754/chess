@@ -1,6 +1,7 @@
 package websocket;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import dataaccess.sql.AuthDAO;
 import dataaccess.sql.GameDAO;
 import io.javalin.websocket.WsCloseContext;
@@ -25,36 +26,44 @@ public class WebSocketHandler {
     }
 
     public void onMessage(WsMessageContext ctx) {
+        UserGameCommand command;
         try {
-            UserGameCommand command = new Gson().fromJson(ctx.message(), UserGameCommand.class);
+            command = gson.fromJson(ctx.message(), UserGameCommand.class);
+        } catch (JsonParseException e) {
+            sendError(ctx, "Error: invalid JSON command");
+            return;
+        }
 
-            if (command == null
-                    || command.getCommandType() == null
-                    || command.getAuthToken() == null
-                    || command.getGameID() == null) {
-                sendErrorMsg(ctx, "Error: invalid command");
-                return;
-            }
+        if (command == null
+                || command.getCommandType() == null
+                || command.getAuthToken() == null
+                || command.getGameID() == null) {
+            sendError(ctx, "Error: invalid command");
+            return;
+        }
 
+        try {
             switch (command.getCommandType()) {
                 case CONNECT -> handleConnect(ctx, command);
                 case MAKE_MOVE -> handleMakeMove(ctx, command);
                 case LEAVE -> handleLeave(ctx, command);
                 case RESIGN -> handleResign(ctx, command);
             }
-
         } catch (Exception e) {
-            sendErrorMsg(ctx, "Error: invalid command");
+            // Log unexpected failures separately so we don't mask them as general "bad user commands"
+            System.err.println("Unexpected error handling " + command.getCommandType() + ": " + e.getMessage());
+            e.printStackTrace();
+            sendError(ctx, "Error: internal server error");
         }
     }
 
     public void onClose(WsCloseContext ctx) {
-        connectionManager.remove(ctx);
+        connectionManager.remove(ctx.session);
     }
 
-    private void sendErrorMsg(WsContext ctx, String errorMessage) {
-        ServerMessage errorMsg = new ServerMessage(ServerMessage.ServerMessageType.ERROR, errorMessage);
-        ctx.send(gson.toJson(errorMsg));
+    private void sendError(WsContext ctx, String message) {
+        ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR, message);
+        connectionManager.sendToContext(ctx, errorMessage);
     }
 
     private void handleConnect(WsContext ctx, UserGameCommand command) {
