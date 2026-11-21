@@ -73,12 +73,8 @@ public class ConnectionManager {
         if (ctx == null) {
             return;
         }
-        try {
-            if (ctx.session.isOpen()) {
-                ctx.send(gson.toJson(message));
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to send WebSocket message " + e.getMessage());
+        if (ctx.session.isOpen()) {
+            ctx.send(gson.toJson(message));
         }
     }
 
@@ -111,12 +107,8 @@ public class ConnectionManager {
     }
 
     public void send(ClientConnection client, ServerMessage message) {
-        try {
-            if (client.session().isOpen()) {
-                client.ctx.send(gson.toJson(message));
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to send message to " + client.username() + ": " + e.getMessage());
+        if (client.session().isOpen()) {
+            client.ctx.send(gson.toJson(message));
         }
     }
 }
