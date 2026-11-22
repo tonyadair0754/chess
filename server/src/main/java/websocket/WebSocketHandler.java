@@ -19,6 +19,7 @@ import websocket.messages.ServerMessage;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -214,8 +215,41 @@ public class WebSocketHandler {
         }
     }
 
-    private void handleLeave(WsContext ctx, UserGameCommand command) {
+    private void handleLeave(WsMessageContext ctx, UserGameCommand command) throws DataAccessException {
+        AuthenticatedGame sessionData = authenticateAndLoadGame(ctx, command);
+        if (sessionData == null) {
+            return;
+        }
 
+        String username = sessionData.auth().username();
+        GameData gameData = sessionData.game();
+
+        ConnectionManager.ClientConnection conn = connectionManager.getConnection(ctx.session);
+        if (conn == null || conn.gameID() != command.getGameID() || !conn.username().equals(username)) {
+            sendError(ctx, "Error: connection not registered for this game");
+            return;
+        }
+
+        // Vacate player slot if the client leaving is assigned as white or black
+        String newWhite = username.equals(gameData.whiteUsername()) ? null : gameData.whiteUsername();
+        String newBlack = username.equals(gameData.blackUsername()) ? null : gameData.blackUsername();
+
+        if (!Objects.equals(newWhite, gameData.whiteUsername()) || !Objects.equals(newBlack, gameData.blackUsername())) {
+            GameData updatedGame = new GameData(
+                    gameData.gameID(),
+                    newWhite,
+                    newBlack,
+                    gameData.gameName(),
+                    gameData.game()
+            );
+            gameDao.updateGame(updatedGame);
+        }
+
+        connectionManager.remove(ctx.session);
+
+        String note = username + " left the game.";
+        ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, note);
+        connectionManager.broadcastToOthers(command.getGameID(), ctx.session, notification);
     }
 
     private void handleResign(WsContext ctx, UserGameCommand command) {
