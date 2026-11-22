@@ -83,8 +83,12 @@ public class WebSocketHandler {
                 return;
             }
 
-            // Determine identity and register connection
             String username = sessionData.auth.username();
+
+            if (connectionManager.getConnection(ctx.session) != null) {
+                sendError(ctx, "Error: already connected");
+                return;
+            }
             connectionManager.add(ctx, username, command.getAuthToken(), command.getGameID());
 
             // Send current game state back to the connecting client
@@ -132,6 +136,10 @@ public class WebSocketHandler {
         }
         if (!conn.username().equals(username)) {
             sendError(ctx, "Error: authenticated user does not match connection");
+            return;
+        }
+        if (!Objects.equals(conn.authToken(), command.getAuthToken())) {
+            sendError(ctx, "Error: auth token does not match connection");
             return;
         }
 
@@ -252,8 +260,47 @@ public class WebSocketHandler {
         connectionManager.broadcastToOthers(command.getGameID(), ctx.session, notification);
     }
 
-    private void handleResign(WsContext ctx, UserGameCommand command) {
+    private void handleResign(WsMessageContext ctx, UserGameCommand command) throws DataAccessException {
+        AuthenticatedGame sessionData = authenticateAndLoadGame(ctx, command);
+        if (sessionData == null) {
+            return;
+        }
 
+        String username = sessionData.auth().username();
+        GameData gameData = sessionData.game();
+
+        ConnectionManager.ClientConnection conn = connectionManager.getConnection(ctx.session);
+        if (conn == null || conn.gameID() != command.getGameID() || !conn.username().equals(username)) {
+            sendError(ctx, "Error: connection not registered for this game");
+            return;
+        }
+
+        boolean isWhite = username.equals(gameData.whiteUsername());
+        boolean isBlack = username.equals(gameData.blackUsername());
+        if (!isWhite && !isBlack) {
+            sendError(ctx, "Error: observers cannot resign");
+            return;
+        }
+
+        ChessGame chessGame = gameData.game();
+        if (chessGame == null || isGameOver(chessGame)) {
+            sendError(ctx, "Error: game is already over");
+            return;
+        }
+
+        chessGame.setGameOver(true);
+        GameData updatedGame = new GameData(
+                gameData.gameID(),
+                gameData.whiteUsername(),
+                gameData.blackUsername(),
+                gameData.gameName(),
+                chessGame
+        );
+        gameDao.updateGame(updatedGame);
+
+        String note = username + " resigned from the game.";
+        ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, note);
+        connectionManager.broadcastToAll(command.getGameID(), notification);
     }
 
     // --- Helper methods ---
