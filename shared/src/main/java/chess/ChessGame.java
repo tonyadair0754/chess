@@ -245,7 +245,7 @@ public class ChessGame {
                 board.addPiece(new ChessPosition(row, 6), rook);
                 board.removePiece(new ChessPosition(row, 8));
 
-            // Rook is queenside
+                // Rook is queenside
             } else if (endPos.getColumn() == 3) {
                 ChessPiece king = board.getPiece(new ChessPosition(row, 5));
                 board.addPiece(new ChessPosition(row, 3), king);
@@ -469,5 +469,15 @@ public class ChessGame {
      */
     public ChessBoard getBoard() {
         return board;
+    }
+
+    private boolean gameOver = false;
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
     }
 }

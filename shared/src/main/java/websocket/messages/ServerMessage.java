@@ -38,12 +38,20 @@ public class ServerMessage {
         this.message = null;
     }
 
-    // Constructor for ERROR messages
-    public ServerMessage(ServerMessageType type, String errorMessage) {
+    // Constructor for ERROR or NOTIFICATION text messages
+    public ServerMessage(ServerMessageType type, String text) {
         this.serverMessageType = type;
         this.game = null;
-        this.errorMessage = errorMessage;
-        this.message = null;
+        if (type == ServerMessageType.ERROR) {
+            this.errorMessage = text;
+            this.message = null;
+        } else if (type == ServerMessageType.NOTIFICATION) {
+            this.errorMessage = null;
+            this.message = text;
+        } else {
+            this.errorMessage = null;
+            this.message = null;
+        }
     }
 
     // Full constructor

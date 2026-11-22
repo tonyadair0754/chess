@@ -31,8 +31,11 @@ public class ConnectionManager {
 
     public void add(WsMessageContext ctx, String username, String authToken, int gameID) {
         Session session = ctx.session;
-        ClientConnection conn = new ClientConnection(session, ctx, username, authToken, gameID);
 
+        // Clean up any prior registration for this session first
+        remove(session);
+
+        ClientConnection conn = new ClientConnection(session, ctx, username, authToken, gameID);
         connections.put(session, conn);
         gameConnections.computeIfAbsent(gameID, k -> ConcurrentHashMap.newKeySet()).add(conn);
     }

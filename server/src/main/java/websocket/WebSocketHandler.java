@@ -1,5 +1,9 @@
 package websocket;
 
+import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPiece;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import dataaccess.DataAccessException;
@@ -13,6 +17,7 @@ import model.GameData;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ServerMessage;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +27,9 @@ public class WebSocketHandler {
     private final GameDAO gameDao;
     private final Gson gson = new Gson();
     private final ConnectionManager connectionManager = new ConnectionManager();
+
+    private record AuthenticatedGame(AuthData auth, GameData game) {
+    }
 
     public WebSocketHandler(AuthDAO authDao, GameDAO gameDao) {
         this.authDao = authDao;
@@ -64,35 +72,22 @@ public class WebSocketHandler {
         connectionManager.remove(ctx.session);
     }
 
-    private void sendError(WsContext ctx, String message) {
-        ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR, message);
-        connectionManager.sendToContext(ctx, errorMessage);
-    }
-
     private void handleConnect(
             WsMessageContext ctx,
             UserGameCommand command) {
 
         try {
-            // Authenticate
-            AuthData auth = authDao.getAuth(command.getAuthToken());
-            if (auth == null) {
-                sendError(ctx, "Error: unauthorized");
-                return;
-            }
-
-            // Retrieve the game
-            GameData game = gameDao.getGame(command.getGameID());
-            if (game == null) {
-                sendError(ctx, "Error: game not found");
+            AuthenticatedGame sessionData = authenticateAndLoadGame(ctx, command);
+            if (sessionData == null) {
                 return;
             }
 
             // Determine identity and register connection
-            String username = auth.username();
+            String username = sessionData.auth.username();
             connectionManager.add(ctx, username, command.getAuthToken(), command.getGameID());
 
             // Send current game state back to the connecting client
+            GameData game = sessionData.game();
             ServerMessage loadGameMessage = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME, game.game());
             connectionManager.sendToSession(ctx.session, loadGameMessage);
 
@@ -110,8 +105,113 @@ public class WebSocketHandler {
         }
     }
 
-    private void handleMakeMove(WsContext ctx, UserGameCommand command) {
+    private void handleMakeMove(WsMessageContext ctx, UserGameCommand command) throws DataAccessException {
+        AuthenticatedGame sessionData = authenticateAndLoadGame(ctx, command);
+        if (sessionData == null) {
+            return;
+        }
 
+        ChessMove move = command.getMove();
+        if (move == null) {
+            sendError(ctx, "Error: missing move");
+            return;
+        }
+
+        String username = sessionData.auth().username();
+
+        // Verify the WebSocket session is registered for this gameID and user
+        ConnectionManager.ClientConnection conn = connectionManager.getConnection(ctx.session);
+        if (conn == null) {
+            sendError(ctx, "Error: connection not registered for a game");
+            return;
+        }
+        if (conn.gameID() != command.getGameID()) {
+            sendError(ctx, "Error: connection does not match game ID");
+            return;
+        }
+        if (!conn.username().equals(username)) {
+            sendError(ctx, "Error: authenticated user does not match connection");
+            return;
+        }
+
+        GameData gameData = sessionData.game();
+        ChessGame chessGame = gameData.game();
+
+        // Reject moves if the game is already over (e.g. resigned or finished)
+        if (chessGame == null || isGameOver(chessGame)) {
+            sendError(ctx, "Error: game is over");
+            return;
+        }
+
+        // Confirm the user is an assigned player and it is their turn
+        ChessGame.TeamColor playerColor;
+        if (username.equals(gameData.whiteUsername())) {
+            playerColor = ChessGame.TeamColor.WHITE;
+        } else if (username.equals(gameData.blackUsername())) {
+            playerColor = ChessGame.TeamColor.BLACK;
+        } else {
+            sendError(ctx, "Error: observers cannot make moves");
+            return;
+        }
+
+        if (chessGame.getTeamTurn() != playerColor) {
+            sendError(ctx, "Error: not your turn");
+            return;
+        }
+
+        // Check piece ownership and legal moves before changing the game
+        ChessPiece piece = chessGame.getBoard().getPiece(move.getStartPosition());
+        if (piece == null || piece.getTeamColor() != playerColor) {
+            sendError(ctx, "Error: invalid piece selection");
+            return;
+        }
+
+        Collection<ChessMove> legalMoves = chessGame.validMoves(move.getStartPosition());
+        if (legalMoves == null || !legalMoves.contains(move)) {
+            sendError(ctx, "Error: illegal move");
+            return;
+        }
+
+        // Execute move and save updated game
+        try {
+            chessGame.makeMove(move);
+        } catch (InvalidMoveException e) {
+            sendError(ctx, "Error: " + e.getMessage());
+            return;
+        }
+
+        GameData updatedGame = new GameData(
+                gameData.gameID(),
+                gameData.whiteUsername(),
+                gameData.blackUsername(),
+                gameData.gameName(),
+                chessGame
+        );
+        gameDao.updateGame(updatedGame);
+
+        // 7. Broadcast updated board to everyone; notify everyone else of the move
+        ServerMessage loadGame = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME, chessGame);
+        connectionManager.broadcastToAll(command.getGameID(), loadGame);
+
+        String note = username + " moved from " + formatSquare(move) + ".";
+        ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, note);
+        connectionManager.broadcastToOthers(command.getGameID(), ctx.session, notification);
+
+        // Broadcast checkmate or stalemate notification to all connected participants
+        ChessGame.TeamColor nextTurn = chessGame.getTeamTurn();
+        if (chessGame.isInCheckmate(nextTurn)) {
+            String msg = nextTurn + " is in checkmate!";
+            connectionManager.broadcastToAll(
+                    command.getGameID(),
+                    new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg)
+            );
+        } else if (chessGame.isInStalemate(nextTurn)) {
+            String msg = "Game ended in stalemate.";
+            connectionManager.broadcastToAll(
+                    command.getGameID(),
+                    new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg)
+            );
+        }
     }
 
     private void handleLeave(WsContext ctx, UserGameCommand command) {
@@ -120,5 +220,48 @@ public class WebSocketHandler {
 
     private void handleResign(WsContext ctx, UserGameCommand command) {
 
+    }
+
+    // --- Helper methods ---
+
+    private void sendError(WsContext ctx, String message) {
+        ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR, message);
+        connectionManager.sendToContext(ctx, errorMessage);
+    }
+
+    /*
+    Authenticates users and retrieves a game
+     */
+    private AuthenticatedGame authenticateAndLoadGame(WsMessageContext ctx, UserGameCommand command)
+            throws DataAccessException {
+        AuthData auth = authDao.getAuth(command.getAuthToken());
+        if (auth == null) {
+            sendError(ctx, "Error: unauthorized");
+            return null;
+        }
+
+        GameData game = gameDao.getGame(command.getGameID());
+        if (game == null) {
+            sendError(ctx, "Error: game not found");
+            return null;
+        }
+
+        return new AuthenticatedGame(auth, game);
+    }
+
+    private boolean isGameOver(ChessGame game) {
+        if (game.isGameOver()) {
+            return true;
+        }
+        ChessGame.TeamColor turn = game.getTeamTurn();
+        return game.isInCheckmate(turn) || game.isInStalemate(turn);
+    }
+
+    private String formatSquare(ChessMove move) {
+        char startCol = (char) ('a' + move.getStartPosition().getColumn() - 1);
+        int startRow = move.getStartPosition().getRow();
+        char endCol = (char) ('a' + move.getEndPosition().getColumn() - 1);
+        int endRow = move.getEndPosition().getRow();
+        return "" + startCol + startRow + " to " + endCol + endRow;
     }
 }
