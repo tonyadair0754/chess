@@ -1,9 +1,12 @@
 package client;
 
 import chess.ChessGame;
+import chess.ChessPosition;
 import model.AuthData;
 import model.GameData;
 import ui.BoardPrinter;
+import websocket.commands.UserGameCommand;
+import websocket.messages.ServerMessage;
 
 import java.util.*;
 
@@ -15,11 +18,17 @@ public class ChessClient {
     private State state;
     private String authToken = null;
     private List<GameData> cachedGames;
+    private int port;
+    private WebsocketCommunicator wsCommunicator = null;
+    private ChessGame currentGame = null;
+    private Integer activeGameID = null;
+    private ChessGame.TeamColor playerColor = null; // null when observing
 
     public ChessClient(int port) {
         facade = new ServerFacade(port);
         this.state = State.SIGNEDOUT;
         this.cachedGames = new ArrayList<>();
+        this.port = port;
     }
 
     public void run() {
@@ -36,7 +45,7 @@ public class ChessClient {
                 var tokens = line.toLowerCase().split("\\s+");
                 var cmd = tokens.length > 0 ? tokens[0] : "";
 
-                if (processCommand(cmd, tokens, scanner)) {
+                if (processCommand(cmd, tokens, line, scanner)) {
                     return; // Exit loop if quit was entered
                 }
             } catch (Exception e) {
@@ -51,12 +60,12 @@ public class ChessClient {
         }
     }
 
-    private boolean processCommand(String cmd, String[] tokens, Scanner scanner) throws Exception {
-        if (state == State.SIGNEDOUT) {
-            return processSignedOutCommand(cmd, tokens, scanner);
-        } else {
-            return processSignedInCommand(cmd, tokens, scanner);
-        }
+    private boolean processCommand(String cmd, String[] tokens, String line, Scanner scanner) throws Exception {
+        return switch (state) {
+            case SIGNEDOUT -> processSignedOutCommand(cmd, tokens, scanner);
+            case SIGNEDIN -> processSignedInCommand(cmd, tokens, scanner);
+            case IN_GAME -> processInGameCommand(cmd, line, scanner);
+        };
     }
 
     private boolean processSignedOutCommand(String cmd, String[] tokens, Scanner scanner) throws Exception {
@@ -86,6 +95,56 @@ public class ChessClient {
             default -> System.out.println("Unknown command. Type 'help' for help.");
         }
         return false;
+    }
+
+    private boolean processInGameCommand(String cmd, String line, Scanner scanner) throws Exception {
+        switch (cmd) {
+            case "help" -> help();
+            case "redraw" -> redrawBoard(null);
+            case "move" -> makeMove(line, scanner);
+            case "highlight" -> highlightMoves(line, scanner);
+            case "resign" -> resign(scanner);
+            case "leave" -> {
+                leaveGame();
+                return false;
+            }
+            case "quit" -> {
+                leaveGame();
+                return true;
+            }
+            default -> System.out.println("Unknown command. Type 'help' for help.");
+        }
+        return false;
+    }
+
+    public void notify(ServerMessage message) {
+        if (message == null || message.getServerMessageType() == null) {
+            return;
+        }
+
+        System.out.println();
+        switch (message.getServerMessageType()) {
+            case LOAD_GAME -> {
+                currentGame = message.getGame();
+                redrawBoard(null);
+            }
+            case NOTIFICATION -> System.out.println(message.getMessage());
+            case ERROR -> System.out.println(message.getErrorMessage());
+        }
+        printPrompt();
+    }
+
+    private void redrawBoard(Set<ChessPosition> highlights) {
+        if (currentGame == null || currentGame.getBoard() == null) {
+            System.out.println("Board not available yet.");
+            return;
+        }
+        ChessGame.TeamColor perspective = (playerColor != null) ? playerColor : ChessGame.TeamColor.WHITE;
+        if (highlights != null && !highlights.isEmpty()) {
+            BoardPrinter.printBoard(currentGame.getBoard(), perspective);
+        } else {
+            BoardPrinter.printBoard(currentGame.getBoard(), perspective);
+        }
     }
 
     private void register(String[] tokens, Scanner scanner) throws Exception {
@@ -241,13 +300,8 @@ public class ChessClient {
         facade.joinGame(color, selectedGame.gameID(), authToken);
         System.out.println("Successfully joined game '" + selectedGame.gameName() + "' as " + color + ".");
 
-        // Render the board from the chosen player's perspective
-        if (selectedGame.game() != null) {
-            chess.ChessBoard board = selectedGame.game().getBoard();
-            BoardPrinter.printBoard(board, color);
-        } else {
-            System.out.println("Error: Game board state is missing.");
-        }
+        // Open WebSocket, enter IN_GAME state, and send CONNECT
+        enterGameSession(selectedGame.gameID(), color);
     }
 
     private void observeGame(String[] tokens, Scanner scanner) throws Exception {
@@ -257,38 +311,75 @@ public class ChessClient {
         }
 
         System.out.println("Now observing game '" + selectedGame.gameName() + "'.");
+        enterGameSession(selectedGame.gameID(), null);
+    }
 
-        // Render the board from white's perspective by default
-        if (selectedGame.game() != null) {
-            chess.ChessBoard board = selectedGame.game().getBoard();
-            BoardPrinter.printBoard(board, ChessGame.TeamColor.WHITE);
-        } else {
-            System.out.println("Error: Game board state is missing.");
-        }
+    private void makeMove() {
+
+    }
+
+    private void highlightMoves() {
+
+    }
+
+    private void resign() {
+
+    }
+
+    private void leaveGame() {
+
     }
 
     // Handle help by showing the available commands.
     private void help() {
-        if (state == State.SIGNEDOUT) {
-            System.out.println("  register <USERNAME> <PASSWORD> <EMAIL> - to create an account");
-            System.out.println("  login <USERNAME> <PASSWORD> - to log in");
-            System.out.println("  quit - exit the program");
-            System.out.println("  help - view available commands");
-        } else {
-            System.out.println("  create <GAMENAME> - create a game");
-            System.out.println("  list - list games");
-            System.out.println("  play <ID> [WHITE|BLACK] - play a game");
-            System.out.println("  observe <ID> - observe a game");
-            System.out.println("  logout - log out of your account");
-            System.out.println("  help - view available commands");
+        switch (state) {
+            case SIGNEDOUT -> {
+                System.out.println("  register <USERNAME> <PASSWORD> <EMAIL> - to create an account");
+                System.out.println("  login <USERNAME> <PASSWORD> - to log in");
+                System.out.println("  quit - exit the program");
+                System.out.println("  help - view available commands");
+            }
+            case SIGNEDIN -> {
+                System.out.println("  create <GAMENAME> - create a game");
+                System.out.println("  list - list games");
+                System.out.println("  play <ID> [WHITE|BLACK] - play a game");
+                System.out.println("  observe <ID> - observe a game");
+                System.out.println("  logout - log out of your account");
+                System.out.println("  quit - exit the program");
+                System.out.println("  help - view available commands");
+            }
+            case IN_GAME -> {
+                System.out.println("  redraw - redraw the chess board");
+                System.out.println("  leave - leave the game and return to menu");
+                System.out.println("  move <FROM> <TO> [Q|R|B|N] - make a move (e.g. move e2 e4)");
+                System.out.println("  resign - forfeit the game");
+                System.out.println("  highlight <SQUARE> - highlight legal moves for a piece (e.g. highlight e2)");
+                System.out.println("  quit - exit the program");
+                System.out.println("  help - show gameplay commands");
+            }
         }
     }
 
+    private void enterGameSession(int gameID, ChessGame.TeamColor color) throws Exception {
+        this.activeGameID = gameID;
+        this.playerColor = color;
+        this.currentGame = null;
+        this.state = State.IN_GAME;
+
+        this.wsCommunicator = new WebsocketCommunicator(port, this::notify);
+        UserGameCommand connectCmd = new UserGameCommand(
+                UserGameCommand.CommandType.CONNECT,
+                authToken,
+                gameID
+        );
+        wsCommunicator.sendCommand(connectCmd);
+    }
+
     private void printPrompt() {
-        if (state == State.SIGNEDOUT) {
-            System.out.print("\n[LOGGED_OUT] >>> ");
-        } else {
-            System.out.print("\n[LOGGED_IN] >>> ");
+        switch (state) {
+            case SIGNEDOUT -> System.out.print("\n[LOGGED_OUT] >>> ");
+            case SIGNEDIN -> System.out.print("\n[LOGGED_IN] >>> ");
+            case IN_GAME -> System.out.print("\n[GAME] >>> ");
         }
     }
 }
