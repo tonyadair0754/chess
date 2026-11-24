@@ -198,7 +198,7 @@ public class WebSocketHandler {
         );
         gameDao.updateGame(updatedGame);
 
-        // 7. Broadcast updated board to everyone; notify everyone else of the move
+        // Broadcast updated board to everyone; notify everyone else of the move
         ServerMessage loadGame = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME, chessGame);
         connectionManager.broadcastToAll(command.getGameID(), loadGame);
 

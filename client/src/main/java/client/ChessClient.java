@@ -4,7 +4,6 @@ import chess.ChessGame;
 import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
-import model.AuthData;
 import model.GameData;
 import ui.BoardPrinter;
 import websocket.commands.UserGameCommand;
@@ -47,7 +46,7 @@ public class ChessClient {
                 var tokens = line.toLowerCase().split("\\s+");
                 var cmd = tokens.length > 0 ? tokens[0] : "";
 
-                if (processCommand(cmd, tokens, line, scanner)) {
+                if (processCommand(cmd, tokens, scanner)) {
                     return; // Exit loop if quit was entered
                 }
             } catch (Exception e) {
@@ -62,11 +61,11 @@ public class ChessClient {
         }
     }
 
-    private boolean processCommand(String cmd, String[] tokens, String line, Scanner scanner) throws Exception {
+    private boolean processCommand(String cmd, String[] tokens, Scanner scanner) throws Exception {
         return switch (state) {
             case SIGNEDOUT -> processSignedOutCommand(cmd, tokens, scanner);
             case SIGNEDIN -> processSignedInCommand(cmd, tokens, scanner);
-            case IN_GAME -> processInGameCommand(cmd, tokens, line, scanner);
+            case IN_GAME -> processInGameCommand(cmd, tokens, scanner);
         };
     }
 
@@ -99,11 +98,11 @@ public class ChessClient {
         return false;
     }
 
-    private boolean processInGameCommand(String cmd, String[] tokens, String line, Scanner scanner) throws Exception {
+    private boolean processInGameCommand(String cmd, String[] tokens, Scanner scanner) throws Exception {
         switch (cmd) {
             case "help" -> help();
             case "redraw" -> redrawBoard(null);
-            case "move" -> makeMove(tokens, line, scanner);
+            case "move" -> makeMove(tokens, scanner);
             case "highlight" -> highlightMoves(tokens, scanner);
             case "resign" -> resign(scanner);
             case "leave" -> {
@@ -317,8 +316,68 @@ public class ChessClient {
         enterGameSession(selectedGame.gameID(), null);
     }
 
-    private void makeMove(String[] tokens, String line, Scanner scanner) {
+    private void makeMove(String[] tokens, Scanner scanner) throws Exception {
+        if (wsCommunicator == null || activeGameID == null) {
+            System.out.println("Not connected to a game.");
+            return;
+        }
 
+        String fromStr;
+        String toStr;
+        String promoStr = null;
+
+        if (tokens.length >= 3) {
+            fromStr = tokens[1];
+            toStr = tokens[2];
+            if (tokens.length >= 4) {
+                promoStr = tokens[3];
+            }
+        } else {
+            System.out.print("From square (e.g. e2): ");
+            fromStr = scanner.nextLine().trim().toLowerCase();
+            System.out.print("To square (e.g. e4): ");
+            toStr = scanner.nextLine().trim().toLowerCase();
+            System.out.print("Promotion piece (Q/R/B/N or blank): ");
+            String inputPromo = scanner.nextLine().trim();
+            if (!inputPromo.isEmpty()) {
+                promoStr = inputPromo;
+            }
+        }
+
+        ChessPosition start = parsePosition(fromStr);
+        ChessPosition end = parsePosition(toStr);
+        if (start == null || end == null) {
+            System.out.println("Invalid square(s). Use a-h followed by 1-8 (e.g. move e2 e4).");
+            return;
+        }
+
+        ChessPiece.PieceType promotion = parsePromotion(promoStr);
+        if (promoStr != null && promotion == null) {
+            System.out.println("Invalid promotion piece. Use Q, R, B, or N.");
+            return;
+        }
+
+        ChessMove move = new ChessMove(start, end, promotion);
+        UserGameCommand cmd = new UserGameCommand(
+                UserGameCommand.CommandType.MAKE_MOVE,
+                authToken,
+                activeGameID,
+                move
+        );
+        wsCommunicator.sendCommand(cmd);
+    }
+
+    private ChessPiece.PieceType parsePromotion(String promo) {
+        if (promo == null) {
+            return null;
+        }
+        return switch (promo.toUpperCase()) {
+            case "Q", "QUEEN" -> ChessPiece.PieceType.QUEEN;
+            case "R", "ROOK" -> ChessPiece.PieceType.ROOK;
+            case "B", "BISHOP" -> ChessPiece.PieceType.BISHOP;
+            case "N", "KNIGHT" -> ChessPiece.PieceType.KNIGHT;
+            default -> null;
+        };
     }
 
     private void highlightMoves(String[] tokens, Scanner scanner) {
