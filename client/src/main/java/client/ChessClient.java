@@ -438,11 +438,54 @@ public class ChessClient {
     }
 
     private void resign(Scanner scanner) {
+        if (wsCommunicator == null || activeGameID == null) {
+            System.out.println("Not connected to a game.");
+            return;
+        }
 
+        if (playerColor == null) {
+            System.out.println("Observers cannot resign from a game.");
+            return;
+        }
+
+        System.out.print("Are you sure you want to resign? (y/n): ");
+        String confirmation = scanner.nextLine().trim().toLowerCase();
+        if (!confirmation.equals("y") && !confirmation.equals("yes")) {
+            System.out.println("Resignation cancelled.");
+            return;
+        }
+
+        try {
+            UserGameCommand resignCmd = new UserGameCommand(
+                    UserGameCommand.CommandType.RESIGN,
+                    authToken,
+                    activeGameID
+            );
+            wsCommunicator.sendCommand(resignCmd);
+        } catch (Exception e) {
+            System.out.println("Failed to send resign command: " + e.getMessage());
+        }
     }
 
     private void leaveGame() {
+        if (wsCommunicator != null && activeGameID != null) {
+            try {
+                UserGameCommand leaveCmd = new UserGameCommand(
+                        UserGameCommand.CommandType.LEAVE,
+                        authToken,
+                        activeGameID
+                );
+                wsCommunicator.sendCommand(leaveCmd);
+            } catch (Exception e) {
+                System.err.println("Failed to send leave command: " + e.getMessage());
+            }
+        }
 
+        cleanupGameSession();
+        if (state == State.IN_GAME) {
+            state = State.SIGNEDIN;
+        }
+        System.out.println("Left the game.");
     }
 
     // Handle help by showing the available commands.
@@ -475,6 +518,14 @@ public class ChessClient {
         }
     }
 
+    private void printPrompt() {
+        switch (state) {
+            case SIGNEDOUT -> System.out.print("\n[LOGGED_OUT] >>> ");
+            case SIGNEDIN -> System.out.print("\n[LOGGED_IN] >>> ");
+            case IN_GAME -> System.out.print("\n[GAME] >>> ");
+        }
+    }
+
     private void enterGameSession(int gameID, ChessGame.TeamColor color) throws Exception {
         this.activeGameID = gameID;
         this.playerColor = color;
@@ -490,11 +541,16 @@ public class ChessClient {
         wsCommunicator.sendCommand(connectCmd);
     }
 
-    private void printPrompt() {
-        switch (state) {
-            case SIGNEDOUT -> System.out.print("\n[LOGGED_OUT] >>> ");
-            case SIGNEDIN -> System.out.print("\n[LOGGED_IN] >>> ");
-            case IN_GAME -> System.out.print("\n[GAME] >>> ");
+    private void cleanupGameSession() {
+        if (wsCommunicator != null) {
+            try {
+                wsCommunicator.close();
+            } catch (Exception ignored) {
+            }
+            wsCommunicator = null;
         }
+        activeGameID = null;
+        playerColor = null;
+        currentGame = null;
     }
 }
