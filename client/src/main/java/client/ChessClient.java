@@ -1,6 +1,8 @@
 package client;
 
 import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPiece;
 import chess.ChessPosition;
 import model.AuthData;
 import model.GameData;
@@ -64,7 +66,7 @@ public class ChessClient {
         return switch (state) {
             case SIGNEDOUT -> processSignedOutCommand(cmd, tokens, scanner);
             case SIGNEDIN -> processSignedInCommand(cmd, tokens, scanner);
-            case IN_GAME -> processInGameCommand(cmd, line, scanner);
+            case IN_GAME -> processInGameCommand(cmd, tokens, line, scanner);
         };
     }
 
@@ -97,12 +99,12 @@ public class ChessClient {
         return false;
     }
 
-    private boolean processInGameCommand(String cmd, String line, Scanner scanner) throws Exception {
+    private boolean processInGameCommand(String cmd, String[] tokens, String line, Scanner scanner) throws Exception {
         switch (cmd) {
             case "help" -> help();
             case "redraw" -> redrawBoard(null);
-            case "move" -> makeMove(line, scanner);
-            case "highlight" -> highlightMoves(line, scanner);
+            case "move" -> makeMove(tokens, line, scanner);
+            case "highlight" -> highlightMoves(tokens, scanner);
             case "resign" -> resign(scanner);
             case "leave" -> {
                 leaveGame();
@@ -141,9 +143,10 @@ public class ChessClient {
         }
         ChessGame.TeamColor perspective = (playerColor != null) ? playerColor : ChessGame.TeamColor.WHITE;
         if (highlights != null && !highlights.isEmpty()) {
-            BoardPrinter.printBoard(currentGame.getBoard(), perspective);
+            BoardPrinter.printBoard(currentGame.getBoard(), perspective, highlights);
         } else {
-            BoardPrinter.printBoard(currentGame.getBoard(), perspective);
+            highlights = Set.of();
+            BoardPrinter.printBoard(currentGame.getBoard(), perspective, highlights);
         }
     }
 
@@ -314,15 +317,68 @@ public class ChessClient {
         enterGameSession(selectedGame.gameID(), null);
     }
 
-    private void makeMove() {
+    private void makeMove(String[] tokens, String line, Scanner scanner) {
 
     }
 
-    private void highlightMoves() {
+    private void highlightMoves(String[] tokens, Scanner scanner) {
+        if (currentGame == null || currentGame.getBoard() == null) {
+            System.out.println("Board not available yet.");
+            return;
+        }
 
+        String squareStr;
+        if (tokens.length >= 2) {
+            squareStr = tokens[1];
+        } else {
+            System.out.print("Enter square to highlight (e.g. e2): ");
+            squareStr = scanner.nextLine().trim().toLowerCase();
+        }
+
+        ChessPosition position = parsePosition(squareStr);
+        if (position == null) {
+            System.out.println("Invalid square. Use a-h followed by 1-8 (e.g. e2).");
+            return;
+        }
+
+        ChessPiece piece = currentGame.getBoard().getPiece(position);
+        if (piece == null) {
+            System.out.println("No piece at " + squareStr + ".");
+            return;
+        }
+
+        Collection<ChessMove> validMoves = currentGame.validMoves(position);
+        Set<ChessPosition> highlights = new HashSet<>();
+        if (validMoves != null) {
+            for (ChessMove move : validMoves) {
+                highlights.add(move.getEndPosition());
+            }
+        }
+
+        if (highlights.isEmpty()) {
+            System.out.println("No legal moves for piece at " + squareStr + ".");
+        }
+
+        redrawBoard(highlights);
     }
 
-    private void resign() {
+    private ChessPosition parsePosition(String square) {
+        if (square == null || square.length() != 2) {
+            return null;
+        }
+        char colChar = square.charAt(0);
+        char rowChar = square.charAt(1);
+
+        if (colChar < 'a' || colChar > 'h' || rowChar < '1' || rowChar > '8') {
+            return null;
+        }
+
+        int col = colChar - 'a' + 1; // a -> 1, h -> 8
+        int row = rowChar - '1' + 1; // 1 -> 1, 8 -> 8
+        return new ChessPosition(row, col);
+    }
+
+    private void resign(Scanner scanner) {
 
     }
 

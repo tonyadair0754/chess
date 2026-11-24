@@ -5,16 +5,18 @@ import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
 
+import java.util.Set;
+
 public class BoardPrinter {
-    public static void printBoard(ChessBoard board, ChessGame.TeamColor perspective) {
+    public static void printBoard(ChessBoard board, ChessGame.TeamColor perspective, Set<ChessPosition> highlights) {
         if (perspective == ChessGame.TeamColor.WHITE) {
-            printWhitePerspective(board);
+            printWhitePerspective(board, highlights);
         } else {
-            printBlackPerspective(board);
+            printBlackPerspective(board, highlights);
         }
     }
 
-    public static void printWhitePerspective(ChessBoard board) {
+    public static void printWhitePerspective(ChessBoard board, Set<ChessPosition> highlights) {
         // Print top file header (a to h)
         System.out.println("    a  b   c   d   e  f   g   h  ");
 
@@ -22,7 +24,7 @@ public class BoardPrinter {
         for (int row = 8; row >= 1; row--) {
             System.out.print(" " + row + " "); // Left rank label
             for (int col = 1; col <= 8; col++) {
-                printSquare(board, row, col);
+                printSquare(board, row, col, highlights);
             }
             System.out.print(" " + row + " "); // Right rank label
             System.out.println();
@@ -32,7 +34,7 @@ public class BoardPrinter {
         System.out.println("    a  b   c   d   e  f   g   h  ");
     }
 
-    public static void printBlackPerspective(ChessBoard board) {
+    public static void printBlackPerspective(ChessBoard board, Set<ChessPosition> highlights) {
         // Print top file header (h to a)
         System.out.println("    h  g   f   e   d  c   b   a  ");
 
@@ -40,7 +42,7 @@ public class BoardPrinter {
         for (int row = 1; row <= 8; row++) {
             System.out.print(" " + row + " "); // Left rank label
             for (int col = 8; col >= 1; col--) {
-                printSquare(board, row, col);
+                printSquare(board, row, col, highlights);
             }
             System.out.print(" " + row + " "); // Right rank label
             System.out.println();
@@ -50,15 +52,20 @@ public class BoardPrinter {
         System.out.println("    h  g   f   e   d  c   b   a  ");
     }
 
-    public static void printSquare(ChessBoard board, int row, int col) {
-        // Alternate background square color light and dark
-        boolean isLightSquare = (row + col) % 2 != 0;
-        String bgColor = isLightSquare ? EscapeSequences.SET_BG_COLOR_LIGHT_GREY : EscapeSequences.SET_BG_COLOR_DARK_GREY;
+    public static void printSquare(ChessBoard board, int row, int col, Set<ChessPosition> highlights) {
+        ChessPosition pos = new ChessPosition(row, col);
+        boolean isHighlighted = highlights.contains(pos);
+        boolean isLightSquare = (row + col) % 2 != 0;  // Alternate background square color light and dark
+
+        String bgColor;
+        if (isHighlighted) {
+            bgColor = isLightSquare ? EscapeSequences.SET_BG_COLOR_GREEN : EscapeSequences.SET_BG_COLOR_DARK_GREEN;
+        } else {
+            bgColor = isLightSquare ? EscapeSequences.SET_BG_COLOR_LIGHT_GREY : EscapeSequences.SET_BG_COLOR_DARK_GREY;
+        }
 
         // Retrieve piece
-        ChessPosition pos = new ChessPosition(row, col);
         ChessPiece piece = board.getPiece(pos);
-
         String pieceSymbol = getPieceSymbol(piece);
 
         System.out.print(bgColor + pieceSymbol + EscapeSequences.RESET_BG_COLOR);
@@ -82,16 +89,16 @@ public class BoardPrinter {
     }
 
     /**
-     * Method for testing the board
+     * Test method for printing the board
      **/
     public static void main(String[] args) {
         ChessBoard board = new ChessBoard();
         board.resetBoard();
 
         System.out.println("=== WHITE PERSPECTIVE ===");
-        BoardPrinter.printBoard(board, ChessGame.TeamColor.WHITE);
+        BoardPrinter.printBoard(board, ChessGame.TeamColor.WHITE, null);
 
         System.out.println("\n=== BLACK PERSPECTIVE ===");
-        BoardPrinter.printBoard(board, ChessGame.TeamColor.BLACK);
+        BoardPrinter.printBoard(board, ChessGame.TeamColor.BLACK, null);
     }
 }
