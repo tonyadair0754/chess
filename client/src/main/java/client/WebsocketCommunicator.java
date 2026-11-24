@@ -8,8 +8,8 @@ import websocket.messages.ServerMessage;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
+import java.nio.ByteBuffer;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class WebsocketCommunicator implements WebSocket.Listener {
@@ -32,7 +32,21 @@ public class WebsocketCommunicator implements WebSocket.Listener {
 
     @Override
     public void onOpen(WebSocket webSocket) {
+        startKeepAlive();
         webSocket.request(1);
+    }
+
+    @Override
+    public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+        stopKeepAlive();
+        scheduler.shutdownNow();
+        webSocket.request(1);
+        return null;
+    }
+
+    @Override
+    public void onError(WebSocket webSocket, Throwable error) {
+        System.err.println("WebSocket error: " + error.getMessage());
     }
 
     @Override
@@ -54,9 +68,12 @@ public class WebsocketCommunicator implements WebSocket.Listener {
         return null;
     }
 
-    @Override
-    public void onError(WebSocket webSocket, Throwable error) {
-        System.err.println("WebSocket error: " + error.getMessage());
+    public void close() {
+        stopKeepAlive();
+        scheduler.shutdownNow();
+        if (webSocket != null && !webSocket.isOutputClosed()) {
+            webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "Leaving game").join();
+        }
     }
 
     public void sendCommand(UserGameCommand command) {
@@ -68,9 +85,31 @@ public class WebsocketCommunicator implements WebSocket.Listener {
         webSocket.sendText(json, true).join();
     }
 
-    public void close() {
-        if (webSocket != null && !webSocket.isOutputClosed()) {
-            webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "Leaving game").join();
+    // --- Keep-alive pings ---
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "ws-keepalive");
+        t.setDaemon(true);
+        return t;
+    });
+    private ScheduledFuture<?> pingTask;
+
+    private void startKeepAlive() {
+        stopKeepAlive();
+        if (scheduler.isShutdown()) {
+            return;
+        }
+        pingTask = scheduler.scheduleAtFixedRate(() -> {
+            if (webSocket != null && !webSocket.isOutputClosed()) {
+                webSocket.sendPing(ByteBuffer.wrap(new byte[]{1}))
+                        .exceptionally(ex -> null);  // Avoid unhandled async errors if closed mid-send
+            }
+        }, 20, 20, TimeUnit.SECONDS);
+    }
+
+    private void stopKeepAlive() {
+        if (pingTask != null) {
+            pingTask.cancel(false);
+            pingTask = null;
         }
     }
 }
