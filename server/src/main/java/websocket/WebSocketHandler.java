@@ -321,27 +321,6 @@ public class WebSocketHandler {
 
     // --- Helper methods for handleMakeMove() ---
 
-    private boolean validateMoveConnection(WsMessageContext ctx, UserGameCommand command, String username) {
-        ConnectionManager.ClientConnection conn = connectionManager.getConnection(ctx.session);
-        if (conn == null) {
-            sendError(ctx, "Error: connection not registered for a game");
-            return false;
-        }
-        if (conn.gameID() != command.getGameID()) {
-            sendError(ctx, "Error: connection does not match game ID");
-            return false;
-        }
-        if (!conn.username().equals(username)) {
-            sendError(ctx, "Error: authenticated user does not match connection");
-            return false;
-        }
-        if (!Objects.equals(conn.authToken(), command.getAuthToken())) {
-            sendError(ctx, "Error: auth token does not match connection");
-            return false;
-        }
-        return true;
-    }
-
     private void broadcastMoveOutcome(WsMessageContext ctx, int gameID, String username,
                                       ChessMove move, ChessGame chessGame) {
         connectionManager.broadcastToAll(gameID,
