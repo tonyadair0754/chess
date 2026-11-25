@@ -18,10 +18,7 @@ import websocket.commands.UserGameCommand;
 import websocket.messages.ServerMessage;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class WebSocketHandler {
     private final AuthDAO authDao;
@@ -337,6 +334,9 @@ public class WebSocketHandler {
         } else if (chessGame.isInStalemate(nextTurn)) {
             connectionManager.broadcastToAll(gameID,
                     new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, "Game ended in stalemate."));
+        } else if (chessGame.isInCheck(nextTurn)) {
+            connectionManager.broadcastToAll(gameID,
+                    new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, nextTurn + " is in check!"));
         }
     }
 }
