@@ -319,8 +319,9 @@ public class WebSocketHandler {
         return "" + startCol + startRow + " to " + endCol + endRow;
     }
 
-    // --- Helper methods for handleMakeMove() ---
-
+    /*
+    Helper method for handleMakeMove()
+     */
     private void broadcastMoveOutcome(WsMessageContext ctx, int gameID, String username,
                                       ChessMove move, ChessGame chessGame) {
         connectionManager.broadcastToAll(gameID,
