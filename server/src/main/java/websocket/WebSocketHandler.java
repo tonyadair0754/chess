@@ -189,38 +189,11 @@ public class WebSocketHandler {
             return;
         }
 
-        GameData updatedGame = new GameData(
-                gameData.gameID(),
-                gameData.whiteUsername(),
-                gameData.blackUsername(),
-                gameData.gameName(),
-                chessGame
-        );
-        gameDao.updateGame(updatedGame);
+        gameDao.updateGame(new GameData(
+                gameData.gameID(), gameData.whiteUsername(),
+                gameData.blackUsername(), gameData.gameName(), chessGame));
 
-        // Broadcast updated board to everyone; notify everyone else of the move
-        ServerMessage loadGame = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME, chessGame);
-        connectionManager.broadcastToAll(command.getGameID(), loadGame);
-
-        String note = username + " moved from " + formatSquare(move) + ".";
-        ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, note);
-        connectionManager.broadcastToOthers(command.getGameID(), ctx.session, notification);
-
-        // Broadcast checkmate or stalemate notification to all connected participants
-        ChessGame.TeamColor nextTurn = chessGame.getTeamTurn();
-        if (chessGame.isInCheckmate(nextTurn)) {
-            String msg = nextTurn + " is in checkmate!";
-            connectionManager.broadcastToAll(
-                    command.getGameID(),
-                    new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg)
-            );
-        } else if (chessGame.isInStalemate(nextTurn)) {
-            String msg = "Game ended in stalemate.";
-            connectionManager.broadcastToAll(
-                    command.getGameID(),
-                    new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg)
-            );
-        }
+        broadcastMoveOutcome(ctx, command.getGameID(), username, move, chessGame);
     }
 
     private void handleLeave(WsMessageContext ctx, UserGameCommand command) throws DataAccessException {
@@ -344,5 +317,46 @@ public class WebSocketHandler {
         char endCol = (char) ('a' + move.getEndPosition().getColumn() - 1);
         int endRow = move.getEndPosition().getRow();
         return "" + startCol + startRow + " to " + endCol + endRow;
+    }
+
+    // --- Helper methods for handleMakeMove() ---
+
+    private boolean validateMoveConnection(WsMessageContext ctx, UserGameCommand command, String username) {
+        ConnectionManager.ClientConnection conn = connectionManager.getConnection(ctx.session);
+        if (conn == null) {
+            sendError(ctx, "Error: connection not registered for a game");
+            return false;
+        }
+        if (conn.gameID() != command.getGameID()) {
+            sendError(ctx, "Error: connection does not match game ID");
+            return false;
+        }
+        if (!conn.username().equals(username)) {
+            sendError(ctx, "Error: authenticated user does not match connection");
+            return false;
+        }
+        if (!Objects.equals(conn.authToken(), command.getAuthToken())) {
+            sendError(ctx, "Error: auth token does not match connection");
+            return false;
+        }
+        return true;
+    }
+
+    private void broadcastMoveOutcome(WsMessageContext ctx, int gameID, String username,
+                                      ChessMove move, ChessGame chessGame) {
+        connectionManager.broadcastToAll(gameID,
+                new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME, chessGame));
+        connectionManager.broadcastToOthers(gameID, ctx.session,
+                new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
+                        username + " moved from " + formatSquare(move) + "."));
+
+        ChessGame.TeamColor nextTurn = chessGame.getTeamTurn();
+        if (chessGame.isInCheckmate(nextTurn)) {
+            connectionManager.broadcastToAll(gameID,
+                    new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, nextTurn + " is in checkmate!"));
+        } else if (chessGame.isInStalemate(nextTurn)) {
+            connectionManager.broadcastToAll(gameID,
+                    new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, "Game ended in stalemate."));
+        }
     }
 }

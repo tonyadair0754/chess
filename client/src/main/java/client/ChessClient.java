@@ -35,11 +35,11 @@ public class ChessClient {
     public void run() {
         // Display a welcome message and available commands.
         System.out.println("♕ Welcome to the best chess program! Type 'help' to get started. ♕");
-        help();
+        ClientHelper.printHelp(state);
 
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            printPrompt();
+            ClientHelper.printPrompt(state);
             String line = scanner.nextLine();
 
             try {
@@ -71,7 +71,7 @@ public class ChessClient {
 
     private boolean processSignedOutCommand(String cmd, String[] tokens, Scanner scanner) throws Exception {
         switch (cmd) {
-            case "help" -> help();
+            case "help" -> ClientHelper.printHelp(state);
             case "quit" -> {
                 return true;
             }
@@ -84,7 +84,7 @@ public class ChessClient {
 
     private boolean processSignedInCommand(String cmd, String[] tokens, Scanner scanner) throws Exception {
         switch (cmd) {
-            case "help" -> help();
+            case "help" -> ClientHelper.printHelp(state);
             case "quit" -> {
                 return true;
             }
@@ -100,7 +100,7 @@ public class ChessClient {
 
     private boolean processInGameCommand(String cmd, String[] tokens, Scanner scanner) throws Exception {
         switch (cmd) {
-            case "help" -> help();
+            case "help" -> ClientHelper.printHelp(state);
             case "redraw" -> redrawBoard(null);
             case "move" -> makeMove(tokens, scanner);
             case "highlight" -> highlightMoves(tokens, scanner);
@@ -132,7 +132,7 @@ public class ChessClient {
             case NOTIFICATION -> System.out.println(message.getMessage());
             case ERROR -> System.out.println(message.getErrorMessage());
         }
-        printPrompt();
+        ClientHelper.printPrompt(state);
     }
 
     private void redrawBoard(Set<ChessPosition> highlights) {
@@ -344,14 +344,14 @@ public class ChessClient {
             }
         }
 
-        ChessPosition start = parsePosition(fromStr);
-        ChessPosition end = parsePosition(toStr);
+        ChessPosition start = ClientHelper.parsePosition(fromStr);
+        ChessPosition end = ClientHelper.parsePosition(toStr);
         if (start == null || end == null) {
             System.out.println("Invalid square(s). Use a-h followed by 1-8 (e.g. move e2 e4).");
             return;
         }
 
-        ChessPiece.PieceType promotion = parsePromotion(promoStr);
+        ChessPiece.PieceType promotion = ClientHelper.parsePromotion(promoStr);
         if (promoStr != null && promotion == null) {
             System.out.println("Invalid promotion piece. Use Q, R, B, or N.");
             return;
@@ -365,19 +365,6 @@ public class ChessClient {
                 move
         );
         wsCommunicator.sendCommand(cmd);
-    }
-
-    private ChessPiece.PieceType parsePromotion(String promo) {
-        if (promo == null) {
-            return null;
-        }
-        return switch (promo.toUpperCase()) {
-            case "Q", "QUEEN" -> ChessPiece.PieceType.QUEEN;
-            case "R", "ROOK" -> ChessPiece.PieceType.ROOK;
-            case "B", "BISHOP" -> ChessPiece.PieceType.BISHOP;
-            case "N", "KNIGHT" -> ChessPiece.PieceType.KNIGHT;
-            default -> null;
-        };
     }
 
     private void highlightMoves(String[] tokens, Scanner scanner) {
@@ -394,7 +381,7 @@ public class ChessClient {
             squareStr = scanner.nextLine().trim().toLowerCase();
         }
 
-        ChessPosition position = parsePosition(squareStr);
+        ChessPosition position = ClientHelper.parsePosition(squareStr);
         if (position == null) {
             System.out.println("Invalid square. Use a-h followed by 1-8 (e.g. e2).");
             return;
@@ -419,22 +406,6 @@ public class ChessClient {
         }
 
         redrawBoard(highlights);
-    }
-
-    private ChessPosition parsePosition(String square) {
-        if (square == null || square.length() != 2) {
-            return null;
-        }
-        char colChar = square.charAt(0);
-        char rowChar = square.charAt(1);
-
-        if (colChar < 'a' || colChar > 'h' || rowChar < '1' || rowChar > '8') {
-            return null;
-        }
-
-        int col = colChar - 'a' + 1; // a -> 1, h -> 8
-        int row = rowChar - '1' + 1; // 1 -> 1, 8 -> 8
-        return new ChessPosition(row, col);
     }
 
     private void resign(Scanner scanner) {
@@ -486,44 +457,6 @@ public class ChessClient {
             state = State.SIGNEDIN;
         }
         System.out.println("Left the game.");
-    }
-
-    // Handle help by showing the available commands.
-    private void help() {
-        switch (state) {
-            case SIGNEDOUT -> {
-                System.out.println("  register <USERNAME> <PASSWORD> <EMAIL> - to create an account");
-                System.out.println("  login <USERNAME> <PASSWORD> - to log in");
-                System.out.println("  quit - exit the program");
-                System.out.println("  help - view available commands");
-            }
-            case SIGNEDIN -> {
-                System.out.println("  create <GAMENAME> - create a game");
-                System.out.println("  list - list games");
-                System.out.println("  play <ID> [WHITE|BLACK] - play a game");
-                System.out.println("  observe <ID> - observe a game");
-                System.out.println("  logout - log out of your account");
-                System.out.println("  quit - exit the program");
-                System.out.println("  help - view available commands");
-            }
-            case IN_GAME -> {
-                System.out.println("  redraw - redraw the chess board");
-                System.out.println("  leave - leave the game and return to menu");
-                System.out.println("  move <FROM> <TO> [Q|R|B|N] - make a move (e.g. move e2 e4)");
-                System.out.println("  resign - forfeit the game");
-                System.out.println("  highlight <SQUARE> - highlight legal moves for a piece (e.g. highlight e2)");
-                System.out.println("  quit - exit the program");
-                System.out.println("  help - show gameplay commands");
-            }
-        }
-    }
-
-    private void printPrompt() {
-        switch (state) {
-            case SIGNEDOUT -> System.out.print("\n[LOGGED_OUT] >>> ");
-            case SIGNEDIN -> System.out.print("\n[LOGGED_IN] >>> ");
-            case IN_GAME -> System.out.print("\n[GAME] >>> ");
-        }
     }
 
     private void enterGameSession(int gameID, ChessGame.TeamColor color) throws Exception {
